@@ -21,7 +21,7 @@ export function Sidebar({
   setIsMenuOpen,
   isDrawer = false,
   isMenuOpen = false,
-  versionOptions = ["v1.7.0", "v1.6.0", "v1.5.0"]
+  versionOptions = ["v1.7.0"]
 }: SidebarProps) {
   const [explorerSearchQuery, setExplorerSearchQuery] = useState("");
   const [isVersionDropdownOpen, setIsVersionDropdownOpen] = useState(false);
@@ -88,8 +88,6 @@ export function Sidebar({
   }, [isDrawer, isMenuOpen, setIsMenuOpen]);
 
   const filterByVersion = (opVersion: string) => {
-    if (activeVersion === "v1.5.0") return opVersion === "v1.5.0";
-    if (activeVersion === "v1.6.0") return opVersion === "v1.5.0" || opVersion === "v1.6.0";
     return true; // v1.7.0
   };
 
@@ -156,21 +154,21 @@ export function Sidebar({
 
             {isVersionDropdownOpen && (
               <div className="absolute right-0 top-full mt-1.5 w-24 bg-[#161616] border border-[#2e2e2e]/60 rounded-md shadow-xl z-40 py-1 flex flex-col font-outfit select-none overflow-hidden">
-              {versionOptions.map((v) => (
-                <button
-                  key={v}
-                  onClick={() => {
-                    setActiveVersion(v);
-                    setIsVersionDropdownOpen(false);
-                  }}
-                  className={`text-left px-3 py-1.5 text-[9px] tracking-wider uppercase transition-colors cursor-pointer select-none ${activeVersion === v
-                    ? "bg-white/10 text-white font-semibold"
-                    : "text-text-muted hover:bg-white/5 hover:text-white"
-                    }`}
-                >
-                  {v}
-                </button>
-              ))}
+                {versionOptions.map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => {
+                      setActiveVersion(v);
+                      setIsVersionDropdownOpen(false);
+                    }}
+                    className={`text-left px-3 py-1.5 text-[9px] tracking-wider uppercase transition-colors cursor-pointer select-none ${activeVersion === v
+                      ? "bg-white/10 text-white font-semibold"
+                      : "text-text-muted hover:bg-white/5 hover:text-white"
+                      }`}
+                  >
+                    {v}
+                  </button>
+                ))}
               </div>
             )}
           </div>

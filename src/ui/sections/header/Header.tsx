@@ -19,7 +19,7 @@ export function Header({
   setIsMenuOpen,
   activeVersion,
   setActiveVersion,
-  versionOptions = ["v1.7.0", "v1.6.0", "v1.5.0"]
+  versionOptions = ["v1.7.0"]
 }: HeaderProps) {
   const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = useState(false);
   const headerDropdownRef = useRef<HTMLDivElement>(null);
