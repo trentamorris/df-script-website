@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Menu, Favorite } from "@mui/icons-material";
+import type { DocsVersion } from "../../../types";
 
 export interface HeaderProps {
   hash: string;
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (val: boolean) => void;
   setIsMenuOpen: (val: boolean) => void;
-  activeVersion: string;
-  setActiveVersion: (val: string) => void;
+  activeVersion: DocsVersion;
+  setActiveVersion: (val: DocsVersion) => void;
+  versionOptions?: DocsVersion[];
 }
 
 export function Header({
@@ -16,7 +18,8 @@ export function Header({
   setIsSidebarCollapsed,
   setIsMenuOpen,
   activeVersion,
-  setActiveVersion
+  setActiveVersion,
+  versionOptions = ["v1.7.0", "v1.6.0", "v1.5.0"]
 }: HeaderProps) {
   const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = useState(false);
   const headerDropdownRef = useRef<HTMLDivElement>(null);
@@ -97,7 +100,7 @@ export function Header({
 
           {isHeaderVersionDropdownOpen && (
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-24 bg-[#161616] border border-[#2e2e2e]/60 rounded-md shadow-xl z-50 py-1 flex flex-col font-outfit select-none overflow-hidden">
-              {["v1.7.0", "v1.6.0", "v1.5.0"].map((v) => (
+              {versionOptions.map((v) => (
                 <button
                   key={v}
                   onClick={() => {

@@ -6,12 +6,14 @@ export interface OperationParam {
   children?: OperationParam[];
 }
 
+export type DocsVersion = "v1.7.0" | "v1.6.0" | "v1.5.0";
+
 export interface OperationItem {
   name: string;
   category: "DataFrame" | "ColumnExpression" | "DataType" | "Exception";
   syntax: string;
   desc: string;
-  version: "v1.7.0";
+  version: DocsVersion;
   examples?: string[];
   params?: OperationParam[];
   returns?: string;

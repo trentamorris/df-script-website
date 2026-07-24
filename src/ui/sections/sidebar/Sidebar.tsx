@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { KeyboardArrowDown, KeyboardArrowRight, Close } from "@mui/icons-material";
-import type { OperationItem } from "../../../types";
+import type { OperationItem, DocsVersion } from "../../../types";
 
 export interface SidebarProps {
-  activeVersion: string;
-  setActiveVersion: (val: string) => void;
+  activeVersion: DocsVersion;
+  setActiveVersion: (val: DocsVersion) => void;
   currentOpName?: string;
   operationsIndex: OperationItem[];
   setIsMenuOpen?: (val: boolean) => void;
   isDrawer?: boolean;
   isMenuOpen?: boolean;
+  versionOptions?: DocsVersion[];
 }
 
 export function Sidebar({
@@ -19,7 +20,8 @@ export function Sidebar({
   operationsIndex,
   setIsMenuOpen,
   isDrawer = false,
-  isMenuOpen = false
+  isMenuOpen = false,
+  versionOptions = ["v1.7.0", "v1.6.0", "v1.5.0"]
 }: SidebarProps) {
   const [explorerSearchQuery, setExplorerSearchQuery] = useState("");
   const [isVersionDropdownOpen, setIsVersionDropdownOpen] = useState(false);
@@ -154,21 +156,21 @@ export function Sidebar({
 
             {isVersionDropdownOpen && (
               <div className="absolute right-0 top-full mt-1.5 w-24 bg-[#161616] border border-[#2e2e2e]/60 rounded-md shadow-xl z-40 py-1 flex flex-col font-outfit select-none overflow-hidden">
-                {["v1.7.0", "v1.6.0", "v1.5.0"].map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => {
-                      setActiveVersion(v);
-                      setIsVersionDropdownOpen(false);
-                    }}
-                    className={`text-left px-3 py-1.5 text-[9px] tracking-wider uppercase transition-colors cursor-pointer select-none ${activeVersion === v
-                      ? "bg-white/10 text-white font-semibold"
-                      : "text-text-muted hover:bg-white/5 hover:text-white"
-                      }`}
-                  >
-                    {v}
-                  </button>
-                ))}
+              {versionOptions.map((v) => (
+                <button
+                  key={v}
+                  onClick={() => {
+                    setActiveVersion(v);
+                    setIsVersionDropdownOpen(false);
+                  }}
+                  className={`text-left px-3 py-1.5 text-[9px] tracking-wider uppercase transition-colors cursor-pointer select-none ${activeVersion === v
+                    ? "bg-white/10 text-white font-semibold"
+                    : "text-text-muted hover:bg-white/5 hover:text-white"
+                    }`}
+                >
+                  {v}
+                </button>
+              ))}
               </div>
             )}
           </div>
