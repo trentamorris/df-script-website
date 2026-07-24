@@ -80,36 +80,7 @@ export function Docs({ op, activeVersion }: DocsProps) {
     );
   }
 
-  const isCompatible =
-    activeVersion === "v1.7.0" ||
-    (activeVersion === "v1.6.0" && op.version !== "v1.7.0") ||
-    (activeVersion === "v1.5.0" && op.version === "v1.5.0");
 
-  if (!isCompatible) {
-    return (
-      <main className="flex-grow overflow-y-auto p-12 bg-[#060606] h-full flex justify-center min-w-0 select-text">
-        <div className="w-full max-w-2xl flex flex-col gap-8 pb-20">
-          <div className="h-full flex flex-col items-center justify-center text-center gap-5 py-20 select-none max-w-md mx-auto">
-            <span className="text-3xl text-amber-500 font-mono">⚠️</span>
-            <h1 className="text-lg text-white font-medium uppercase font-outfit tracking-wide">Version Compatibility Warning</h1>
-            <p className="text-[12px] text-[#8c8c8c] leading-relaxed">
-              The operation <code className="text-white font-mono">{op.name}</code> is not supported in version{" "}
-              <span className="text-white font-semibold font-mono">{activeVersion}</span>.
-            </p>
-            <div className="bg-[#0c0c0c] border border-amber-950/30 rounded p-3 text-[11px] font-mono text-amber-500/90 leading-relaxed text-left w-full">
-              Introduced in: <span className="text-white font-bold">{op.version}</span>
-              <br />
-              Current active selector: <span className="text-white font-bold">{activeVersion}</span>
-            </div>
-            <p className="text-[11px] text-[#5c5c5c] leading-relaxed">
-              Please upgrade the active API Explorer version filter to a higher version to view the syntax and execution guidelines.
-            </p>
-          </div>
-          <Footer className="mt-12" />
-        </div>
-      </main>
-    );
-  }
 
   let fullPath = "";
   let importStatement = "";
@@ -123,7 +94,7 @@ export function Docs({ op, activeVersion }: DocsProps) {
     } else if (op.name.startsWith("col") || op.name.startsWith("all")) {
       fullPath = `$df.${op.name}`;
     } else if (op.name.startsWith(".")) {
-      fullPath = `$df.col("<column_name>")${op.name}`;
+      fullPath = `$df.col(<column_name>)${op.name}`;
     } else {
       fullPath = `$df.${op.name}`;
     }

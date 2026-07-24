@@ -11,7 +11,7 @@ export interface OperationItem {
   category: "DataFrame" | "ColumnExpression" | "DataType" | "Exception";
   syntax: string;
   desc: string;
-  version: "v1.5.0" | "v1.6.0" | "v1.7.0";
+  version: "v1.7.0";
   examples?: string[];
   params?: OperationParam[];
   returns?: string;
