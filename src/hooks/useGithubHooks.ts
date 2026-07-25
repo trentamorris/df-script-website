@@ -57,7 +57,7 @@ export function useGithubDocs(activeVersion: DocsVersion) {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json?t=${Date.now()}`)
+    fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json`)
       .then((r) => r.json())
       .then((rawDocs: Record<string, Record<string, any>>) => {
         const mappedList: OperationItem[] = [];
@@ -92,9 +92,9 @@ export function useGithubDocs(activeVersion: DocsVersion) {
         }
         setOperationsIndex(mappedList);
       })
-    .catch(() => setOperationsIndex([]))
-    .finally(() => setIsLoading(false));
-}, [activeVersion]);
+      .catch(() => setOperationsIndex([]))
+      .finally(() => setIsLoading(false));
+  }, [activeVersion]);
 
-return { operationsIndex, isLoading };
+  return { operationsIndex, isLoading };
 }

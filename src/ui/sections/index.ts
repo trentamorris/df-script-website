@@ -8,3 +8,5 @@ export { About } from "./about/About";
 export { Support } from "./support/Support";
 export { Docs } from "./docs/Docs";
 export type { DocsProps } from "./docs/Docs";
+export { Home } from "./home/Home";
+
