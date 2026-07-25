@@ -2,24 +2,11 @@ import React from "react";
 import { ContentCopy } from "@mui/icons-material";
 import { Footer } from "../footer/Footer";
 import type { OperationItem, OperationParam } from "../../../types";
+import { useCopyToClipboard } from "../../../hooks/useCopyToClipboard";
 
 export interface DocsProps {
   op: OperationItem | undefined;
   activeVersion: string;
-}
-
-function useCopyToClipboard(duration = 1500) {
-  const [copiedId, setCopiedId] = React.useState<string | null>(null);
-
-  const copy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => { setCopiedId(null); }, duration);
-  };
-
-  const isCopied = (id: string) => copiedId === id;
-
-  return { copy, isCopied };
 }
 
 const getTypeBadgeClass = (typeStr: string): string => {

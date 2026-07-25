@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { KeyboardArrowDown, KeyboardArrowRight, Close } from "@mui/icons-material";
 import type { OperationItem, DocsVersion } from "../../../types";
+import { $df } from "df-script";
 
 export interface SidebarProps {
   activeVersion: DocsVersion;
@@ -87,31 +88,29 @@ export function Sidebar({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isDrawer, isMenuOpen, setIsMenuOpen]);
 
-  const filterByVersion = (opVersion: string) => {
-    return true; // v1.7.0
-  };
-
   const q = explorerSearchQuery.trim().toLowerCase();
 
-  const dfOps = operationsIndex
-    .filter((op) => op.category === "DataFrame" && filterByVersion(op.version))
-    .filter((op) => !q || op.name.toLowerCase().includes(q))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Create DataFrame from the list of operations for dogfooding!
+  const df = operationsIndex.length > 0 ? $df.data(operationsIndex) : null;
 
-  const exprOps = operationsIndex
-    .filter((op) => op.category === "ColumnExpression" && filterByVersion(op.version))
-    .filter((op) => !q || op.name.toLowerCase().includes(q))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const getFilteredOps = (category: string): OperationItem[] => {
+    if (!df) return [];
+    
+    let filtered = df.filter($df.col("category").eq(category));
+    
+    if (q) {
+      filtered = filtered.filter(
+        $df.col("name").str.contains(new RegExp(q, "i"))
+      );
+    }
+    
+    return filtered.sort({ by: "name" }).to_dicts() as OperationItem[];
+  };
 
-  const dataTypeOps = operationsIndex
-    .filter((op) => op.category === "DataType" && filterByVersion(op.version))
-    .filter((op) => !q || op.name.toLowerCase().includes(q))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const exceptionOps = operationsIndex
-    .filter((op) => op.category === "Exception" && filterByVersion(op.version))
-    .filter((op) => !q || op.name.toLowerCase().includes(q))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const dfOps = getFilteredOps("DataFrame");
+  const exprOps = getFilteredOps("ColumnExpression");
+  const dataTypeOps = getFilteredOps("DataType");
+  const exceptionOps = getFilteredOps("Exception");
 
   const isDfOpen = q ? dfOps.length > 0 : isDfFolderOpen;
   const isExprOpen = q ? exprOps.length > 0 : isExprFolderOpen;

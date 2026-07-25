@@ -1,20 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { ContentCopy } from "@mui/icons-material";
 import { MagneticParticles } from "../../elements";
-
-function useCopyToClipboard(duration = 1500) {
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const copy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => { setCopiedId(null); }, duration);
-  };
-
-  const isCopied = (id: string) => copiedId === id;
-
-  return { copy, isCopied };
-}
+import { useCopyToClipboard } from "../../../hooks/useCopyToClipboard";
 
 export function Home() {
   const { copy, isCopied } = useCopyToClipboard();
