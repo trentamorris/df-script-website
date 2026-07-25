@@ -4,3 +4,4 @@ dist
 .env
 .DS_Store
 .agents/
+vite.config.ts.timestamp-*
