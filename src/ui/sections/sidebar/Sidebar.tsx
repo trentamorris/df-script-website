@@ -3,6 +3,8 @@ import { KeyboardArrowDown, KeyboardArrowRight, Close } from "@mui/icons-materia
 import type { OperationItem, DocsVersion } from "../../../types";
 import { $df } from "df-script";
 
+import { getQualifiedPath } from "../../../utils/routing";
+
 export interface SidebarProps {
   activeVersion: DocsVersion;
   setActiveVersion: (val: DocsVersion) => void;
@@ -226,13 +228,16 @@ export function Sidebar({
 
                   {isOpen && (
                     <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-2">
-                      {ops.map((op) => {
-                        const isCurrent = op.name === currentOpName;
+                       {ops.map((op) => {
+                        const qualifiedPath = getQualifiedPath(op);
+                        const isCurrent = qualifiedPath === currentOpName;
                         return (
                           <div key={op.name} className="flex flex-col">
                             <button
                               onClick={() => {
-                                window.location.hash = "#/docs/" + encodeURIComponent(op.name);
+                                const url = `/docs/${activeVersion}/${qualifiedPath}`;
+                                window.history.pushState ? window.history.pushState({}, "", url) : (window.location.pathname = url);
+                                window.dispatchEvent(new Event("popstate"));
                                 setIsMenuOpen?.(false);
                               }}
                               className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer font-mono text-[11px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}

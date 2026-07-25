@@ -3,7 +3,7 @@ import { Menu, Favorite } from "@mui/icons-material";
 import type { DocsVersion } from "../../../types";
 
 export interface HeaderProps {
-  hash: string;
+  path: string;
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (val: boolean) => void;
   setIsMenuOpen: (val: boolean) => void;
@@ -13,7 +13,7 @@ export interface HeaderProps {
 }
 
 export function Header({
-  hash,
+  path,
   isSidebarCollapsed,
   setIsSidebarCollapsed,
   setIsMenuOpen,
@@ -60,14 +60,14 @@ export function Header({
           <span>MENU</span>
         </button>
         <a
-          href="#/about"
-          className={`${hash === "#/about" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
+          href="/about"
+          className={`${path === "/about" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
         >
           ABOUT
         </a>
         <a
-          href="#/notebook"
-          className={`${hash === "#/notebook" || hash === "#/playground" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
+          href="/notebook"
+          className={`${path === "/notebook" || path === "/playground" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
         >
           NOTEBOOK WORKSPACE
         </a>
@@ -76,7 +76,7 @@ export function Header({
       {/* Center: centered df-script wordmark */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
         <a
-          href="#/"
+          href="/"
           onClick={() => {
             setIsMenuOpen(false);
           }}
@@ -120,8 +120,8 @@ export function Header({
       {/* Right Side: Support & Resource Links */}
       <nav className="flex items-center gap-6 font-outfit text-[11px] tracking-widest text-text-muted select-none">
         <a
-          href="#/support"
-          className={`${hash === "#/support" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase flex items-center gap-1.5 text-[#fb7185]/90 hover:text-[#fb7185]`}
+          href="/support"
+          className={`${path === "/support" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase flex items-center gap-1.5 text-[#fb7185]/90 hover:text-[#fb7185]`}
         >
           <Favorite style={{ fontSize: "14px" }} />
           <span>SPONSOR</span>

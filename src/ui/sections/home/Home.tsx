@@ -40,7 +40,7 @@ export function Home() {
 
           {/* Enter Playground CTA */}
           <a
-            href="#/playground"
+            href="/notebook"
             className="mt-6 px-6 py-2.5 text-[11px] font-medium tracking-widest text-[#ffffff] uppercase flat-border-btn"
           >
             ENTER PLAYGROUND →

@@ -5,6 +5,8 @@ import type { OperationItem, DocsVersion } from "./types";
 
 import { useGithubVersions, useGithubDocs } from "./hooks/useGithubHooks";
 
+import { getQualifiedPath } from "./utils/routing";
+
 export default function App() {
 
   // API Explorer state
@@ -13,30 +15,60 @@ export default function App() {
   const { operationsIndex } = useGithubDocs(activeVersion);
 
   // Routing state
-  const [hash, setHash] = useState(() => window.location.hash);
+  const [path, setPath] = useState(() => window.location.pathname);
 
   useEffect(() => {
-    const handleHashChange = () => { setHash(window.location.hash); };
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    const handlePopState = () => {
+      setPath(window.location.pathname);
+    };
+    window.addEventListener("popstate", handlePopState);
+
+    // Global click listener to intercept clean path navigations
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest("a");
+      if (target && target.href && target.host === window.location.host) {
+        if (!target.target && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+          e.preventDefault();
+          const url = new URL(target.href);
+          window.history.pushState({}, "", url.pathname + url.search);
+          setPath(url.pathname);
+        }
+      }
+    };
+    document.addEventListener("click", handleLinkClick);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      document.removeEventListener("click", handleLinkClick);
+    };
   }, []);
 
   // UI state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Routing checks
-  const isPlayground = hash === "#/playground" || hash === "#playground" || hash === "#/notebook" || hash === "#notebook";
-  const isAbout = hash === "#/about" || hash === "#about";
-  const isSupport = hash === "#/support" || hash === "#support";
-  const isDocs = hash.startsWith("#/docs/") || hash.startsWith("#docs/");
+  const isPlayground = path === "/playground" || path === "/notebook";
+  const isAbout = path === "/about";
+  const isSupport = path === "/support";
+
+  // Check if pathname matches /docs/version/function (e.g. /docs/v1.7.0/df-script.ColumnExpression.dt.weekday)
+  const docsMatch = path.match(/^\/docs\/([^\/]+)\/(.+)$/);
+  const isDocs = !!docsMatch;
 
   let activeOpName = "";
-  if (isDocs) {
-    const rawOp = hash.startsWith("#/docs/")
-      ? hash.substring(7)
-      : hash.substring(6);
-    activeOpName = decodeURIComponent(rawOp);
+  if (isDocs && docsMatch) {
+    activeOpName = decodeURIComponent(docsMatch[2]);
   }
+
+  // Automatically sync activeVersion state if URL version changes
+  useEffect(() => {
+    if (docsMatch) {
+      const urlVersion = docsMatch[1];
+      if (urlVersion !== activeVersion) {
+        setActiveVersion(urlVersion);
+      }
+    }
+  }, [path, activeVersion, docsMatch]);
 
   // Render main content area dynamically based on route
   const renderMainContent = () => {
@@ -45,7 +77,7 @@ export default function App() {
     if (isPlayground) return <DFScriptNotebook />;
 
     if (isDocs) {
-      const op = operationsIndex.find(o => o.name === activeOpName);
+      const op = operationsIndex.find(o => getQualifiedPath(o) === activeOpName);
       return <Docs op={op} activeVersion={activeVersion} />;
     }
 
@@ -58,7 +90,7 @@ export default function App() {
     <div className="h-screen w-screen flex flex-col justify-between relative overflow-hidden select-none bg-[#060606] text-[#9c9c9c] font-sans antialiased">
 
       <Header
-        hash={hash}
+        path={path}
         isSidebarCollapsed={isSidebarCollapsed}
         setIsSidebarCollapsed={setIsSidebarCollapsed}
         setIsMenuOpen={() => {}}
