@@ -17,4 +17,5 @@ export interface OperationItem {
   examples?: string[];
   params?: OperationParam[];
   returns?: string;
+  signature?: string;
 }

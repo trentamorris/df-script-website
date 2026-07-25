@@ -85,7 +85,8 @@ export function useGithubDocs(activeVersion: DocsVersion) {
               version: activeVersion,
               examples: info.examples,
               params: info.params,
-              returns: info.returns
+              returns: info.returns,
+              signature: info.signature
             });
           }
         }

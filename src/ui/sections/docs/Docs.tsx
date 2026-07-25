@@ -132,6 +132,26 @@ export function Docs({ op, activeVersion }: DocsProps) {
           </div>
         </div>
 
+        {/* Signature */}
+        {op.signature && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
+              Signature
+            </h2>
+            <div className="relative border border-[#1e1e1e] rounded bg-[#0c0c0c] p-4 flex flex-col gap-3">
+              <pre className="text-[11.5px] font-mono text-[#dcdcdc] whitespace-pre-wrap overflow-x-auto select-all leading-relaxed">
+                {op.signature}
+              </pre>
+              <button
+                onClick={() => copy(op.signature!, `${op.name}-signature`)}
+                className="absolute top-3 right-3 px-2 py-1 text-[8px] font-mono bg-[#060606] hover:bg-[#111] border border-[#1e1e1e] text-[#9c9c9c] hover:text-[#ffffff] transition-colors cursor-pointer select-none"
+              >
+                {isCopied(`${op.name}-signature`) ? "COPIED!" : "COPY"}
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* Description */}
         <section className="flex flex-col gap-3">
           <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
