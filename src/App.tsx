@@ -5,8 +5,7 @@ import DFScriptNotebook from "./DFScriptNotebook";
 import type { OperationItem, DocsVersion } from "./types";
 import { ContentCopy } from "@mui/icons-material";
 
-import { useVersionOptions } from "./hooks/useVersionOptions";
-import { useDocs } from "./hooks/useDocs";
+import { useGithubVersions, useGithubDocs } from "./hooks/useGithubHooks";
 
 /**
  * A reusable hook to copy text to the clipboard and track a temporary "COPIED" state.
@@ -30,8 +29,8 @@ export default function App() {
 
   // API Explorer state
   const [activeVersion, setActiveVersion] = useState<DocsVersion>("v1.7.0");
-  const versionOptions = useVersionOptions();
-  const { operationsIndex } = useDocs(activeVersion);
+  const versionOptions = useGithubVersions();
+  const { operationsIndex } = useGithubDocs(activeVersion);
 
   // Routing state
   const [hash, setHash] = useState(() => window.location.hash);
