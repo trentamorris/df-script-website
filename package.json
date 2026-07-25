@@ -11,7 +11,7 @@
     "deploy-preview": "npx vercel"
   },
   "dependencies": {
-    "df-script": "file:../df-script",
+    "df-script": "^1.7.0",
 
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
