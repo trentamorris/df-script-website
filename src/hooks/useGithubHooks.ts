@@ -57,7 +57,7 @@ export function useGithubDocs(activeVersion: DocsVersion) {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json`)
+    fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json?t=${Date.now()}`)
       .then((r) => r.json())
       .then((rawDocs: Record<string, Record<string, any>>) => {
         const mappedList: OperationItem[] = [];
