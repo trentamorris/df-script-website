@@ -14,6 +14,13 @@
   --color-text-dim: #5c5c5c;
   --color-bg-darker: #0c0c0c;
   --color-bg-pitch: #060606;
+
+  /* Screen Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
 }
 
 html {

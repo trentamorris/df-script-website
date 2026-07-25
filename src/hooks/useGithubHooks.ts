@@ -2,26 +2,30 @@ import { useState, useEffect } from "react";
 import type { OperationItem, DocsVersion } from "../types";
 
 const GITHUB_RAW_BASE_URL = "https://raw.githubusercontent.com/trentamorris/df-script";
+const GITHUB_API_BASE_URL = "https://api.github.com/repos/trentamorris/df-script";
 
 export function useGithubVersions() {
   const [versionOptions, setVersionOptions] = useState<DocsVersion[]>(["v1.7.0"]);
 
   useEffect(() => {
-    fetch("https://api.github.com/repos/trentamorris/df-script/branches")
+    fetch(`${GITHUB_API_BASE_URL}/branches`)
       .then((r) => r.json())
       .then(async (branches: { name: string }[]) => {
-        const allowedVersions = ["v1.7.0", "v1.6.0", "v1.5.0"];
         const versionBranches = branches
           .map((b) => b.name)
-          .filter((name): name is DocsVersion => allowedVersions.includes(name));
+          .filter((name): name is DocsVersion => /^v\d+\.\d+\.\d+$/.test(name));
 
         const validVersions: DocsVersion[] = [];
         await Promise.all(
           versionBranches.map(async (v) => {
             try {
-              const res = await fetch(`${GITHUB_RAW_BASE_URL}/${v}/docs.json`, { method: "HEAD" });
+              const res = await fetch(`${GITHUB_API_BASE_URL}/contents?ref=${v}`);
               if (res.ok) {
-                validVersions.push(v);
+                const files = await res.json();
+                const hasDocs = Array.isArray(files) && files.some((f: any) => f.name === "docs.json");
+                if (hasDocs) {
+                  validVersions.push(v);
+                }
               }
             } catch {
               // Ignore
@@ -57,8 +61,11 @@ export function useGithubDocs(activeVersion: DocsVersion) {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json`)
-      .then((r) => r.json())
+    fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json?t=${Date.now()}`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+        return r.json();
+      })
       .then((rawDocs: Record<string, Record<string, any>>) => {
         const mappedList: OperationItem[] = [];
         for (const [filePath, symbols] of Object.entries(rawDocs)) {

@@ -22,8 +22,7 @@ export default function App() {
   }, []);
 
   // UI state
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Routing checks
   const isPlayground = hash === "#/playground" || hash === "#playground" || hash === "#/notebook" || hash === "#notebook";
@@ -62,19 +61,9 @@ export default function App() {
         hash={hash}
         isSidebarCollapsed={isSidebarCollapsed}
         setIsSidebarCollapsed={setIsSidebarCollapsed}
-        setIsMenuOpen={setIsMenuOpen}
+        setIsMenuOpen={() => {}}
         activeVersion={activeVersion}
         setActiveVersion={setActiveVersion}
-        versionOptions={versionOptions}
-      />
-      <Sidebar
-        isDrawer={true}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        activeVersion={activeVersion}
-        setActiveVersion={setActiveVersion}
-        currentOpName={activeOpName}
-        operationsIndex={operationsIndex}
         versionOptions={versionOptions}
       />
 
@@ -87,7 +76,6 @@ export default function App() {
             setActiveVersion={setActiveVersion}
             currentOpName={activeOpName}
             operationsIndex={operationsIndex}
-            setIsMenuOpen={setIsMenuOpen}
             versionOptions={versionOptions}
           />
         </aside>

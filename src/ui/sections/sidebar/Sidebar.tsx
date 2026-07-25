@@ -84,20 +84,20 @@ export function Sidebar({
 
   // Dynamically find categories present in the operations index
   const categoriesList: string[] = df
-    ? (df.select("category").unique().sort({ by: "category" }).to_dicts().map(r => r.category) as string[])
+    ? (df.select("category").unique().sort({ by: "category" }).to_array("category") as string[])
     : [];
 
   const getFilteredOps = (category: string): OperationItem[] => {
     if (!df) return [];
-    
+
     let filtered = df.filter($df.col("category").eq(category));
-    
+
     if (q) {
       filtered = filtered.filter(
         $df.col("name").str.contains(new RegExp(q, "i"))
       );
     }
-    
+
     return filtered.sort({ by: "name" }).to_dicts() as OperationItem[];
   };
 
