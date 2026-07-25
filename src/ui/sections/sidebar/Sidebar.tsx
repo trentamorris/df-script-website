@@ -27,11 +27,8 @@ export function Sidebar({
   const [explorerSearchQuery, setExplorerSearchQuery] = useState("");
   const [isVersionDropdownOpen, setIsVersionDropdownOpen] = useState(false);
 
-  // Collapsing states
-  const [isDfFolderOpen, setIsDfFolderOpen] = useState(false);
-  const [isExprFolderOpen, setIsExprFolderOpen] = useState(false);
-  const [isTypeFolderOpen, setIsTypeFolderOpen] = useState(false);
-  const [isExceptionFolderOpen, setIsExceptionFolderOpen] = useState(false);
+  // Dynamic open folders state
+  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
 
   const sidebarDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -39,16 +36,8 @@ export function Sidebar({
   useEffect(() => {
     if (currentOpName) {
       const op = operationsIndex.find((o) => o.name === currentOpName);
-      if (op) {
-        if (op.category === "DataFrame") {
-          setIsDfFolderOpen(true);
-        } else if (op.category === "ColumnExpression") {
-          setIsExprFolderOpen(true);
-        } else if (op.category === "DataType") {
-          setIsTypeFolderOpen(true);
-        } else if (op.category === "Exception") {
-          setIsExceptionFolderOpen(true);
-        }
+      if (op && op.category) {
+        setOpenFolders((prev) => ({ ...prev, [op.category]: true }));
       }
     }
   }, [currentOpName, operationsIndex]);
@@ -93,6 +82,11 @@ export function Sidebar({
   // Create DataFrame from the list of operations for dogfooding!
   const df = operationsIndex.length > 0 ? $df.data(operationsIndex) : null;
 
+  // Dynamically find categories present in the operations index
+  const categoriesList: string[] = df
+    ? (df.select("category").unique().sort({ by: "category" }).to_dicts().map(r => r.category) as string[])
+    : [];
+
   const getFilteredOps = (category: string): OperationItem[] => {
     if (!df) return [];
     
@@ -107,15 +101,13 @@ export function Sidebar({
     return filtered.sort({ by: "name" }).to_dicts() as OperationItem[];
   };
 
-  const dfOps = getFilteredOps("DataFrame");
-  const exprOps = getFilteredOps("ColumnExpression");
-  const dataTypeOps = getFilteredOps("DataType");
-  const exceptionOps = getFilteredOps("Exception");
-
-  const isDfOpen = q ? dfOps.length > 0 : isDfFolderOpen;
-  const isExprOpen = q ? exprOps.length > 0 : isExprFolderOpen;
-  const isTypeOpen = q ? dataTypeOps.length > 0 : isTypeFolderOpen;
-  const isExceptionOpen = q ? exceptionOps.length > 0 : isExceptionFolderOpen;
+  const getFolderDisplayName = (category: string) => {
+    if (category === "DataFrame") return "DataFrame Operations";
+    if (category === "ColumnExpression") return "Column Expressions";
+    if (category === "DataType") return "Data Types";
+    if (category === "Exception") return "Exceptions";
+    return category; // fallback for any new/custom categories
+  };
 
   const renderHighlightedName = (name: string) => {
     if (!q) return <span>{name}</span>;
@@ -208,165 +200,53 @@ export function Sidebar({
         {/* Scrollable Explorer List */}
         <div className="flex-grow overflow-y-auto select-none pt-2 pb-12 min-h-0 text-[11px] font-mono flex flex-col gap-4">
           <div className="flex flex-col gap-0 px-6 md:px-8">
-            {/* Folder: DataFrame Operations */}
-            {dfOps.length > 0 && (
-              <div className="flex flex-col">
-                <button
-                  onClick={() => setIsDfFolderOpen(!isDfFolderOpen)}
-                  className="sticky top-0 bg-[#0c0c0c] z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2 border-b border-[#1a1a1a]/30"
-                >
-                  <span className="text-text-dim w-3 h-3 flex items-center justify-center shrink-0">
-                    {isDfOpen ? (
-                      <KeyboardArrowDown style={{ fontSize: "14px" }} />
-                    ) : (
-                      <KeyboardArrowRight style={{ fontSize: "14px" }} />
-                    )}
-                  </span>
-                  <span className="font-semibold tracking-widest font-outfit text-[11px] uppercase text-[#e5e5e5]">DataFrame Operations</span>
-                </button>
+            {categoriesList.map((cat) => {
+              const ops = getFilteredOps(cat);
+              if (ops.length === 0) return null;
 
-                {isDfOpen && (
-                  <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-2">
-                    {dfOps.map((op) => {
-                      const isCurrent = op.name === currentOpName;
-                      return (
-                        <div key={op.name} className="flex flex-col">
-                          <button
-                            onClick={() => {
-                              window.location.hash = "#/docs/" + encodeURIComponent(op.name);
-                              setIsMenuOpen?.(false);
-                            }}
-                            className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer font-mono text-[11px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
-                          >
-                            <span>{renderHighlightedName(op.name)}</span>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+              const isOpen = q ? true : !!openFolders[cat];
 
-            {/* Folder: ColumnExpressions */}
-            {exprOps.length > 0 && (
-              <div className="flex flex-col">
-                <button
-                  onClick={() => setIsExprFolderOpen(!isExprFolderOpen)}
-                  className="sticky top-0 bg-[#0c0c0c] z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2 border-b border-[#1a1a1a]/30"
-                >
-                  <span className="text-text-dim w-3 h-3 flex items-center justify-center shrink-0">
-                    {isExprOpen ? (
-                      <KeyboardArrowDown style={{ fontSize: "14px" }} />
-                    ) : (
-                      <KeyboardArrowRight style={{ fontSize: "14px" }} />
-                    )}
-                  </span>
-                  <span className="font-semibold tracking-widest font-outfit text-[11px] uppercase text-[#e5e5e5]">Column Expressions</span>
-                </button>
+              return (
+                <div key={cat} className="flex flex-col">
+                  <button
+                    onClick={() => setOpenFolders(prev => ({ ...prev, [cat]: !prev[cat] }))}
+                    className="sticky top-0 bg-[#0c0c0c] z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2 border-b border-[#1a1a1a]/30"
+                  >
+                    <span className="text-text-dim w-3 h-3 flex items-center justify-center shrink-0">
+                      {isOpen ? (
+                        <KeyboardArrowDown style={{ fontSize: "14px" }} />
+                      ) : (
+                        <KeyboardArrowRight style={{ fontSize: "14px" }} />
+                      )}
+                    </span>
+                    <span className="font-semibold tracking-widest font-outfit text-[11px] uppercase text-[#e5e5e5]">
+                      {getFolderDisplayName(cat)}
+                    </span>
+                  </button>
 
-                {isExprOpen && (
-                  <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-2">
-                    {exprOps.map((op) => {
-                      const isCurrent = op.name === currentOpName;
-                      return (
-                        <div key={op.name} className="flex flex-col">
-                          <button
-                            onClick={() => {
-                              window.location.hash = "#/docs/" + encodeURIComponent(op.name);
-                              setIsMenuOpen?.(false);
-                            }}
-                            className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer font-mono text-[11px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
-                          >
-                            <span>{renderHighlightedName(op.name)}</span>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Folder: DataTypes */}
-            {dataTypeOps.length > 0 && (
-              <div className="flex flex-col">
-                <button
-                  onClick={() => setIsTypeFolderOpen(!isTypeFolderOpen)}
-                  className="sticky top-0 bg-[#0c0c0c] z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2 border-b border-[#1a1a1a]/30"
-                >
-                  <span className="text-text-dim w-3 h-3 flex items-center justify-center shrink-0">
-                    {isTypeOpen ? (
-                      <KeyboardArrowDown style={{ fontSize: "14px" }} />
-                    ) : (
-                      <KeyboardArrowRight style={{ fontSize: "14px" }} />
-                    )}
-                  </span>
-                  <span className="font-semibold tracking-widest font-outfit text-[11px] uppercase text-[#e5e5e5]">Data Types</span>
-                </button>
-
-                {isTypeOpen && (
-                  <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-2">
-                    {dataTypeOps.map((op) => {
-                      const isCurrent = op.name === currentOpName;
-                      return (
-                        <div key={op.name} className="flex flex-col">
-                          <button
-                            onClick={() => {
-                              window.location.hash = "#/docs/" + encodeURIComponent(op.name);
-                              setIsMenuOpen?.(false);
-                            }}
-                            className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer font-mono text-[11px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
-                          >
-                            <span>{renderHighlightedName(op.name)}</span>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Folder: Exceptions */}
-            {exceptionOps.length > 0 && (
-              <div className="flex flex-col">
-                <button
-                  onClick={() => setIsExceptionFolderOpen(!isExceptionFolderOpen)}
-                  className="sticky top-0 bg-[#0c0c0c] z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2 border-b border-[#1a1a1a]/30"
-                >
-                  <span className="text-text-dim w-3 h-3 flex items-center justify-center shrink-0">
-                    {isExceptionOpen ? (
-                      <KeyboardArrowDown style={{ fontSize: "14px" }} />
-                    ) : (
-                      <KeyboardArrowRight style={{ fontSize: "14px" }} />
-                    )}
-                  </span>
-                  <span className="font-semibold tracking-widest font-outfit text-[11px] uppercase text-[#e5e5e5]">Exceptions</span>
-                </button>
-
-                {isExceptionOpen && (
-                  <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-2">
-                    {exceptionOps.map((op) => {
-                      const isCurrent = op.name === currentOpName;
-                      return (
-                        <div key={op.name} className="flex flex-col">
-                          <button
-                            onClick={() => {
-                              window.location.hash = "#/docs/" + encodeURIComponent(op.name);
-                              setIsMenuOpen?.(false);
-                            }}
-                            className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer font-mono text-[11px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
-                          >
-                            <span>{renderHighlightedName(op.name)}</span>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                  {isOpen && (
+                    <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-2">
+                      {ops.map((op) => {
+                        const isCurrent = op.name === currentOpName;
+                        return (
+                          <div key={op.name} className="flex flex-col">
+                            <button
+                              onClick={() => {
+                                window.location.hash = "#/docs/" + encodeURIComponent(op.name);
+                                setIsMenuOpen?.(false);
+                              }}
+                              className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer font-mono text-[11px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
+                            >
+                              <span>{renderHighlightedName(op.name)}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
