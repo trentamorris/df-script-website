@@ -62,76 +62,25 @@ export function useGithubDocs(activeVersion: DocsVersion) {
       .then((rawDocs: Record<string, Record<string, any>>) => {
         const mappedList: OperationItem[] = [];
         for (const [filePath, symbols] of Object.entries(rawDocs)) {
-          const isDf = filePath.includes("dataframe/");
-          const isException = filePath.includes("exceptions/");
-          const isDatatype = filePath.includes("datatypes/") || filePath.includes("types.ts");
-          const isGlobal = filePath.includes("functions/");
-          const isExprBase = filePath.includes("ExprBase.ts");
-
-          let mixinNamespace = "";
-          if (filePath.includes("mixins/")) {
-            if (filePath.includes("StringExpr")) mixinNamespace = "str";
-            else if (filePath.includes("TemporalExpr")) mixinNamespace = "dt";
-            else if (filePath.includes("ArrayExpr")) mixinNamespace = "arr";
-            else if (filePath.includes("StructExpr")) mixinNamespace = "struct";
-          }
-
           for (const [symbolName, info] of Object.entries(symbols)) {
             let name = symbolName;
-            let category: "DataFrame" | "ColumnExpression" | "DataType" | "Exception" = "ColumnExpression";
-            let syntax = "";
-
-            if (info.category && info.syntax) {
-              category = info.category;
-              syntax = info.syntax;
-              if (category === "DataFrame") {
-                name = `.${symbolName}()`;
-              } else if (category === "ColumnExpression") {
-                if (syntax.includes("$df.col(<column_name>).")) {
-                  const parts = syntax.split("$df.col(<column_name>)");
-                  name = parts[1].replace("(...)", "()");
-                } else if (syntax.startsWith("$df.")) {
-                  name = `${symbolName}()`;
-                } else {
-                  name = `.${symbolName}()`;
-                }
-              } else if (category === "DataType") {
-                let typeDisplay = symbolName;
-                if (symbolName.endsWith("DataType")) typeDisplay = symbolName.slice(0, -8);
-                syntax = `DataType.${typeDisplay}`;
-              }
-            } else {
-              if (isDf) {
-                name = `.${symbolName}()`;
-                category = "DataFrame";
-                syntax = `df.${symbolName}(...)`;
-              } else if (isException) {
-                category = "Exception";
-                syntax = `throw new ${symbolName}("message")`;
-              } else if (isDatatype) {
-                category = "DataType";
-                let typeDisplay = symbolName;
-                if (symbolName.endsWith("DataType")) typeDisplay = symbolName.slice(0, -8);
-                syntax = `DataType.${typeDisplay}`;
-              } else if (isGlobal) {
+            if (info.category === "DataFrame") {
+              name = `.${symbolName}()`;
+            } else if (info.category === "ColumnExpression") {
+              if (info.namespace === "$df") {
                 name = `${symbolName}()`;
-                syntax = `$df.${symbolName}(...)`;
-              } else if (isExprBase) {
-                name = `.${symbolName}()`;
-                syntax = `$df.col(<column_name>).${symbolName}(...)`;
-              } else if (mixinNamespace) {
-                name = `.${mixinNamespace}.${symbolName}()`;
-                syntax = `$df.col(<column_name>).${mixinNamespace}.${symbolName}(...)`;
+              } else if (info.namespace && info.namespace.startsWith("$df.col.")) {
+                const sub = info.namespace.slice(8);
+                name = `.${sub}.${symbolName}()`;
               } else {
                 name = `.${symbolName}()`;
-                syntax = `$df.col(<column_name>).${symbolName}(...)`;
               }
             }
 
             mappedList.push({
               name,
-              category,
-              syntax,
+              category: info.category || "ColumnExpression",
+              syntax: info.syntax || "",
               desc: info.desc || "",
               version: activeVersion,
               examples: info.examples,
@@ -142,9 +91,9 @@ export function useGithubDocs(activeVersion: DocsVersion) {
         }
         setOperationsIndex(mappedList);
       })
-      .catch(() => setOperationsIndex([]))
-      .finally(() => setIsLoading(false));
-  }, [activeVersion]);
+    .catch(() => setOperationsIndex([]))
+    .finally(() => setIsLoading(false));
+}, [activeVersion]);
 
-  return { operationsIndex, isLoading };
+return { operationsIndex, isLoading };
 }
