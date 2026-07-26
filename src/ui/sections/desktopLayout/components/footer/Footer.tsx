@@ -1,8 +1,6 @@
 import React from "react";
-
-export interface FooterProps {
-  className?: string;
-}
+import { GITHUB_REPO_URL, NPM_PACKAGE_URL } from "../../../../../constants";
+import type { FooterProps } from "./types";
 
 export function Footer({ className = "" }: FooterProps) {
   return (
@@ -11,7 +9,7 @@ export function Footer({ className = "" }: FooterProps) {
         <span>© 2026 df-script project</span>
         <div className="flex gap-4">
           <a
-            href="https://github.com/trentamorris/df-script"
+            href={GITHUB_REPO_URL}
             target="_blank"
             rel="noreferrer"
             className="hover:text-white transition-colors"
@@ -19,7 +17,7 @@ export function Footer({ className = "" }: FooterProps) {
             GITHUB
           </a>
           <a
-            href="https://www.npmjs.com/package/df-script"
+            href={NPM_PACKAGE_URL}
             target="_blank"
             rel="noreferrer"
             className="hover:text-white transition-colors"

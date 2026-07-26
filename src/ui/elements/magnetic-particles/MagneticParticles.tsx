@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import type { Particle, MouseState, MagneticParticlesProps } from "./magneticParticlesTypes";
+import React from "react";
+import type { Particle, MouseState, MagneticParticlesProps } from "./types";
 
 export function MagneticParticles({
   spacing = 35,
@@ -8,9 +8,9 @@ export function MagneticParticles({
   friction = 0.85,
   repelStrength = 0.35
 }: MagneticParticlesProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");

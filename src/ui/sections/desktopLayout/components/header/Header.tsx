@@ -1,16 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { Menu, Favorite } from "@mui/icons-material";
-import type { DocsVersion } from "../../../types";
-
-export interface HeaderProps {
-  path: string;
-  isSidebarCollapsed: boolean;
-  setIsSidebarCollapsed: (val: boolean) => void;
-  setIsMenuOpen: (val: boolean) => void;
-  activeVersion: DocsVersion;
-  setActiveVersion: (val: DocsVersion) => void;
-  versionOptions?: DocsVersion[];
-}
+import { GITHUB_REPO_URL, NPM_PACKAGE_URL } from "../../../../../constants";
+import { NOTEBOOK_PATH, ABOUT_PATH, SUPPORT_PATH } from "../../constants";
+import type { HeaderProps } from "./types";
 
 export function Header({
   path,
@@ -21,10 +13,10 @@ export function Header({
   setActiveVersion,
   versionOptions = ["v1.7.0"]
 }: HeaderProps) {
-  const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = useState(false);
-  const headerDropdownRef = useRef<HTMLDivElement>(null);
+  const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = React.useState(false);
+  const headerDropdownRef = React.useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
         headerDropdownRef.current &&
@@ -60,16 +52,16 @@ export function Header({
           <span>MENU</span>
         </button>
         <a
-          href="/about"
-          className={`${path === "/about" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
+          href={ABOUT_PATH}
+          className={`${path === ABOUT_PATH ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
         >
           ABOUT
         </a>
         <a
-          href="/notebook"
-          className={`${path === "/notebook" || path === "/playground" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
+          href={NOTEBOOK_PATH}
+          className={`${path === NOTEBOOK_PATH ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase`}
         >
-          NOTEBOOK WORKSPACE
+          NOTEBOOK
         </a>
       </div>
 
@@ -120,14 +112,14 @@ export function Header({
       {/* Right Side: Support & Resource Links */}
       <nav className="flex items-center gap-6 font-outfit text-[11px] tracking-widest text-text-muted select-none">
         <a
-          href="/support"
-          className={`${path === "/support" ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase flex items-center gap-1.5 text-[#fb7185]/90 hover:text-[#fb7185]`}
+          href={SUPPORT_PATH}
+          className={`${path === SUPPORT_PATH ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase flex items-center gap-1.5 text-[#fb7185]/90 hover:text-[#fb7185]`}
         >
           <Favorite style={{ fontSize: "14px" }} />
           <span>SPONSOR</span>
         </a>
         <a
-          href="https://www.npmjs.com/package/df-script"
+          href={NPM_PACKAGE_URL}
           target="_blank"
           rel="noreferrer"
           className="hover:text-white transition-colors uppercase"
@@ -135,7 +127,7 @@ export function Header({
           NPM
         </a>
         <a
-          href="https://github.com/trentamorris/df-script"
+          href={GITHUB_REPO_URL}
           target="_blank"
           rel="noreferrer"
           className="hover:text-white transition-colors uppercase"

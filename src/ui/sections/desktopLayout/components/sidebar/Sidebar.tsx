@@ -1,20 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { KeyboardArrowDown, KeyboardArrowRight, Close } from "@mui/icons-material";
-import type { OperationItem, DocsVersion } from "../../../types";
+import type { OperationItem, DocsVersion } from "../../../../../types";
 import { $df } from "df-script";
 
-import { getQualifiedPath } from "../../../utils/routing";
-
-export interface SidebarProps {
-  activeVersion: DocsVersion;
-  setActiveVersion: (val: DocsVersion) => void;
-  currentOpName?: string;
-  operationsIndex: OperationItem[];
-  setIsMenuOpen?: (val: boolean) => void;
-  isDrawer?: boolean;
-  isMenuOpen?: boolean;
-  versionOptions?: DocsVersion[];
-}
+import { getQualifiedPath } from "../../../../../utils/routing";
+import type { SidebarProps } from "./types";
 
 export function Sidebar({
   activeVersion,
@@ -26,16 +16,16 @@ export function Sidebar({
   isMenuOpen = false,
   versionOptions = ["v1.7.0"]
 }: SidebarProps) {
-  const [explorerSearchQuery, setExplorerSearchQuery] = useState("");
-  const [isVersionDropdownOpen, setIsVersionDropdownOpen] = useState(false);
+  const [explorerSearchQuery, setExplorerSearchQuery] = React.useState("");
+  const [isVersionDropdownOpen, setIsVersionDropdownOpen] = React.useState(false);
 
   // Dynamic open folders state
-  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
+  const [openFolders, setOpenFolders] = React.useState<Record<string, boolean>>({});
 
-  const sidebarDropdownRef = useRef<HTMLDivElement>(null);
+  const sidebarDropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Auto-expand folder when currentOpName changes (e.g. from routing)
-  useEffect(() => {
+  React.useEffect(() => {
     if (currentOpName) {
       const op = operationsIndex.find((o) => o.name === currentOpName);
       if (op && op.category) {
@@ -45,7 +35,7 @@ export function Sidebar({
   }, [currentOpName, operationsIndex]);
 
   // Click outside and ESC handlers for version dropdown
-  useEffect(() => {
+  React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
         sidebarDropdownRef.current &&
@@ -68,7 +58,7 @@ export function Sidebar({
   }, []);
 
   // Listen to Escape key to close the drawer overlay
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isDrawer || !isMenuOpen || !setIsMenuOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -206,12 +196,12 @@ export function Sidebar({
               const ops = getFilteredOps(cat);
               if (ops.length === 0) return null;
 
-              const isOpen = q ? true : !!openFolders[cat];
+              const isOpen = q ? true : openFolders[cat] !== false;
 
               return (
                 <div key={cat} className="flex flex-col">
                   <button
-                    onClick={() => setOpenFolders(prev => ({ ...prev, [cat]: !prev[cat] }))}
+                    onClick={() => setOpenFolders(prev => ({ ...prev, [cat]: openFolders[cat] === false }))}
                     className="sticky top-0 bg-[#0c0c0c] z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2 border-b border-[#1a1a1a]/30"
                   >
                     <span className="text-text-dim w-3 h-3 flex items-center justify-center shrink-0">

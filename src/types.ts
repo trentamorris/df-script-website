@@ -18,4 +18,6 @@ export interface OperationItem {
   params?: OperationParam[];
   returns?: string;
   signature?: string;
+  filePath: string;
+  lineStart?: number;
 }

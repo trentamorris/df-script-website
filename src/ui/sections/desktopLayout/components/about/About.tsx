@@ -1,40 +1,44 @@
-import React, { useState } from "react";
+import React from "react";
+import { CodeBlock } from "../../../../elements";
 import { Footer } from "../footer/Footer";
+import type { BenchmarkResult, BenchmarkCardProps, CodePanelProps } from "./types";
+import { PlayArrow, Autorenew } from "@mui/icons-material";
+
+const BENCHMARK_USERS = Array.from({ length: 500 }, (_, i) => ({
+  id: `USR-${i}`,
+  name: `User Name ${i} `,
+  email: `UserEmail_${i}@example.com `
+}));
+
+const BENCHMARK_SALES = Array.from({ length: 5000 }, (_, i) => ({
+  userId: `usr-${i % 500}`,
+  price: i % 200 === 0 ? 99999 : (i % 100 === 0 ? -5 : i % 50),
+  amount: i % 100 === 0 ? -10 : i % 10,
+  category: i % 5 === 0 ? null : ` Category_${i % 5} `
+}));
 
 export function About() {
   // Performance Benchmarking State
-  const [joinJsResult, setJoinJsResult] = useState<{ ms: number; isLive: boolean }>({ ms: 0.85, isLive: false });
-  const [joinDfResult, setJoinDfResult] = useState<{ ms: number; isLive: boolean }>({ ms: 0.18, isLive: false });
-  const [groupbyJsResult, setGroupbyJsResult] = useState<{ ms: number; isLive: boolean }>({ ms: 0.52, isLive: false });
-  const [groupbyDfResult, setGroupbyDfResult] = useState<{ ms: number; isLive: boolean }>({ ms: 0.11, isLive: false });
-  const [isRunningJoin, setIsRunningJoin] = useState(false);
-  const [isRunningGroupby, setIsRunningGroupby] = useState(false);
+  const [joinJsResult, setJoinJsResult] = React.useState<BenchmarkResult>({ ms: 0.85, isLive: false });
+  const [joinDfResult, setJoinDfResult] = React.useState<BenchmarkResult>({ ms: 0.18, isLive: false });
+  const [groupbyJsResult, setGroupbyJsResult] = React.useState<BenchmarkResult>({ ms: 0.52, isLive: false });
+  const [groupbyDfResult, setGroupbyDfResult] = React.useState<BenchmarkResult>({ ms: 0.11, isLive: false });
+  const [isRunningJoin, setIsRunningJoin] = React.useState(false);
+  const [isRunningGroupby, setIsRunningGroupby] = React.useState(false);
 
   const runJoinBenchmark = () => {
     setIsRunningJoin(true);
     setTimeout(() => {
-      const users = Array.from({ length: 500 }, (_, i) => ({
-        id: `USR-${i}`,
-        name: `User Name ${i} `,
-        email: `UserEmail_${i}@example.com `
-      }));
-      const sales = Array.from({ length: 5000 }, (_, i) => ({
-        userId: `usr-${i % 500}`,
-        price: i % 200 === 0 ? 99999 : (i % 100 === 0 ? -5 : i % 50),
-        amount: i % 100 === 0 ? -10 : i % 10,
-        category: i % 5 === 0 ? null : ` Category_${i % 5} `
-      }));
-
       const tJoin0 = performance.now();
       for (let run = 0; run < 5; run++) {
         const joined = [];
         const usersMap = new Map();
-        for (const u of users) {
+        for (const u of BENCHMARK_USERS) {
           if (!u || u.id == null) continue;
           const key = String(u.id).trim().toLowerCase();
           usersMap.set(key, u);
         }
-        for (const s of sales) {
+        for (const s of BENCHMARK_SALES) {
           if (!s || s.userId == null) continue;
           const key = String(s.userId).trim().toLowerCase();
           const price = Number(s.price);
@@ -63,17 +67,10 @@ export function About() {
   const runGroupbyBenchmark = () => {
     setIsRunningGroupby(true);
     setTimeout(() => {
-      const sales = Array.from({ length: 5000 }, (_, i) => ({
-        userId: `usr-${i % 500}`,
-        price: i % 200 === 0 ? 99999 : (i % 100 === 0 ? -5 : i % 50),
-        amount: i % 100 === 0 ? -10 : i % 10,
-        category: i % 5 === 0 ? null : ` Category_${i % 5} `
-      }));
-
       const tGroupby0 = performance.now();
       for (let run = 0; run < 5; run++) {
         const groups: Record<string, any> = {};
-        for (const s of sales) {
+        for (const s of BENCHMARK_SALES) {
           if (!s) continue;
           const userId = s.userId != null ? String(s.userId).trim().toLowerCase() : "unknown";
           const amount = Number(s.amount);
@@ -114,96 +111,73 @@ export function About() {
     dfResult,
     operationName,
     marginTop = "mt-6"
-  }: {
-    title: string;
-    btnText: string;
-    onRun: () => void;
-    isRunning: boolean;
-    jsLabel: string;
-    jsCode: string;
-    jsResult: { ms: number; isLive: boolean };
-    dfLabel: string;
-    dfCode: string;
-    dfResult: { ms: number; isLive: boolean };
-    operationName: string;
-    marginTop?: string;
-  }) => (
-    <div className={`flex flex-col gap-4 ${marginTop}`}>
-      <div className="flex items-center justify-between border-b border-border-dark pb-2 shrink-0 select-none">
-        <div className="text-[11px] font-mono text-[#e5e5e5] uppercase tracking-wider">
-          {title}
-        </div>
-        <button
-          onClick={onRun}
-          disabled={isRunning}
-          title={`Run ${operationName} Benchmark`}
-          className="flex items-center gap-1.5 px-3 py-1.5 font-mono text-[10px] tracking-wider uppercase border border-border-dark hover:border-white bg-[#0c0c0c] hover:bg-[#111111] text-text-muted hover:text-white transition-all rounded cursor-pointer font-semibold disabled:opacity-50"
-        >
-          {isRunning ? (
-            <>
-              <svg className="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              running...
-            </>
-          ) : (
-            <>
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              {btnText}
-            </>
-          )}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-        {/* Standard JS/TS */}
-        <div className="flex flex-col justify-between gap-2 border border-border-dark rounded bg-[#0c0c0c] p-4 relative group">
-          <div className="flex flex-col gap-2">
-            <div className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
-              {jsLabel}
-            </div>
-            <pre className="text-[10.5px] font-mono text-text-muted leading-relaxed whitespace-pre overflow-x-auto select-all">
-              {jsCode}
-            </pre>
+  }: BenchmarkCardProps) => {
+    const renderCodePanel = ({
+      label,
+      code,
+      result,
+      isDf = false
+    }: CodePanelProps) => (
+      <div className={`flex flex-col justify-between gap-2 border border-border-dark ${isDf ? "hover:border-[#2e2e2e] transition-colors" : ""} rounded bg-[#0c0c0c] p-4 relative group`}>
+        <div className="flex flex-col gap-2">
+          <div className={`text-[10px] font-mono ${isDf ? "text-[#e5e5e5]" : "text-text-muted"} uppercase tracking-wider`}>
+            {label}
           </div>
-
-          <div className="flex items-center justify-end border-t border-border-dark pt-3 mt-1 select-none">
-            <div className="text-[10px] font-mono text-text-muted">
-              Execution: <span className="text-[#e5e5e5] font-semibold">{jsResult.ms.toFixed(3)} ms</span> <span className="text-[8px] text-text-dim">({jsResult.isLive ? "live" : "baseline"})</span>
-            </div>
-          </div>
+          <CodeBlock
+            unstyled
+            code={code}
+            className={`text-[10.5px] ${isDf ? "text-white" : "text-text-muted"} leading-relaxed whitespace-pre overflow-x-auto`}
+          />
         </div>
 
-        {/* df-script */}
-        <div className="flex flex-col justify-between gap-2 border border-border-dark hover:border-[#2e2e2e] transition-colors rounded bg-[#0c0c0c] p-4 group relative">
-          <div className="flex flex-col gap-2">
-            <div className="text-[10px] font-mono text-[#e5e5e5] uppercase tracking-wider">
-              {dfLabel}
-            </div>
-            <pre className="text-[10.5px] font-mono text-white leading-relaxed whitespace-pre overflow-x-auto select-all">
-              {dfCode}
-            </pre>
-          </div>
-
-          <div className="flex items-center justify-end border-t border-border-dark pt-3 mt-1 select-none">
-            <div className="text-[10px] font-mono text-text-muted">
-              Execution: <span className="text-[#e5e5e5] font-semibold">{dfResult.ms.toFixed(3)} ms</span> <span className="text-[8px] text-text-dim">({dfResult.isLive ? "live" : "baseline"})</span>
-            </div>
+        <div className="flex items-center justify-end border-t border-border-dark pt-3 mt-1 select-none">
+          <div className="text-[10px] font-mono text-text-muted">
+            Execution: <span className="text-[#e5e5e5] font-semibold">{result.ms.toFixed(3)} ms</span> <span className="text-[8px] text-text-dim">({result.isLive ? "live" : "baseline"})</span>
           </div>
         </div>
       </div>
+    );
 
-      {/* Speedup banner footnote */}
-      <div className="border border-border-dark rounded bg-[#0c0c0c] p-4 text-center select-none mt-2">
-        <div className="text-[11px] font-mono text-[#e5e5e5]">
-          Result: df-script {operationName} is <span className="text-emerald-400 font-semibold">{(jsResult.ms / dfResult.ms).toFixed(1)}x</span> faster than standard JS/TS <span className="text-text-dim">({jsResult.isLive || dfResult.isLive ? "calculated live in your browser" : "representative baseline"})</span>
+    return (
+      <div className={`flex flex-col gap-4 ${marginTop}`}>
+        <div className="flex items-center justify-between border-b border-border-dark pb-2 shrink-0 select-none">
+          <div className="text-[11px] font-mono text-[#e5e5e5] uppercase tracking-wider">
+            {title}
+          </div>
+          <button
+            onClick={onRun}
+            disabled={isRunning}
+            title={`Run ${operationName} Benchmark`}
+            className="flex items-center gap-1.5 px-3 py-1.5 font-mono text-[10px] tracking-wider uppercase border border-border-dark hover:border-white bg-[#0c0c0c] hover:bg-[#111111] text-text-muted hover:text-white transition-all rounded cursor-pointer font-semibold disabled:opacity-50"
+          >
+            {isRunning ? (
+              <>
+                <Autorenew className="animate-spin text-current" style={{ fontSize: 14 }} />
+                running...
+              </>
+            ) : (
+              <>
+                <PlayArrow className="text-current" style={{ fontSize: 14 }} />
+                {btnText}
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+          {renderCodePanel({ label: jsLabel, code: jsCode, result: jsResult, isDf: false })}
+          {renderCodePanel({ label: dfLabel, code: dfCode, result: dfResult, isDf: true })}
+        </div>
+
+        {/* Speedup banner footnote */}
+        <div className="border border-border-dark rounded bg-[#0c0c0c] p-4 text-center select-none mt-2">
+          <div className="text-[11px] font-mono text-[#e5e5e5]">
+            Result: df-script {operationName} is <span className="text-emerald-400 font-semibold">{(jsResult.ms / dfResult.ms).toFixed(1)}x</span> faster than standard JS/TS <span className="text-text-dim">({jsResult.isLive || dfResult.isLive ? "calculated live in your browser" : "representative baseline"})</span>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <main className="flex-grow overflow-y-auto p-12 bg-[#060606] h-full flex justify-center min-w-0 select-text">
@@ -264,26 +238,30 @@ export function About() {
                   <div className="font-mono text-[#e5e5e5] text-[10.5px]">
                     sales <span className="text-text-dim">(5,000 rows)</span>
                   </div>
-                  <pre className="text-[10px] text-text-dim font-mono bg-[#070707] p-2 rounded whitespace-pre overflow-x-auto select-all">
-                    {`[{
+                  <CodeBlock
+                    unstyled
+                    code={`[{
   userId: "usr-0",
   price: 50,
   amount: 10,
   category: "Category_1"
 }, ...]`}
-                  </pre>
+                    className="text-[10px] text-text-dim bg-[#070707] p-2 rounded whitespace-pre overflow-x-auto"
+                  />
                 </div>
                 <div className="flex flex-col gap-1">
                   <div className="font-mono text-[#e5e5e5] text-[10.5px]">
                     users <span className="text-text-dim">(500 rows)</span>
                   </div>
-                  <pre className="text-[10px] text-text-dim font-mono bg-[#070707] p-2 rounded whitespace-pre overflow-x-auto select-all">
-                    {`[{
+                  <CodeBlock
+                    unstyled
+                    code={`[{
   id: "USR-0",
   name: "User Name 0",
   email: "UserEmail_0@example.com"
 }, ...]`}
-                  </pre>
+                    className="text-[10px] text-text-dim bg-[#070707] p-2 rounded whitespace-pre overflow-x-auto"
+                  />
                 </div>
               </div>
             </div>

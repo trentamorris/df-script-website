@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react";
+import React from "react";
 import type { OperationItem, DocsVersion } from "../types";
-
-const GITHUB_RAW_BASE_URL = "https://raw.githubusercontent.com/trentamorris/df-script";
-const GITHUB_API_BASE_URL = "https://api.github.com/repos/trentamorris/df-script";
+import { GITHUB_RAW_BASE_URL, GITHUB_API_BASE_URL, KNOWN_VERSIONS } from "../constants";
 
 export function useGithubVersions() {
-  const [versionOptions, setVersionOptions] = useState<DocsVersion[]>(["v1.7.0"]);
+  const [versionOptions, setVersionOptions] = React.useState<DocsVersion[]>([...KNOWN_VERSIONS]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetch(`${GITHUB_API_BASE_URL}/branches`)
       .then((r) => r.json())
       .then(async (branches: { name: string }[]) => {
@@ -56,10 +54,10 @@ export function useGithubVersions() {
 }
 
 export function useGithubDocs(activeVersion: DocsVersion) {
-  const [operationsIndex, setOperationsIndex] = useState<OperationItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [operationsIndex, setOperationsIndex] = React.useState<OperationItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setIsLoading(true);
     fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json?t=${Date.now()}`)
       .then((r) => {
@@ -93,7 +91,9 @@ export function useGithubDocs(activeVersion: DocsVersion) {
               examples: info.examples,
               params: info.params,
               returns: info.returns,
-              signature: info.signature
+              signature: info.signature,
+              filePath,
+              lineStart: info.lineStart
             });
           }
         }

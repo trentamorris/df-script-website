@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { $df, DataFrame } from "df-script";
 import Editor from "@monaco-editor/react";
 import { marked } from "marked";
@@ -115,8 +115,8 @@ const EyeClosedIcon = () => (
 );
 
 const DOMNodeRenderer = ({ node }: { node: HTMLElement | SVGElement }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
     if (ref.current) {
       ref.current.innerHTML = "";
       ref.current.appendChild(node);
@@ -358,18 +358,18 @@ summary`,
 ];
 
 export default function DFScriptNotebook() {
-  const [notebookName, setNotebookName] = useState("untitled_notebook.dfnb");
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [cells, setCells] = useState<CellState[]>(WELCOME_NOTEBOOK);
-  const [activeCellId, setActiveCellId] = useState<string | null>(null);
-  const [copiedCellId, setCopiedCellId] = useState<string | null>(null);
-  const [copiedCellCodeId, setCopiedCellCodeId] = useState<string | null>(null);
+  const [notebookName, setNotebookName] = React.useState("untitled_notebook.dfnb");
+  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [cells, setCells] = React.useState<CellState[]>(WELCOME_NOTEBOOK);
+  const [activeCellId, setActiveCellId] = React.useState<string | null>(null);
+  const [copiedCellId, setCopiedCellId] = React.useState<string | null>(null);
+  const [copiedCellCodeId, setCopiedCellCodeId] = React.useState<string | null>(null);
   
-  const nextExecIndexRef = useRef(1);
-  const sharedStateRef = useRef<Record<string, any>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const babelRef = useRef<any>(null);
-  const [isBabelLoading, setIsBabelLoading] = useState(false);
+  const nextExecIndexRef = React.useRef(1);
+  const sharedStateRef = React.useRef<Record<string, any>>({});
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const babelRef = React.useRef<any>(null);
+  const [isBabelLoading, setIsBabelLoading] = React.useState(false);
 
   const loadBabel = async () => {
     if (babelRef.current) return babelRef.current;
@@ -566,7 +566,7 @@ export default function DFScriptNotebook() {
 
       // Map standard React hooks + HTML helper in the eval scope context
       const htmlHelper = (str: string) => ({ toHTML: () => str });
-      const hookKeys = ["useState", "useEffect", "useRef", "useMemo", "useCallback", "useContext", "html"];
+      const hookKeys = ["React.useState", "React.useEffect", "React.useRef", "useMemo", "useCallback", "useContext", "html"];
       const hookVals = [React.useState, React.useEffect, React.useRef, React.useMemo, React.useCallback, React.useContext, htmlHelper];
 
       // Assign html helper to $df runtime
@@ -642,7 +642,7 @@ export default function DFScriptNotebook() {
       initialCode = "## Double-click to edit Markdown\n* Bullet point 1\n* Bullet point 2";
     } else if (type === "jsx") {
       initialCode = `// JSX Cells let you render interactive React components natively!
-const [count, setCount] = useState(0);
+const [count, setCount] = React.useState(0);
 
 <div className="flex flex-col gap-3 items-start font-sans">
   <h4 className="text-sm font-semibold text-emerald-400">JSX Live Component Output</h4>

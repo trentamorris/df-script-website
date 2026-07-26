@@ -1,7 +1,7 @@
 import React from "react";
 import { ContentCopy } from "@mui/icons-material";
-import { MagneticParticles } from "../../elements";
-import { useCopyToClipboard } from "../../../hooks/useCopyToClipboard";
+import { MagneticParticles } from "../../../../elements";
+import { useCopyToClipboard } from "../../../../../hooks/useCopyToClipboard";
 
 export function Home() {
   const { copy, isCopied } = useCopyToClipboard();
@@ -39,12 +39,12 @@ export function Home() {
           </div>
 
           {/* Enter Playground CTA */}
-          <a
+          {/* <a
             href="/notebook"
             className="mt-6 px-6 py-2.5 text-[11px] font-medium tracking-widest text-[#ffffff] uppercase flat-border-btn"
           >
             ENTER PLAYGROUND →
-          </a>
+          </a> */}
         </div>
 
         {/* Footer of Hero */}

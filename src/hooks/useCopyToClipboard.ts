@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React from "react";
 
 export function useCopyToClipboard(duration = 1500) {
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
   const copy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);

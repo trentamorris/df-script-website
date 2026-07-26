@@ -1,13 +1,9 @@
 import React from "react";
-import { ContentCopy } from "@mui/icons-material";
 import { Footer } from "../footer/Footer";
-import type { OperationItem, OperationParam } from "../../../types";
-import { useCopyToClipboard } from "../../../hooks/useCopyToClipboard";
-
-export interface DocsProps {
-  op: OperationItem | undefined;
-  activeVersion: string;
-}
+import type { OperationItem, OperationParam } from "../../../../../types";
+import { GITHUB_REPO_URL } from "../../../../../constants";
+import { CodeBlock } from "../../../../elements";
+import type { DocsProps } from "./types";
 
 const getTypeBadgeClass = (typeStr: string): string => {
   const name = typeStr.toLowerCase();
@@ -49,9 +45,43 @@ function renderParamTree(params: OperationParam[], depth = 0): React.ReactNode {
   );
 }
 
-export function Docs({ op, activeVersion }: DocsProps) {
-  const { copy, isCopied } = useCopyToClipboard();
+function buildParamTree(flatParams: OperationParam[]): OperationParam[] {
+  const root: OperationParam[] = [];
+  const map: Record<string, OperationParam & { children: OperationParam[] }> = {};
 
+  flatParams.forEach(p => {
+    const isOptional = p.name.startsWith("[") && p.name.endsWith("]");
+    const cleanName = p.name.replace(/^\[|\]$/g, "");
+    map[cleanName] = {
+      ...p,
+      name: cleanName,
+      optional: isOptional || p.optional,
+      children: []
+    };
+  });
+
+  flatParams.forEach(p => {
+    const cleanName = p.name.replace(/^\[|\]$/g, "");
+    const parts = cleanName.split(".");
+    if (parts.length === 1) {
+      root.push(map[cleanName]);
+    } else {
+      const parentName = parts.slice(0, -1).join(".");
+      const parent = map[parentName];
+      if (parent) {
+        const childBaseName = parts[parts.length - 1];
+        map[cleanName].name = childBaseName;
+        parent.children.push(map[cleanName]);
+      } else {
+        root.push(map[cleanName]);
+      }
+    }
+  });
+
+  return root;
+}
+
+export function Docs({ op, activeVersion }: DocsProps) {
   if (!op) {
     return (
       <main className="flex-grow overflow-y-auto p-12 bg-[#060606] h-full flex justify-center min-w-0 select-text">
@@ -67,13 +97,11 @@ export function Docs({ op, activeVersion }: DocsProps) {
     );
   }
 
-
   let fullPath = "";
-  let importStatement = "";
+  let importStatement = `import { $df } from "df-script"`;
 
   if (op.category === "DataFrame") {
     fullPath = `df${op.name}`;
-    importStatement = `import { $df } from "df-script"`;
   } else if (op.category === "ColumnExpression") {
     if (op.name.startsWith("$df.")) {
       fullPath = op.name;
@@ -84,10 +112,8 @@ export function Docs({ op, activeVersion }: DocsProps) {
     } else {
       fullPath = `$df.${op.name}`;
     }
-    importStatement = `import { $df } from "df-script"`;
   } else if (op.category === "DataType") {
     fullPath = `$df.DataType.${op.name}`;
-    importStatement = `import { $df } from "df-script"`;
   } else if (op.category === "Exception") {
     fullPath = op.name;
     importStatement = `import { ${op.name} } from "df-script"`;
@@ -105,17 +131,29 @@ export function Docs({ op, activeVersion }: DocsProps) {
             {importStatement}
           </div>
           <div className="flex items-center gap-3 mt-1">
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#ffffff] font-mono lowercase">
-              {fullPath}
-            </h1>
+            {op.filePath ? (
+              <a
+                href={`${GITHUB_REPO_URL}/blob/${activeVersion}/src/${op.filePath}${op.lineStart ? `#L${op.lineStart}` : ""}`}
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors group"
+                title="View Source on GitHub"
+              >
+                <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#ffffff] group-hover:text-indigo-400 group-hover:underline decoration-indigo-400/30 font-mono lowercase transition-colors">
+                  {fullPath}
+                </h1>
+              </a>
+            ) : (
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#ffffff] font-mono lowercase">
+                {fullPath}
+              </h1>
+            )}
             <span className="px-2 py-0.5 rounded border border-[#2e2e2e] text-[9px] font-mono text-[#9c9c9c] uppercase bg-[#0c0c0c] select-none shrink-0">
               {op.category}
             </span>
           </div>
           <div className="flex items-center gap-2 text-[10px] font-mono text-[#5c5c5c] select-none uppercase tracking-wider">
             <span>df-script API REFERENCE</span>
-            <span>•</span>
-            <span className="text-[#8c8c8c]">INTRODUCED IN {op.version}</span>
           </div>
         </div>
 
@@ -125,17 +163,10 @@ export function Docs({ op, activeVersion }: DocsProps) {
             <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
               Signature
             </h2>
-            <div className="relative border border-[#1e1e1e] rounded bg-[#0c0c0c] p-4 flex flex-col gap-3">
-              <pre className="text-[11.5px] font-mono text-[#dcdcdc] whitespace-pre-wrap overflow-x-auto select-all leading-relaxed">
-                {op.signature}
-              </pre>
-              <button
-                onClick={() => copy(op.signature!, `${op.name}-signature`)}
-                className="absolute top-3 right-3 px-2 py-1 text-[8px] font-mono bg-[#060606] hover:bg-[#111] border border-[#1e1e1e] text-[#9c9c9c] hover:text-[#ffffff] transition-colors cursor-pointer select-none"
-              >
-                {isCopied(`${op.name}-signature`) ? "COPIED!" : "COPY"}
-              </button>
-            </div>
+            <CodeBlock
+              code={op.signature}
+              className="text-[11.5px] text-[#dcdcdc] whitespace-pre-wrap"
+            />
           </section>
         )}
 
@@ -153,7 +184,7 @@ export function Docs({ op, activeVersion }: DocsProps) {
             <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
               Parameters
             </h2>
-            {renderParamTree(op.params)}
+            {renderParamTree(buildParamTree(op.params))}
           </section>
         )}
 
@@ -176,17 +207,10 @@ export function Docs({ op, activeVersion }: DocsProps) {
           <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
             Syntax
           </h2>
-          <div className="relative border border-[#1e1e1e] rounded bg-[#0c0c0c] p-4 flex flex-col gap-3">
-            <pre className="text-[11px] font-mono text-indigo-300 whitespace-pre overflow-x-auto select-all leading-relaxed">
-              {op.syntax}
-            </pre>
-            <button
-              onClick={() => copy(op.syntax, `${op.name}-syntax`)}
-              className="absolute top-3 right-3 px-2 py-1 text-[8px] font-mono bg-[#060606] hover:bg-[#111] border border-[#1e1e1e] text-[#9c9c9c] hover:text-[#ffffff] transition-colors cursor-pointer select-none"
-            >
-              {isCopied(`${op.name}-syntax`) ? "COPIED!" : "COPY"}
-            </button>
-          </div>
+          <CodeBlock
+            code={op.syntax}
+            className="text-[11px] text-indigo-300 whitespace-pre"
+          />
         </section>
 
         {/* Examples */}
@@ -195,17 +219,10 @@ export function Docs({ op, activeVersion }: DocsProps) {
             <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
               examples
             </h2>
-            <div className="relative border border-[#1e1e1e] rounded bg-[#0c0c0c] p-4 flex flex-col gap-3">
-              <pre className="text-[11px] font-mono text-[#8c8c8c] whitespace-pre overflow-x-auto select-all leading-relaxed">
-                {combinedExamples}
-              </pre>
-              <button
-                onClick={() => copy(combinedExamples, `${op.name}-examples`)}
-                className="absolute top-3 right-3 px-2 py-1 text-[8px] font-mono bg-[#060606] hover:bg-[#111] border border-[#1e1e1e] text-[#9c9c9c] hover:text-[#ffffff] transition-colors cursor-pointer select-none"
-              >
-                {isCopied(`${op.name}-examples`) ? "COPIED!" : "COPY"}
-              </button>
-            </div>
+            <CodeBlock
+              code={combinedExamples}
+              className="text-[11px] text-[#8c8c8c] whitespace-pre"
+            />
           </section>
         )}
 

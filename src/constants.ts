@@ -1,39 +1,8 @@
-/**
- * Matches class name declarations in source files.
- */
-export const CLASS_REGEX = /class\s+([a-zA-Z0-9_$]+)/;
+export const GITHUB_REPO_URL = "https://github.com/trentamorris/df-script";
+export const GITHUB_RAW_BASE_URL = "https://raw.githubusercontent.com/trentamorris/df-script";
+export const GITHUB_API_BASE_URL = "https://api.github.com/repos/trentamorris/df-script";
+export const GITHUB_SPONSORS_URL = "https://github.com/sponsors/trentamorris";
+export const NPM_PACKAGE_URL = "https://www.npmjs.com/package/df-script";
 
-/**
- * Matches JSDoc method signatures, including optional generator asterisk (*).
- */
-export const METHOD_REGEX = /\/\*\*([\s\S]*?)\*\/[\s\r\n]*?(?:public\s+|private\s+|static\s+)?\*?([a-zA-Z0-9_$]+)\s*(?:<[^>]+>)?\s*\(([\s\S]*?)\)/g;
-
-/**
- * Matches export function signatures for global helpers.
- */
-export const FUNCTION_REGEX = /\/\*\*([\s\S]*?)\*\/[\s\r\n]*?export\s+function\s+([a-zA-Z0-9_$]+)\s*(?:<[^>]+>)?\s*\(([\s\S]*?)\)/g;
-
-/**
- * Matches @since tags with semver versions.
- */
-export const SINCE_REGEX = /@since\s+(v1\.[567]\.0)/;
-
-/**
- * Matches @param tags, capturing parameter names (including dot-notation properties) and descriptions.
- */
-export const PARAM_REGEX = /@param\s+([a-zA-Z0-9_$.?]+)\s+(.*)/;
-
-/**
- * Matches @returns tags.
- */
-export const RETURNS_REGEX = /@returns\s+(.*)/;
-
-/**
- * Matches export class declarations (exceptions).
- */
-export const EXCEPTION_REGEX = /\/\*\*([\s\S]*?)\*\/[\s\r\n]*?export\s+class\s+([a-zA-Z0-9_$]+)/g;
-
-/**
- * Matches default value declarations (e.g. "default: value" or "Default value") inside descriptions.
- */
-export const DEFAULT_VALUE_REGEX = /(?:default|Default)\s*=?\s*(`[^`]+`|"[^"]+"|\S+)/;
+/** Known documentation versions in descending order. Update when cutting a new release. */
+export const KNOWN_VERSIONS = ["v1.8.0", "v1.7.0"] as const;
