@@ -5,7 +5,7 @@ import { About } from "./components/about/About";
 import { Support } from "./components/support/Support";
 import { Docs } from "./components/docs/Docs";
 import { Home } from "./components/home/Home";
-import DFScriptNotebook from "../../../DFScriptNotebook";
+import { DFScriptNotebook } from "../../../df-script-notebook";
 import { getQualifiedPath } from "../../../utils/routing";
 import type { DesktopLayoutProps } from "./types";
 import { NOTEBOOK_PATH, ABOUT_PATH, SUPPORT_PATH } from "./constants";

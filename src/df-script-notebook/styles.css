@@ -1,0 +1,37 @@
+#df-script-notebook {
+  /* Background colors */
+  --nb-bg-app: rgb(6, 6, 6);
+  --nb-bg-surface: rgb(12, 12, 12);
+  --nb-bg-code: rgb(7, 7, 7);
+  --nb-bg-raised: rgb(22, 22, 22);
+  --nb-bg-raised-alt: rgb(34, 34, 34);
+  --nb-bg-hover: rgb(17, 17, 17);
+
+  /* Border colors */
+  --nb-border-default: rgb(30, 30, 30);
+  --nb-border-cell: rgb(26, 26, 26);
+  --nb-border-light: rgb(44, 44, 44);
+  --nb-border-hover: rgb(60, 60, 60);
+  --nb-border-active: rgb(42, 42, 42);
+  --nb-border-accent: rgb(68, 68, 68);
+
+  /* Text colors */
+  --nb-text-primary: rgb(255, 255, 255);
+  --nb-text-heading: rgb(229, 229, 229);
+  --nb-text-secondary: rgb(156, 156, 156);
+  --nb-text-muted: rgb(92, 92, 92);
+  --nb-text-console: rgb(140, 140, 140);
+
+  /* RGB triples for opacity use */
+  --nb-bg-app-rgb: 6, 6, 6;
+  --nb-bg-surface-rgb: 12, 12, 12;
+  --nb-bg-code-rgb: 7, 7, 7;
+  --nb-bg-raised-rgb: 22, 22, 22;
+  --nb-bg-hover-rgb: 17, 17, 17;
+  --nb-border-default-rgb: 30, 30, 30;
+  --nb-border-cell-rgb: 26, 26, 26;
+  --nb-border-light-rgb: 44, 44, 44;
+  --nb-border-hover-rgb: 60, 60, 60;
+  --nb-border-active-rgb: 42, 42, 42;
+  --nb-border-accent-rgb: 68, 68, 68;
+}
