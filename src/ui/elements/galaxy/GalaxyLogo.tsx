@@ -390,8 +390,8 @@ export function GalaxyLogo({
         // Diffraction flare when glisten is active: elegant 4-pointed diamond star
         if (glistenCurve > 0.05) {
           const flareMult = p.glistenScale ?? 1;
-          const outerR = renderSize * (2.8 + glistenCurve * 4.8) * flareMult;
-          const waistR = Math.max(0.5, renderSize * (0.28 + glistenCurve * 0.18) * flareMult);
+          const outerR = renderSize * (3.4 + glistenCurve * 5.6) * flareMult;
+          const waistR = Math.max(1.2, renderSize * (0.95 + glistenCurve * 0.55) * flareMult);
 
           ctx.save();
 

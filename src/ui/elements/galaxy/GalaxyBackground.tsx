@@ -320,38 +320,42 @@ export function GalaxyBackground({
 
         drawStarParticle(ctx, star, alpha);
 
-        // If micro-nova is flaring, render a natural soft lens flare
+        // Micro-nova glisten: beautiful 4-pointed diamond star
         if (glistenCurve > 0.05) {
-          const flareR = star.size * (3 + glistenCurve * 5);
+          const outerR = star.size * (3.0 + glistenCurve * 4.8);
+          const waistR = Math.max(1.1, star.size * (0.85 + glistenCurve * 0.45));
+
           ctx.save();
-          ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 0.75;
-          ctx.globalAlpha = glistenCurve * 0.7;
 
-          // Main horizontal and vertical diffraction spikes
+          // Soft cosmic aura
+          const auraRadius = outerR * 0.9;
+          const grad = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, auraRadius);
+          grad.addColorStop(0, "rgba(255, 255, 255, " + (glistenCurve * 0.8) + ")");
+          grad.addColorStop(0.38, "rgba(186, 230, 253, " + (glistenCurve * 0.3) + ")");
+          grad.addColorStop(1, "rgba(56, 189, 248, 0)");
+          ctx.fillStyle = grad;
           ctx.beginPath();
-          ctx.moveTo(star.x - flareR, star.y);
-          ctx.lineTo(star.x + flareR, star.y);
-          ctx.moveTo(star.x, star.y - flareR);
-          ctx.lineTo(star.x, star.y + flareR);
-          ctx.stroke();
+          ctx.arc(star.x, star.y, auraRadius, 0, Math.PI * 2);
+          ctx.fill();
 
-          // Soft diagonal micro-diffraction rays
-          const diag = flareR * 0.35;
-          ctx.lineWidth = 0.5;
-          ctx.globalAlpha = glistenCurve * 0.4;
+          // 4-pointed diamond star with solid waist
           ctx.beginPath();
-          ctx.moveTo(star.x - diag, star.y - diag);
-          ctx.lineTo(star.x + diag, star.y + diag);
-          ctx.moveTo(star.x + diag, star.y - diag);
-          ctx.lineTo(star.x - diag, star.y + diag);
-          ctx.stroke();
+          ctx.moveTo(star.x, star.y - outerR);
+          ctx.quadraticCurveTo(star.x + waistR, star.y - waistR, star.x + outerR, star.y);
+          ctx.quadraticCurveTo(star.x + waistR, star.y + waistR, star.x, star.y + outerR);
+          ctx.quadraticCurveTo(star.x - waistR, star.y + waistR, star.x - outerR, star.y);
+          ctx.quadraticCurveTo(star.x - waistR, star.y - waistR, star.x, star.y - outerR);
+          ctx.closePath();
 
-          // Core flare halo
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * (1 + glistenCurve * 0.7), 0, Math.PI * 2);
           ctx.fillStyle = "#ffffff";
-          ctx.globalAlpha = glistenCurve * 0.75;
+          ctx.globalAlpha = Math.min(1, glistenCurve * 0.9);
+          ctx.fill();
+
+          // Luminous core
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * (1.1 + glistenCurve * 0.7), 0, Math.PI * 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.globalAlpha = glistenCurve * 0.85;
           ctx.fill();
 
           ctx.restore();
