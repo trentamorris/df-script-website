@@ -193,7 +193,7 @@ export function GalaxyLogo({
         if (s) {
           s.glistenProgress = 0.01;
           s.glistenDuration = 45 + Math.floor(Math.random() * 25);
-          s.glistenScale = 1.7; // Obvious, luminous flare size multiplier
+          s.glistenScale = 1.25; // Subtle, refined flare size multiplier
         }
       }
     };
@@ -390,8 +390,8 @@ export function GalaxyLogo({
         // Diffraction flare when glisten is active: elegant 4-pointed diamond star
         if (glistenCurve > 0.05) {
           const flareMult = p.glistenScale ?? 1;
-          const outerR = renderSize * (4.2 + glistenCurve * 7.8) * flareMult;
-          const waistR = Math.max(0.7, renderSize * (0.35 + glistenCurve * 0.25) * flareMult);
+          const outerR = renderSize * (2.8 + glistenCurve * 4.8) * flareMult;
+          const waistR = Math.max(0.5, renderSize * (0.28 + glistenCurve * 0.18) * flareMult);
 
           ctx.save();
 
