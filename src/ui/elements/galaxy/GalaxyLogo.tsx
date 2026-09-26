@@ -13,10 +13,13 @@ export function GalaxyLogo({
   className = "",
   repelRadius = 75,
   repelStrength = 0.4,
+  triggerPulse,
 }: GalaxyLogoProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const mouseStateRef = useCanvasMouse(canvasRef, true);
+  const lastTriggerRef = React.useRef<number | undefined>(triggerPulse);
+  const pulseStarsRef = React.useRef<() => void>(() => {});
 
   // Subtle 3D tilt angles for mouse hover (fixed orientation, no free spinning)
   const tiltRef = React.useRef({
@@ -175,6 +178,24 @@ export function GalaxyLogo({
 
     const handleResize = () => initScene();
     window.addEventListener("resize", handleResize);
+
+    // Function to trigger a dramatic constellation pulse across the letters
+    pulseStarsRef.current = () => {
+      if (stars.length === 0) return;
+      // Pick 5 to 7 stars dispersed across different letters
+      const count = 5 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i++) {
+        // Divide stars into segments to guarantee spread across the whole word
+        const segmentStart = Math.floor((i / count) * stars.length);
+        const segmentEnd = Math.floor(((i + 1) / count) * stars.length);
+        const index = segmentStart + Math.floor(Math.random() * Math.max(1, segmentEnd - segmentStart));
+        const s = stars[index];
+        if (s) {
+          s.glistenProgress = 0.01;
+          s.glistenDuration = 38 + Math.floor(Math.random() * 24);
+        }
+      }
+    };
 
     let time = 0;
     let ticksSinceLastGlisten = 0;
@@ -427,6 +448,13 @@ export function GalaxyLogo({
       cancelAnimationFrame(animationFrameId);
     };
   }, [text, repelRadius, repelStrength, mouseStateRef]);
+
+  React.useEffect(() => {
+    if (triggerPulse !== undefined && triggerPulse !== lastTriggerRef.current) {
+      lastTriggerRef.current = triggerPulse;
+      pulseStarsRef.current();
+    }
+  }, [triggerPulse]);
 
   return (
     <div
