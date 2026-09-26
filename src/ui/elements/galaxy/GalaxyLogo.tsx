@@ -367,32 +367,51 @@ export function GalaxyLogo({
         // Diffraction flare when glisten is active
         if (glistenCurve > 0.05) {
           const flareLength = renderSize * (3.5 + glistenCurve * 6.5);
+          ctx.save();
+          ctx.lineCap = "round";
           ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 0.8 * scale;
+
+          // Primary cross rays (+ shape)
+          ctx.lineWidth = Math.max(0.7, 0.9 * scale);
           ctx.globalAlpha = glistenCurve * 0.85;
 
+          // Horizontal ray
           ctx.beginPath();
           ctx.moveTo(p.projX - flareLength, p.projY);
           ctx.lineTo(p.projX + flareLength, p.projY);
-          ctx.moveTo(p.projX, p.projY - flareLength);
-          ctx.lineTo(p.projX + flareLength, p.projY);
           ctx.stroke();
 
-          const diag = flareLength * 0.35;
-          ctx.lineWidth = 0.5 * scale;
+          // Vertical ray
+          ctx.beginPath();
+          ctx.moveTo(p.projX, p.projY - flareLength);
+          ctx.lineTo(p.projX, p.projY + flareLength);
+          ctx.stroke();
+
+          // Secondary diagonal rays (x shape) - symmetrical and passing cleanly through center
+          const diag = flareLength * 0.42;
+          ctx.lineWidth = Math.max(0.5, 0.6 * scale);
           ctx.globalAlpha = glistenCurve * 0.5;
+
+          // Diagonal 1 (\)
           ctx.beginPath();
           ctx.moveTo(p.projX - diag, p.projY - diag);
           ctx.lineTo(p.projX + diag, p.projY + diag);
-          ctx.moveTo(p.projX + diag, p.projY - diag);
-          ctx.lineTo(p.projX - diag, p.projY + diag);
           ctx.stroke();
 
+          // Diagonal 2 (/)
+          ctx.beginPath();
+          ctx.moveTo(p.projX - diag, p.projY + diag);
+          ctx.lineTo(p.projX + diag, p.projY - diag);
+          ctx.stroke();
+
+          // Central circular core glow
           ctx.beginPath();
           ctx.arc(p.projX, p.projY, renderSize * (1 + glistenCurve * 0.8), 0, Math.PI * 2);
           ctx.fillStyle = "#ffffff";
           ctx.globalAlpha = glistenCurve * 0.9;
           ctx.fill();
+
+          ctx.restore();
         }
       }
 
