@@ -17,7 +17,7 @@ export function GalaxyLogo({
 }: GalaxyLogoProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const mouseStateRef = useCanvasMouse(canvasRef, true);
+  const mouseStateRef = useCanvasMouse(canvasRef, false);
   const lastTriggerRef = React.useRef<number | undefined>(triggerPulse);
   const pulseStarsRef = React.useRef<() => void>(() => {});
 
@@ -42,22 +42,26 @@ export function GalaxyLogo({
 
     const initScene = () => {
       const rect = container.getBoundingClientRect();
-      const width = Math.max(rect.width, 360);
-      const height = Math.max(rect.height, 120);
+      const logoWidth = Math.max(rect.width, 360);
+      const logoHeight = Math.max(rect.height, 120);
 
-      setupHiDpiCanvas(canvas, ctx, width, height);
+      // Canvas matches full window viewport
+      const canvasWidth = window.innerWidth;
+      const canvasHeight = window.innerHeight;
+
+      setupHiDpiCanvas(canvas, ctx, canvasWidth, canvasHeight);
 
       // Create an offscreen canvas to sample text pixel positions accurately
       const offscreen = document.createElement("canvas");
-      offscreen.width = width;
-      offscreen.height = height;
+      offscreen.width = logoWidth;
+      offscreen.height = logoHeight;
       const offCtx = offscreen.getContext("2d");
       if (!offCtx) return;
 
-      let fontSize = Math.min(Math.round(height * 0.72), 96);
+      let fontSize = Math.min(Math.round(logoHeight * 0.72), 96);
       offCtx.font = `700 ${fontSize}px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
       const textWidth = offCtx.measureText(text).width;
-      const targetMaxWidth = width * 0.92;
+      const targetMaxWidth = logoWidth * 0.92;
 
       if (textWidth > targetMaxWidth) {
         fontSize = Math.floor(fontSize * (targetMaxWidth / textWidth));
@@ -67,41 +71,44 @@ export function GalaxyLogo({
       offCtx.textAlign = "center";
       offCtx.textBaseline = "middle";
       offCtx.fillStyle = "#ffffff";
-      offCtx.fillText(text, width / 2, height / 2 + 2);
+      offCtx.fillText(text, logoWidth / 2, logoHeight / 2 + 2);
 
-      const imgData = offCtx.getImageData(0, 0, width, height);
+      const imgData = offCtx.getImageData(0, 0, logoWidth, logoHeight);
       const data = imgData.data;
 
       stars.length = 0;
       startTime = null;
 
-      const centerX = width / 2;
-      const centerY = height / 2;
+      // Exact viewport location of the container
+      const originBoxX = rect.left;
+      const originBoxY = rect.top;
+      const centerTargetX = originBoxX + logoWidth / 2;
+      const centerTargetY = originBoxY + logoHeight / 2;
 
       // Crisp 3px sampling grid
       const step = 3;
-      for (let y = 0; y < height; y += step) {
-        for (let x = 0; x < width; x += step) {
-          const index = (y * width + x) * 4;
+      for (let y = 0; y < logoHeight; y += step) {
+        for (let x = 0; x < logoWidth; x += step) {
+          const index = (y * logoWidth + x) * 4;
           const alpha = data[index + 3];
 
           if (alpha > 35) {
-            const originX = x + (Math.random() - 0.5) * 1.4;
-            const originY = y + (Math.random() - 0.5) * 1.4;
-            // Volumetric subtle depth
+            const originX = originBoxX + x + (Math.random() - 0.5) * 1.4;
+            const originY = originBoxY + y + (Math.random() - 0.5) * 1.4;
             const originZ = (Math.random() - 0.5) * 20;
 
-            // Astra Intro Formation: starts widely dispersed along spiral outer space
+            // Astra Intro Formation: starts far outside the entire browser window
             const spiralAngle = Math.random() * Math.PI * 4;
-            const disperseRadius = Math.max(width, height) * (0.65 + Math.random() * 0.85);
-            const startX = centerX + Math.cos(spiralAngle) * disperseRadius;
-            const startY = centerY + Math.sin(spiralAngle) * disperseRadius * 0.65;
-            const startZ = (Math.random() - 0.5) * 220;
+            // Radius reaches well past the outer viewport edges
+            const disperseRadius = Math.max(canvasWidth, canvasHeight) * (0.65 + Math.random() * 0.6);
+            const startX = centerTargetX + Math.cos(spiralAngle) * disperseRadius;
+            const startY = centerTargetY + Math.sin(spiralAngle) * disperseRadius * 0.75;
+            const startZ = (Math.random() - 0.5) * 350;
 
             // Staggered convergence wave across the word length
-            const normalizedX = originX / width;
-            const buildDelay = normalizedX * 380 + Math.random() * 260; // 0 - 640ms delay
-            const buildDuration = 850 + Math.random() * 450; // 850 - 1300ms smooth gathering
+            const normalizedX = x / logoWidth;
+            const buildDelay = normalizedX * 450 + Math.random() * 280; // 0 - 730ms delay
+            const buildDuration = 950 + Math.random() * 450; // 950 - 1400ms smooth celestial gathering
 
             const isBrightStar = Math.random() < 0.15;
 
@@ -144,10 +151,10 @@ export function GalaxyLogo({
         const originZ = (Math.random() - 0.5) * 60;
 
         const spiralAngle = Math.random() * Math.PI * 4;
-        const disperseRadius = Math.max(width, height) * (0.8 + Math.random() * 0.8);
-        const startX = centerX + Math.cos(spiralAngle) * disperseRadius;
-        const startY = centerY + Math.sin(spiralAngle) * disperseRadius * 0.65;
-        const startZ = (Math.random() - 0.5) * 250;
+        const disperseRadius = Math.max(canvasWidth, canvasHeight) * (0.7 + Math.random() * 0.55);
+        const startX = centerTargetX + Math.cos(spiralAngle) * disperseRadius;
+        const startY = centerTargetY + Math.sin(spiralAngle) * disperseRadius * 0.75;
+        const startZ = (Math.random() - 0.5) * 380;
 
         stars.push({
           originX,
@@ -157,7 +164,7 @@ export function GalaxyLogo({
           startY,
           startZ,
           buildDelay: Math.random() * 500,
-          buildDuration: 1000 + Math.random() * 500,
+          buildDuration: 1100 + Math.random() * 450,
           x: startX,
           y: startY,
           z: startZ,
@@ -224,23 +231,30 @@ export function GalaxyLogo({
         }
       }
 
+      const canvasWidth = window.innerWidth;
+      const canvasHeight = window.innerHeight;
       const rect = container.getBoundingClientRect();
-      const width = Math.max(rect.width, 360);
-      const height = Math.max(rect.height, 120);
-      const centerX = width / 2;
-      const centerY = height / 2;
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
 
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
       const { mouseX, mouseY, isHovered } = mouseStateRef.current;
       const tilt = tiltRef.current;
 
+      // Detect whether mouse is in proximity of the logo area
+      const isLogoHovered = isHovered &&
+        mouseX >= rect.left - 40 &&
+        mouseX <= rect.right + 40 &&
+        mouseY >= rect.top - 30 &&
+        mouseY <= rect.bottom + 30;
+
       // Astra Hover Behavior: subtle camera parallax tilt without spinning
-      if (isHovered) {
-        const normX = (mouseX - centerX) / (width * 0.5);
-        const normY = (mouseY - centerY) / (height * 0.5);
-        tilt.targetYaw = normX * 0.12; // Gentle ~7 degree tilt max
-        tilt.targetPitch = -normY * 0.10;
+      if (isLogoHovered) {
+        const normX = (mouseX - centerX) / (rect.width * 0.5);
+        const normY = (mouseY - centerY) / (rect.height * 0.5);
+        tilt.targetYaw = Math.max(-0.14, Math.min(0.14, normX * 0.12));
+        tilt.targetPitch = Math.max(-0.12, Math.min(0.12, -normY * 0.10));
       } else {
         // Return gracefully to flat center when not hovering
         tilt.targetYaw = 0;
@@ -294,7 +308,7 @@ export function GalaxyLogo({
         const driftY = assembledY + Math.sin(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
 
         // Cursor dispersion force on hover
-        const force = isHovered && assembleProgress > 0.8
+        const force = isLogoHovered && assembleProgress > 0.8
           ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.35)
           : { fx: 0, fy: 0 };
 
@@ -356,7 +370,7 @@ export function GalaxyLogo({
 
         // Calculate proximity to cursor for Astra localized depth illumination on hover
         let hoverGlow = 0;
-        if (isHovered) {
+        if (isLogoHovered) {
           const dx = p.projX - mouseX;
           const dy = p.projY - mouseY;
           const dist = Math.hypot(dx, dy);
@@ -457,7 +471,7 @@ export function GalaxyLogo({
     >
       <canvas
         ref={canvasRef}
-        className="w-full h-full cursor-pointer block"
+        className="fixed inset-0 w-screen h-screen pointer-events-none z-10 block"
       />
     </div>
   );
