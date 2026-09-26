@@ -14,10 +14,42 @@ export function GalaxyLogo({
   className = "",
   repelRadius = 90,
   repelStrength = 0.6,
+  triggerDisperse = 0,
 }: GalaxyLogoProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const mouseStateRef = useCanvasMouse(canvasRef, true);
+  const triggerRef = React.useRef(triggerDisperse);
+  const starsRef = React.useRef<GalaxyLogoStar[]>([]);
+
+  // Trigger cosmic blast shockwave when triggerDisperse prop increments
+  React.useEffect(() => {
+    if (triggerDisperse > 0 && triggerDisperse !== triggerRef.current) {
+      triggerRef.current = triggerDisperse;
+      const stars = starsRef.current;
+      const len = stars.length;
+      if (len > 0) {
+        let sumX = 0;
+        let sumY = 0;
+        for (let i = 0; i < len; i++) {
+          sumX += stars[i].originX;
+          sumY += stars[i].originY;
+        }
+        const cX = sumX / len;
+        const cY = sumY / len;
+
+        for (let i = 0; i < len; i++) {
+          const s = stars[i];
+          const angle = Math.atan2(s.y - cY, s.x - cX) + (Math.random() - 0.5) * 0.9;
+          const blastSpeed = 7 + Math.random() * 16;
+          s.vx = Math.cos(angle) * blastSpeed;
+          s.vy = Math.sin(angle) * blastSpeed;
+          s.glistenProgress = 0.01;
+          s.glistenDuration = 48;
+        }
+      }
+    }
+  }, [triggerDisperse]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,6 +60,7 @@ export function GalaxyLogo({
 
     let animationFrameId: number;
     const stars: GalaxyLogoStar[] = [];
+    starsRef.current = stars;
 
     const initScene = () => {
       const rect = container.getBoundingClientRect();
@@ -173,7 +206,8 @@ export function GalaxyLogo({
           ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 16, 0.38)
           : { fx: 0, fy: 0 };
 
-        applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.07, 0.84);
+        // Spring physics: stiffness 0.045 and friction 0.88 for smooth cosmic explosion & reformation
+        applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.045, 0.88);
 
         // Decay glisten flare via smooth bell-curve intensity using sin^1.6(progress * PI)
         let glistenCurve = 0;

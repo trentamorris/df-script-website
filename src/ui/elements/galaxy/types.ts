@@ -47,6 +47,7 @@ export interface GalaxyLogoProps {
   className?: string;
   repelRadius?: number;
   repelStrength?: number;
+  triggerDisperse?: number;
 }
 
 export interface ShootingStar {

@@ -109,14 +109,14 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: diamondSheen 13.5s cubic-bezier(0.38, 0, 0.22, 1) infinite;
+  animation: diamondSheen 18s cubic-bezier(0.38, 0, 0.22, 1) infinite;
 }
 
 @keyframes diamondSheen {
   0% {
     background-position: 140% 0;
   }
-  32% {
+  30% {
     background-position: -40% 0;
   }
   100% {
