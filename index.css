@@ -83,4 +83,41 @@ body {
 .h-viewport-content {
   height: calc(100vh - 53px); /* Total viewport minus Header height */
 }
+
+/* Reusable Diamond Glisten utility for text */
+.diamond-glisten {
+  --base-color: #9c9c9c;
+  --glint-color: #ffffff;
+  --glint-prism: #dbeafe;
+  
+  background: linear-gradient(
+    115deg,
+    var(--base-color) 0%,
+    var(--base-color) 38%,
+    var(--glint-prism) 47%,
+    var(--glint-color) 50%,
+    var(--glint-prism) 53%,
+    var(--base-color) 62%,
+    var(--base-color) 100%
+  );
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: diamondSheen 9.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  display: inline-block;
+}
+
+@keyframes diamondSheen {
+  0% {
+    background-position: 130% 0;
+  }
+  26% {
+    background-position: -30% 0;
+  }
+  100% {
+    background-position: -30% 0;
+  }
+}
 

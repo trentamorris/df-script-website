@@ -19,8 +19,8 @@ export function Home() {
 
           <GalaxyLogo text="df-script" className="animate-fade-in" />
 
-          <p className="text-sm md:text-base text-[#9c9c9c] max-w-lg leading-relaxed">
-            A zero-dependency, high-performance, expression-based DataFrame engine designed for lighting-fast data processing in JavaScript and TypeScript.
+          <p className="text-sm md:text-base diamond-glisten max-w-lg leading-relaxed select-none">
+            A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.
           </p>
 
           {/* Quick Install Pill with subtle cosmic hover border */}
