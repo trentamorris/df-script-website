@@ -509,7 +509,6 @@ export function GalaxyLogo({
       ref={containerRef}
       onClick={(e) => retriggerIntroRef.current(e.clientX, e.clientY)}
       className={`relative w-full max-w-2xl h-24 sm:h-32 md:h-36 flex items-center justify-center select-none cursor-pointer group ${className}`}
-      title="Click constellation to scatter and gather"
     >
       <canvas
         ref={canvasRef}
