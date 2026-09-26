@@ -24,12 +24,12 @@ export function Home() {
 
           <GalaxyLogo text="df-script" className="animate-fade-in" triggerPulse={copyPulse} />
 
-          <p className="text-sm md:text-base diamond-glisten max-w-lg leading-relaxed select-none">
+          <p className="text-sm md:text-base diamond-glisten max-w-lg leading-relaxed select-none animate-hero-desc">
             A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.
           </p>
 
           {/* Quick Install Pill with subtle cosmic hover border */}
-          <div className="group flex items-center justify-between gap-4 p-2 px-4 rounded bg-[#0a0a0a]/90 backdrop-blur-sm border border-[#1e1e1e] hover:border-sky-500/30 transition-all duration-300 font-mono text-[11px] text-[#e5e5e5] w-full max-w-sm mt-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] hover:shadow-[0_0_25px_-5px_rgba(56,189,248,0.12)]">
+          <div className="group flex items-center justify-between gap-4 p-2 px-4 rounded bg-[#0a0a0a]/90 backdrop-blur-sm border border-[#1e1e1e] hover:border-sky-500/30 transition-all duration-300 font-mono text-[11px] text-[#e5e5e5] w-full max-w-sm mt-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] hover:shadow-[0_0_25px_-5px_rgba(56,189,248,0.12)] animate-hero-pill">
             <div className="flex items-center gap-2">
               <span className="text-[#5c5c5c] group-hover:text-sky-400/80 transition-colors select-none">$</span>
               <span className="diamond-glisten [--base-color:#e5e5e5] [--glint-color:#ffffff] [--glint-prism:#bae6fd]">npm install df-script</span>

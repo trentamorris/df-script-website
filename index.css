@@ -124,4 +124,28 @@ body {
   }
 }
 
+/* Cinematic hero text entrance synchronized with constellation assembly */
+@keyframes heroEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-hero-desc {
+  opacity: 0;
+  animation: heroEntrance 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+}
+
+.animate-hero-pill {
+  opacity: 0;
+  animation: heroEntrance 1.1s cubic-bezier(0.16, 1, 0.3, 1) 1.25s forwards;
+}
+
 

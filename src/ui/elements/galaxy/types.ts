@@ -12,6 +12,8 @@ export interface GalaxyLogoStar extends BaseStar {
   originX: number;
   originY: number;
   originZ: number;
+  localOffsetX: number;
+  localOffsetY: number;
   z: number;
   startX: number;
   startY: number;

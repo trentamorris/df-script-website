@@ -20,6 +20,7 @@ export function GalaxyLogo({
   const mouseStateRef = useCanvasMouse(canvasRef, false);
   const lastTriggerRef = React.useRef<number | undefined>(triggerPulse);
   const pulseStarsRef = React.useRef<() => void>(() => {});
+  const retriggerIntroRef = React.useRef<() => void>(() => {});
 
   // Subtle 3D tilt angles for mouse hover (fixed orientation, no free spinning)
   const tiltRef = React.useRef({
@@ -39,17 +40,21 @@ export function GalaxyLogo({
     let animationFrameId: number;
     const stars: GalaxyLogoStar[] = [];
     let startTime: number | null = null;
+    let canvasW = window.innerWidth;
+    let canvasH = window.innerHeight;
+
+    const setupCanvasResolution = () => {
+      canvasW = window.innerWidth;
+      canvasH = window.innerHeight;
+      setupHiDpiCanvas(canvas, ctx, canvasW, canvasH);
+    };
 
     const initScene = () => {
+      setupCanvasResolution();
+
       const rect = container.getBoundingClientRect();
       const logoWidth = Math.max(rect.width, 360);
       const logoHeight = Math.max(rect.height, 120);
-
-      // Canvas matches full window viewport
-      const canvasWidth = window.innerWidth;
-      const canvasHeight = window.innerHeight;
-
-      setupHiDpiCanvas(canvas, ctx, canvasWidth, canvasHeight);
 
       // Create an offscreen canvas to sample text pixel positions accurately
       const offscreen = document.createElement("canvas");
@@ -79,11 +84,9 @@ export function GalaxyLogo({
       stars.length = 0;
       startTime = null;
 
-      // Exact viewport location of the container
-      const originBoxX = rect.left;
-      const originBoxY = rect.top;
-      const centerTargetX = originBoxX + logoWidth / 2;
-      const centerTargetY = originBoxY + logoHeight / 2;
+      // Center of the container box
+      const centerTargetX = rect.left + logoWidth / 2;
+      const centerTargetY = rect.top + logoHeight / 2;
 
       // Crisp 3px sampling grid
       const step = 3;
@@ -93,29 +96,31 @@ export function GalaxyLogo({
           const alpha = data[index + 3];
 
           if (alpha > 35) {
-            const originX = originBoxX + x + (Math.random() - 0.5) * 1.4;
-            const originY = originBoxY + y + (Math.random() - 0.5) * 1.4;
+            // Local offsets relative to container center
+            const localOffsetX = x - logoWidth / 2 + (Math.random() - 0.5) * 1.4;
+            const localOffsetY = y - logoHeight / 2 + (Math.random() - 0.5) * 1.4;
             const originZ = (Math.random() - 0.5) * 20;
 
             // Astra Intro Formation: starts far outside the entire browser window
             const spiralAngle = Math.random() * Math.PI * 4;
-            // Radius reaches well past the outer viewport edges
-            const disperseRadius = Math.max(canvasWidth, canvasHeight) * (0.65 + Math.random() * 0.6);
+            const disperseRadius = Math.max(canvasW, canvasH) * (0.65 + Math.random() * 0.6);
             const startX = centerTargetX + Math.cos(spiralAngle) * disperseRadius;
             const startY = centerTargetY + Math.sin(spiralAngle) * disperseRadius * 0.75;
             const startZ = (Math.random() - 0.5) * 350;
 
             // Staggered convergence wave across the word length
             const normalizedX = x / logoWidth;
-            const buildDelay = normalizedX * 450 + Math.random() * 280; // 0 - 730ms delay
-            const buildDuration = 950 + Math.random() * 450; // 950 - 1400ms smooth celestial gathering
+            const buildDelay = normalizedX * 450 + Math.random() * 280;
+            const buildDuration = 950 + Math.random() * 450;
 
             const isBrightStar = Math.random() < 0.15;
 
             stars.push({
-              originX,
-              originY,
+              originX: centerTargetX + localOffsetX,
+              originY: centerTargetY + localOffsetY,
               originZ,
+              localOffsetX,
+              localOffsetY,
               startX,
               startY,
               startZ,
@@ -146,20 +151,22 @@ export function GalaxyLogo({
         const angle = Math.random() * Math.PI * 2;
         const dist = 6 + Math.random() * 22;
 
-        const originX = ref.originX + Math.cos(angle) * dist;
-        const originY = ref.originY + Math.sin(angle) * dist;
+        const localOffsetX = ref.localOffsetX + Math.cos(angle) * dist;
+        const localOffsetY = ref.localOffsetY + Math.sin(angle) * dist;
         const originZ = (Math.random() - 0.5) * 60;
 
         const spiralAngle = Math.random() * Math.PI * 4;
-        const disperseRadius = Math.max(canvasWidth, canvasHeight) * (0.7 + Math.random() * 0.55);
+        const disperseRadius = Math.max(canvasW, canvasH) * (0.7 + Math.random() * 0.55);
         const startX = centerTargetX + Math.cos(spiralAngle) * disperseRadius;
         const startY = centerTargetY + Math.sin(spiralAngle) * disperseRadius * 0.75;
         const startZ = (Math.random() - 0.5) * 380;
 
         stars.push({
-          originX,
-          originY,
+          originX: centerTargetX + localOffsetX,
+          originY: centerTargetY + localOffsetY,
           originZ,
+          localOffsetX,
+          localOffsetY,
           startX,
           startY,
           startZ,
@@ -183,16 +190,41 @@ export function GalaxyLogo({
 
     initScene();
 
-    const handleResize = () => initScene();
-    window.addEventListener("resize", handleResize);
+    // ResizeObserver tracks container movement from sidebar expand/collapse in real time
+    const resizeObserver = new ResizeObserver(() => {
+      setupCanvasResolution();
+    });
+    resizeObserver.observe(container);
+    window.addEventListener("resize", setupCanvasResolution);
 
-    // Function to trigger a dramatic constellation pulse across the letters
+    // Retrigger intro gathering on logo click for interactive delight
+    retriggerIntroRef.current = () => {
+      if (stars.length === 0) return;
+      startTime = performance.now();
+      const rect = container.getBoundingClientRect();
+      const centerTargetX = rect.left + rect.width / 2;
+      const centerTargetY = rect.top + rect.height / 2;
+
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        const spiralAngle = Math.random() * Math.PI * 4;
+        const disperseRadius = Math.max(canvasW, canvasH) * (0.65 + Math.random() * 0.55);
+        s.startX = centerTargetX + Math.cos(spiralAngle) * disperseRadius;
+        s.startY = centerTargetY + Math.sin(spiralAngle) * disperseRadius * 0.75;
+        s.startZ = (Math.random() - 0.5) * 350;
+        s.x = s.startX;
+        s.y = s.startY;
+        s.z = s.startZ;
+        s.buildDelay = Math.random() * 320;
+        s.buildDuration = 900 + Math.random() * 400;
+      }
+    };
+
+    // Trigger dramatic constellation pulse on copy
     pulseStarsRef.current = () => {
       if (stars.length === 0) return;
-      // Pick 8 to 11 stars dispersed across different letters
       const count = 8 + Math.floor(Math.random() * 4);
       for (let i = 0; i < count; i++) {
-        // Divide stars into segments to guarantee spread across the whole word
         const segmentStart = Math.floor((i / count) * stars.length);
         const segmentEnd = Math.floor(((i + 1) / count) * stars.length);
         const index = segmentStart + Math.floor(Math.random() * Math.max(1, segmentEnd - segmentStart));
@@ -200,7 +232,7 @@ export function GalaxyLogo({
         if (s) {
           s.glistenProgress = 0.01;
           s.glistenDuration = 45 + Math.floor(Math.random() * 25);
-          s.glistenScale = 1.25; // Subtle, refined flare size multiplier
+          s.glistenScale = 1.25;
         }
       }
     };
@@ -231,37 +263,34 @@ export function GalaxyLogo({
         }
       }
 
-      const canvasWidth = window.innerWidth;
-      const canvasHeight = window.innerHeight;
+      // Read live container bounding box every frame so sidebar animation is 100% fluid
       const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+      const currentCenterX = rect.left + rect.width / 2;
+      const currentCenterY = rect.top + rect.height / 2;
 
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.clearRect(0, 0, canvasW, canvasH);
 
       const { mouseX, mouseY, isHovered } = mouseStateRef.current;
       const tilt = tiltRef.current;
 
-      // Detect whether mouse is in proximity of the logo area
+      // Proximity detection to logo
       const isLogoHovered = isHovered &&
         mouseX >= rect.left - 40 &&
         mouseX <= rect.right + 40 &&
         mouseY >= rect.top - 30 &&
         mouseY <= rect.bottom + 30;
 
-      // Astra Hover Behavior: subtle camera parallax tilt without spinning
+      // Astra Hover Behavior: subtle camera parallax tilt
       if (isLogoHovered) {
-        const normX = (mouseX - centerX) / (rect.width * 0.5);
-        const normY = (mouseY - centerY) / (rect.height * 0.5);
+        const normX = (mouseX - currentCenterX) / (rect.width * 0.5);
+        const normY = (mouseY - currentCenterY) / (rect.height * 0.5);
         tilt.targetYaw = Math.max(-0.14, Math.min(0.14, normX * 0.12));
         tilt.targetPitch = Math.max(-0.12, Math.min(0.12, -normY * 0.10));
       } else {
-        // Return gracefully to flat center when not hovering
         tilt.targetYaw = 0;
         tilt.targetPitch = 0;
       }
 
-      // Smooth exponential lerp damping for camera tilt
       tilt.yaw += (tilt.targetYaw - tilt.yaw) * 0.08;
       tilt.pitch += (tilt.targetPitch - tilt.pitch) * 0.08;
 
@@ -273,37 +302,37 @@ export function GalaxyLogo({
       const cameraFov = 460;
       const len = stars.length;
 
-      // 1. Calculate physics, intro convergence curve, and 3D camera projection
+      // 1. Calculate physics, dynamic container anchoring, and 3D camera projection
       for (let i = 0; i < len; i++) {
         const p = stars[i];
 
-        // Intro build animation progression (dispersed space -> letter target)
+        // Dynamically update star origin with live container center (follows sidebar expansion/collapse instantly)
+        const currentOriginX = currentCenterX + p.localOffsetX;
+        const currentOriginY = currentCenterY + p.localOffsetY;
+
+        // Intro build animation progression
         const starAge = elapsedMs - p.buildDelay;
         let assembleProgress = 1;
         if (starAge < 0) {
           assembleProgress = 0;
         } else if (starAge < p.buildDuration) {
           const t = starAge / p.buildDuration;
-          // Smooth cubic ease-out for celestial deceleration
           assembleProgress = 1 - Math.pow(1 - t, 3);
         }
 
-        // Curved spiral convergence path during intro
         const spiralRotation = (1 - assembleProgress) * 1.6;
-        const currentTargetX = p.startX + (p.originX - p.startX) * assembleProgress;
-        const currentTargetY = p.startY + (p.originY - p.startY) * assembleProgress;
+        const currentTargetX = p.startX + (currentOriginX - p.startX) * assembleProgress;
+        const currentTargetY = p.startY + (currentOriginY - p.startY) * assembleProgress;
         const currentTargetZ = p.startZ + (p.originZ - p.startZ) * assembleProgress;
 
-        // Apply spiral curvature during build
         const rotCos = Math.cos(spiralRotation);
         const rotSin = Math.sin(spiralRotation);
-        const relToDestX = currentTargetX - p.originX;
-        const relToDestY = currentTargetY - p.originY;
+        const relToDestX = currentTargetX - currentOriginX;
+        const relToDestY = currentTargetY - currentOriginY;
 
-        const assembledX = p.originX + relToDestX * rotCos - relToDestY * rotSin;
-        const assembledY = p.originY + relToDestX * rotSin + relToDestY * rotCos;
+        const assembledX = currentOriginX + relToDestX * rotCos - relToDestY * rotSin;
+        const assembledY = currentOriginY + relToDestX * rotSin + relToDestY * rotCos;
 
-        // Subtle cosmic drift once assembled
         const driftX = assembledX + Math.cos(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
         const driftY = assembledY + Math.sin(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
 
@@ -312,12 +341,11 @@ export function GalaxyLogo({
           ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.35)
           : { fx: 0, fy: 0 };
 
-        // Spring physics: stiffness 0.06 and friction 0.86
         applySpringPhysics(p, driftX, driftY, force.fx, force.fy, 0.06, 0.86);
 
         // Center relative coords for 3D tilt
-        const relX = p.x - centerX;
-        const relY = p.y - centerY;
+        const relX = p.x - currentCenterX;
+        const relY = p.y - currentCenterY;
         const relZ = currentTargetZ;
 
         // 3D camera tilt
@@ -331,8 +359,8 @@ export function GalaxyLogo({
         const depth = cameraFov + z2;
         const scale = cameraFov / Math.max(30, depth);
 
-        p.projX = centerX + x1 * scale;
-        p.projY = centerY + y2 * scale;
+        p.projX = currentCenterX + x1 * scale;
+        p.projY = currentCenterY + y2 * scale;
         p.projZ = z2;
         p.projScale = scale;
 
@@ -368,7 +396,7 @@ export function GalaxyLogo({
 
         const twinkle = 0.88 + 0.12 * Math.sin(time * 1.6 + p.phase);
 
-        // Calculate proximity to cursor for Astra localized depth illumination on hover
+        // Proximity illumination on hover
         let hoverGlow = 0;
         if (isLogoHovered) {
           const dx = p.projX - mouseX;
@@ -385,7 +413,7 @@ export function GalaxyLogo({
           p.baseAlpha * twinkle * depthAlpha + hoverGlow + glistenCurve * 0.7
         );
 
-        // Render star point
+        // Render point star
         ctx.beginPath();
         ctx.arc(p.projX, p.projY, renderSize * (1 + hoverGlow * 0.5), 0, Math.PI * 2);
         ctx.fillStyle = p.color;
@@ -452,7 +480,8 @@ export function GalaxyLogo({
     animationFrameId = requestAnimationFrame(render);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", setupCanvasResolution);
       cancelAnimationFrame(animationFrameId);
     };
   }, [text, repelRadius, repelStrength, mouseStateRef]);
@@ -467,7 +496,9 @@ export function GalaxyLogo({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full max-w-2xl h-24 sm:h-32 md:h-36 flex items-center justify-center select-none ${className}`}
+      onClick={() => retriggerIntroRef.current()}
+      className={`relative w-full max-w-2xl h-24 sm:h-32 md:h-36 flex items-center justify-center select-none cursor-pointer group ${className}`}
+      title="Click constellation to reassemble"
     >
       <canvas
         ref={canvasRef}
