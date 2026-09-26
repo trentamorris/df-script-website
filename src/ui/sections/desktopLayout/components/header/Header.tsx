@@ -15,6 +15,7 @@ export function Header({
 }: HeaderProps) {
   const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = React.useState(false);
   const headerDropdownRef = React.useRef<HTMLDivElement>(null);
+  const isHomePage = path === "/" || (!path.startsWith("/docs") && path !== ABOUT_PATH && path !== SUPPORT_PATH && path !== NOTEBOOK_PATH);
 
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -39,7 +40,10 @@ export function Header({
   }, []);
 
   return (
-    <header className="flex items-center justify-between w-full p-4 border-b border-transparent hover:border-border-dark z-20 shrink-0 bg-transparent hover:bg-[#060606]/90 backdrop-blur-none hover:backdrop-blur-md sticky top-0 px-6 md:px-12 select-none transition-all duration-300">
+    <header className={`flex items-center justify-between w-full p-4 border-b z-20 shrink-0 sticky top-0 px-6 md:px-12 select-none transition-all duration-300 ${isHomePage
+      ? "border-transparent hover:border-border-dark bg-transparent hover:bg-[#060606]/90 backdrop-blur-none hover:backdrop-blur-md"
+      : "border-border-dark bg-[#060606]/90 backdrop-blur-md"
+      }`}>
       {/* Left Side: Menu Trigger & App Links */}
       <div className="flex items-center gap-6 font-outfit text-[11px] tracking-widest text-text-muted select-none">
         <button

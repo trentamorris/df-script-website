@@ -21,10 +21,11 @@ export function DesktopLayout({
   operationsIndex
 }: DesktopLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  const isHomePage = !isDocs && path !== ABOUT_PATH && path !== SUPPORT_PATH && path !== NOTEBOOK_PATH;
 
   return (
     <div className="h-screen w-screen flex flex-col justify-between relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased">
-      <GalaxyBackground />
+      {isHomePage && <GalaxyBackground />}
       <Header
         path={path}
         isSidebarCollapsed={isSidebarCollapsed}
