@@ -8,7 +8,6 @@ export function Home() {
 
   return (
     <>
-      <GalaxyBackground />
       {/* <MagneticParticles /> */}
       <main className="flex-grow overflow-y-auto h-full flex flex-col justify-between min-w-0 relative z-10">
 

@@ -7,6 +7,7 @@ import { Docs } from "./components/docs/Docs";
 import { Home } from "./components/home/Home";
 import { DFScriptNotebook } from "../../../df-script-notebook";
 import { getQualifiedPath } from "../../../utils/routing";
+import { GalaxyBackground } from "../../elements";
 import type { DesktopLayoutProps } from "./types";
 import { NOTEBOOK_PATH, ABOUT_PATH, SUPPORT_PATH } from "./constants";
 
@@ -23,6 +24,7 @@ export function DesktopLayout({
 
   return (
     <div className="h-screen w-screen flex flex-col justify-between relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased">
+      <GalaxyBackground />
       <Header
         path={path}
         isSidebarCollapsed={isSidebarCollapsed}
