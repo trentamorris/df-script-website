@@ -22,7 +22,7 @@ export function GalaxyLogo({
   const triggerRef = React.useRef(triggerDisperse);
   const starsRef = React.useRef<GalaxyLogoStar[]>([]);
 
-  // Trigger cosmic blast shockwave when triggerDisperse prop increments
+  // Trigger smooth cosmic dissolution & celestial reformation shockwave
   React.useEffect(() => {
     if (triggerDisperse > 0 && triggerDisperse !== triggerRef.current) {
       triggerRef.current = triggerDisperse;
@@ -40,12 +40,23 @@ export function GalaxyLogo({
 
         for (let i = 0; i < len; i++) {
           const s = stars[i];
-          const angle = Math.atan2(s.y - cY, s.x - cX) + (Math.random() - 0.5) * 0.9;
-          const blastSpeed = 7 + Math.random() * 16;
-          s.vx = Math.cos(angle) * blastSpeed;
-          s.vy = Math.sin(angle) * blastSpeed;
-          s.glistenProgress = 0.01;
-          s.glistenDuration = 48;
+          const dx = s.x - cX;
+          const dy = s.y - cY;
+          const dist = Math.hypot(dx, dy) || 1;
+          
+          // Organic vortex / spiral swirl angle
+          const swirl = 0.45;
+          const radialAngle = Math.atan2(dy, dx) + swirl * (Math.random() < 0.5 ? 1 : -1) * (0.6 + 0.4 * Math.random());
+          
+          // Graduated, elegant velocity: lighter stars scatter farther, heavier stars hold closer
+          const speed = (3.5 + Math.random() * 8.5) * (1.1 - (s.size / 3.0) * 0.4);
+          
+          s.vx += Math.cos(radialAngle) * speed;
+          s.vy += Math.sin(radialAngle) * speed;
+          
+          // Trigger a soft bloom on dissolution
+          s.glistenProgress = 0.05 + Math.random() * 0.15;
+          s.glistenDuration = 40 + Math.floor(Math.random() * 30);
         }
       }
     }
@@ -206,8 +217,8 @@ export function GalaxyLogo({
           ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 16, 0.38)
           : { fx: 0, fy: 0 };
 
-        // Spring physics: stiffness 0.045 and friction 0.88 for smooth cosmic explosion & reformation
-        applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.045, 0.88);
+        // Spring physics: stiffness 0.038 and friction 0.90 for silky smooth cosmic drift, soft deceleration & graceful return
+        applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.038, 0.90);
 
         // Decay glisten flare via smooth bell-curve intensity using sin^1.6(progress * PI)
         let glistenCurve = 0;
