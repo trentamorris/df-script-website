@@ -211,7 +211,7 @@ export function About() {
             Modern web platforms are increasingly executing complex data operations directly in the browser—including real-time dashboards, IoT sensor visualization, and interactive analytical graphs.
           </p>
           <p>
-            Importing heavy server-oriented analysis modules increases bundle sizes and slows page loads. df-script resolves this with a <strong>zero-dependency structure</strong> and a compiled bundle weight under <strong>85 KB</strong>. This makes it instantly loaded and highly optimized for edge environments.
+            Importing heavy server-oriented analysis modules increases bundle sizes and slows page loads. df-script resolves this with a <strong>zero-dependency structure</strong> and a compiled transfer weight of only <strong>43.4 KB gzipped</strong> (127.8 KB minified). This makes it instantly loaded and highly optimized for edge environments.
           </p>
 
           {/* Side-by-Side Comparison */}

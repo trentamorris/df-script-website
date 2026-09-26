@@ -54,7 +54,7 @@ export function Home() {
         {/* Footer of Hero */}
         <div className="w-full flex items-center justify-between text-[10px] font-mono text-[#5c5c5c] border-t border-[#1a1a1a] p-4 md:px-8 bg-[#060606] shrink-0 select-none">
           <span>ZERO DEPENDENCIES</span>
-          <span>&lt; 85 KB BUNDLE WEIGHT</span>
+          <span>&lt; 43.4 KB GZIPPED</span>
           <span>HIGH-PERFORMANCE DATA PIPELINES</span>
         </div>
       </main>
