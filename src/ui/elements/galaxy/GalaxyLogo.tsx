@@ -11,24 +11,19 @@ import { useCanvasMouse } from "./useCanvasMouse";
 export function GalaxyLogo({
   text = "df-script",
   className = "",
-  repelRadius = 90,
-  repelStrength = 0.6,
+  repelRadius = 75,
+  repelStrength = 0.4,
 }: GalaxyLogoProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const mouseStateRef = useCanvasMouse(canvasRef, true);
 
-  // 3D camera angles and velocities for silky Astra-style inertia
-  const orbitRef = React.useRef({
+  // Subtle 3D tilt angles for mouse hover (fixed orientation, no free spinning)
+  const tiltRef = React.useRef({
     pitch: 0,
     yaw: 0,
     targetPitch: 0,
     targetYaw: 0,
-    velPitch: 0,
-    velYaw: 0,
-    isDragging: false,
-    lastMouseX: 0,
-    lastMouseY: 0,
   });
 
   React.useEffect(() => {
@@ -40,40 +35,7 @@ export function GalaxyLogo({
 
     let animationFrameId: number;
     const stars: GalaxyLogoStar[] = [];
-
-    // Pointer drag listeners for 3D camera orbit
-    const handleMouseDown = (e: MouseEvent) => {
-      orbitRef.current.isDragging = true;
-      orbitRef.current.lastMouseX = e.clientX;
-      orbitRef.current.lastMouseY = e.clientY;
-      orbitRef.current.velPitch = 0;
-      orbitRef.current.velYaw = 0;
-    };
-
-    const handleMouseMoveWindow = (e: MouseEvent) => {
-      if (!orbitRef.current.isDragging) return;
-      const dx = e.clientX - orbitRef.current.lastMouseX;
-      const dy = e.clientY - orbitRef.current.lastMouseY;
-      orbitRef.current.lastMouseX = e.clientX;
-      orbitRef.current.lastMouseY = e.clientY;
-
-      // Astra sensitivity
-      const sensitivity = 0.0055;
-      orbitRef.current.targetYaw += dx * sensitivity;
-      orbitRef.current.targetPitch += -dy * sensitivity;
-
-      // Store velocity for release inertia
-      orbitRef.current.velYaw = dx * sensitivity;
-      orbitRef.current.velPitch = -dy * sensitivity;
-    };
-
-    const handleMouseUpWindow = () => {
-      orbitRef.current.isDragging = false;
-    };
-
-    canvas.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mousemove", handleMouseMoveWindow);
-    window.addEventListener("mouseup", handleMouseUpWindow);
+    let startTime: number | null = null;
 
     const initScene = () => {
       const rect = container.getBoundingClientRect();
@@ -108,6 +70,10 @@ export function GalaxyLogo({
       const data = imgData.data;
 
       stars.length = 0;
+      startTime = null;
+
+      const centerX = width / 2;
+      const centerY = height / 2;
 
       // Crisp 3px sampling grid
       const step = 3;
@@ -119,17 +85,35 @@ export function GalaxyLogo({
           if (alpha > 35) {
             const originX = x + (Math.random() - 0.5) * 1.4;
             const originY = y + (Math.random() - 0.5) * 1.4;
-            // 3D depth jitter for volumetric constellation
-            const originZ = (Math.random() - 0.5) * 28;
+            // Volumetric subtle depth
+            const originZ = (Math.random() - 0.5) * 20;
+
+            // Astra Intro Formation: starts widely dispersed along spiral outer space
+            const spiralAngle = Math.random() * Math.PI * 4;
+            const disperseRadius = Math.max(width, height) * (0.65 + Math.random() * 0.85);
+            const startX = centerX + Math.cos(spiralAngle) * disperseRadius;
+            const startY = centerY + Math.sin(spiralAngle) * disperseRadius * 0.65;
+            const startZ = (Math.random() - 0.5) * 220;
+
+            // Staggered convergence wave across the word length
+            const normalizedX = originX / width;
+            const buildDelay = normalizedX * 380 + Math.random() * 260; // 0 - 640ms delay
+            const buildDuration = 850 + Math.random() * 450; // 850 - 1300ms smooth gathering
+
             const isBrightStar = Math.random() < 0.15;
 
             stars.push({
               originX,
               originY,
               originZ,
-              x: originX,
-              y: originY,
-              z: originZ,
+              startX,
+              startY,
+              startZ,
+              buildDelay,
+              buildDuration,
+              x: startX,
+              y: startY,
+              z: startZ,
               vx: 0,
               vy: 0,
               size: isBrightStar ? 1.6 + Math.random() * 1.3 : 0.8 + Math.random() * 0.9,
@@ -144,25 +128,36 @@ export function GalaxyLogo({
         }
       }
 
-      // Ambient cosmic stardust around the letters in 3D space
+      // Ambient cosmic stardust around the letters
       const ambientCount = Math.floor(stars.length * 0.08);
       for (let i = 0; i < ambientCount; i++) {
         const ref = stars[Math.floor(Math.random() * stars.length)];
         if (!ref) continue;
         const angle = Math.random() * Math.PI * 2;
-        const dist = 6 + Math.random() * 24;
+        const dist = 6 + Math.random() * 22;
 
         const originX = ref.originX + Math.cos(angle) * dist;
         const originY = ref.originY + Math.sin(angle) * dist;
-        const originZ = (Math.random() - 0.5) * 85;
+        const originZ = (Math.random() - 0.5) * 60;
+
+        const spiralAngle = Math.random() * Math.PI * 4;
+        const disperseRadius = Math.max(width, height) * (0.8 + Math.random() * 0.8);
+        const startX = centerX + Math.cos(spiralAngle) * disperseRadius;
+        const startY = centerY + Math.sin(spiralAngle) * disperseRadius * 0.65;
+        const startZ = (Math.random() - 0.5) * 250;
 
         stars.push({
           originX,
           originY,
           originZ,
-          x: originX,
-          y: originY,
-          z: originZ,
+          startX,
+          startY,
+          startZ,
+          buildDelay: Math.random() * 500,
+          buildDuration: 1000 + Math.random() * 500,
+          x: startX,
+          y: startY,
+          z: startZ,
           vx: 0,
           vy: 0,
           size: 0.5 + Math.random() * 0.7,
@@ -185,7 +180,10 @@ export function GalaxyLogo({
     let ticksSinceLastGlisten = 0;
     let nextGlistenInterval = 20 + Math.random() * 30;
 
-    const render = () => {
+    const render = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsedMs = timestamp - startTime;
+
       time += 0.025;
       ticksSinceLastGlisten++;
 
@@ -213,66 +211,80 @@ export function GalaxyLogo({
       ctx.clearRect(0, 0, width, height);
 
       const { mouseX, mouseY, isHovered } = mouseStateRef.current;
-      const orbit = orbitRef.current;
+      const tilt = tiltRef.current;
 
-      // Natural subtle idle yaw rotation
-      if (!orbit.isDragging) {
-        orbit.targetYaw += 0.0012;
-
-        // Apply release inertia with smooth exponential damping
-        orbit.targetYaw += orbit.velYaw;
-        orbit.targetPitch += orbit.velPitch;
-        orbit.velYaw *= 0.94;
-        orbit.velPitch *= 0.94;
-
-        // If hovered and not dragging, apply gentle Astra tilt parallax toward cursor
-        if (isHovered) {
-          const normX = (mouseX - centerX) / (width * 0.5);
-          const normY = (mouseY - centerY) / (height * 0.5);
-          orbit.targetYaw += normX * 0.003;
-          orbit.targetPitch += -normY * 0.003;
-        }
+      // Astra Hover Behavior: subtle camera parallax tilt without spinning
+      if (isHovered) {
+        const normX = (mouseX - centerX) / (width * 0.5);
+        const normY = (mouseY - centerY) / (height * 0.5);
+        tilt.targetYaw = normX * 0.12; // Gentle ~7 degree tilt max
+        tilt.targetPitch = -normY * 0.10;
+      } else {
+        // Return gracefully to flat center when not hovering
+        tilt.targetYaw = 0;
+        tilt.targetPitch = 0;
       }
 
-      // Clamp pitch to prevent disorienting flip
-      orbit.targetPitch = Math.max(-0.65, Math.min(0.65, orbit.targetPitch));
+      // Smooth exponential lerp damping for camera tilt
+      tilt.yaw += (tilt.targetYaw - tilt.yaw) * 0.08;
+      tilt.pitch += (tilt.targetPitch - tilt.pitch) * 0.08;
 
-      // Silky lerp damping toward target angles
-      orbit.yaw += (orbit.targetYaw - orbit.yaw) * 0.08;
-      orbit.pitch += (orbit.targetPitch - orbit.pitch) * 0.08;
+      const cosYaw = Math.cos(tilt.yaw);
+      const sinYaw = Math.sin(tilt.yaw);
+      const cosPitch = Math.cos(tilt.pitch);
+      const sinPitch = Math.sin(tilt.pitch);
 
-      const cosYaw = Math.cos(orbit.yaw);
-      const sinYaw = Math.sin(orbit.yaw);
-      const cosPitch = Math.cos(orbit.pitch);
-      const sinPitch = Math.sin(orbit.pitch);
-
-      // Camera FOV distance for 3D perspective projection
-      const cameraFov = 420;
-
+      const cameraFov = 460;
       const len = stars.length;
 
-      // 1. Calculate physics, drift, and 3D camera projection
+      // 1. Calculate physics, intro convergence curve, and 3D camera projection
       for (let i = 0; i < len; i++) {
         const p = stars[i];
 
-        // Cosmic drift target in local 3D space
-        const targetX = p.originX + Math.cos(time * p.speed + p.phase) * p.driftRadius;
-        const targetY = p.originY + Math.sin(time * p.speed + p.phase) * p.driftRadius;
+        // Intro build animation progression (dispersed space -> letter target)
+        const starAge = elapsedMs - p.buildDelay;
+        let assembleProgress = 1;
+        if (starAge < 0) {
+          assembleProgress = 0;
+        } else if (starAge < p.buildDuration) {
+          const t = starAge / p.buildDuration;
+          // Smooth cubic ease-out for celestial deceleration
+          assembleProgress = 1 - Math.pow(1 - t, 3);
+        }
 
-        // Dispersion force calculation from cursor hover
-        const force = isHovered
-          ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 16, 0.38)
+        // Curved spiral convergence path during intro
+        const spiralRotation = (1 - assembleProgress) * 1.6;
+        const currentTargetX = p.startX + (p.originX - p.startX) * assembleProgress;
+        const currentTargetY = p.startY + (p.originY - p.startY) * assembleProgress;
+        const currentTargetZ = p.startZ + (p.originZ - p.startZ) * assembleProgress;
+
+        // Apply spiral curvature during build
+        const rotCos = Math.cos(spiralRotation);
+        const rotSin = Math.sin(spiralRotation);
+        const relToDestX = currentTargetX - p.originX;
+        const relToDestY = currentTargetY - p.originY;
+
+        const assembledX = p.originX + relToDestX * rotCos - relToDestY * rotSin;
+        const assembledY = p.originY + relToDestX * rotSin + relToDestY * rotCos;
+
+        // Subtle cosmic drift once assembled
+        const driftX = assembledX + Math.cos(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
+        const driftY = assembledY + Math.sin(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
+
+        // Cursor dispersion force on hover
+        const force = isHovered && assembleProgress > 0.8
+          ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.35)
           : { fx: 0, fy: 0 };
 
-        // Spring physics: stiffness 0.05 and friction 0.88 for crisp, organic cosmic drift
-        applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.05, 0.88);
+        // Spring physics: stiffness 0.06 and friction 0.86
+        applySpringPhysics(p, driftX, driftY, force.fx, force.fy, 0.06, 0.86);
 
-        // Center relative coords
+        // Center relative coords for 3D tilt
         const relX = p.x - centerX;
         const relY = p.y - centerY;
-        const relZ = p.originZ;
+        const relZ = currentTargetZ;
 
-        // 3D rotation: Yaw around Y axis, Pitch around X axis
+        // 3D camera tilt
         const x1 = relX * cosYaw - relZ * sinYaw;
         const z1 = relX * sinYaw + relZ * cosYaw;
 
@@ -288,7 +300,7 @@ export function GalaxyLogo({
         p.projZ = z2;
         p.projScale = scale;
 
-        // Decay glisten flare
+        // Glisten flare progression
         if (p.glistenProgress !== undefined && p.glistenProgress < 1) {
           const step = 1 / (p.glistenDuration || 35);
           p.glistenProgress += step;
@@ -298,10 +310,10 @@ export function GalaxyLogo({
         }
       }
 
-      // 2. Depth sort back-to-front for proper 3D layering
+      // 2. Depth sort back-to-front
       stars.sort((a, b) => (b.projZ ?? 0) - (a.projZ ?? 0));
 
-      // 3. Render 3D stars with luminous additive blend
+      // 3. Render luminous stars
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
 
@@ -318,34 +330,47 @@ export function GalaxyLogo({
         }
 
         const twinkle = 0.88 + 0.12 * Math.sin(time * 1.6 + p.phase);
-        // Perspective depth modulation on alpha (foreground is brighter, far background softer)
-        const depthAlpha = Math.min(1.2, Math.max(0.2, (p.projZ! + 150) / 250));
-        const effectiveAlpha = Math.min(1, (p.baseAlpha * twinkle * depthAlpha) + glistenCurve * 0.7);
 
-        // Render point star
+        // Calculate proximity to cursor for Astra localized depth illumination on hover
+        let hoverGlow = 0;
+        if (isHovered) {
+          const dx = p.projX - mouseX;
+          const dy = p.projY - mouseY;
+          const dist = Math.hypot(dx, dy);
+          if (dist < repelRadius * 1.4) {
+            hoverGlow = (1 - dist / (repelRadius * 1.4)) * 0.35;
+          }
+        }
+
+        const depthAlpha = Math.min(1.2, Math.max(0.3, (p.projZ! + 150) / 250));
+        const effectiveAlpha = Math.min(
+          1,
+          p.baseAlpha * twinkle * depthAlpha + hoverGlow + glistenCurve * 0.7
+        );
+
+        // Render star point
         ctx.beginPath();
-        ctx.arc(p.projX, p.projY, renderSize, 0, Math.PI * 2);
+        ctx.arc(p.projX, p.projY, renderSize * (1 + hoverGlow * 0.5), 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = effectiveAlpha;
         ctx.fill();
 
-        // Core glow for prominent stars
-        if (p.hasGlow) {
+        // Core glow for prominent or hovered stars
+        if (p.hasGlow || hoverGlow > 0.1) {
           ctx.beginPath();
-          ctx.arc(p.projX, p.projY, renderSize * 2.2, 0, Math.PI * 2);
+          ctx.arc(p.projX, p.projY, renderSize * (2.2 + hoverGlow * 1.2), 0, Math.PI * 2);
           ctx.fillStyle = p.color;
-          ctx.globalAlpha = effectiveAlpha * 0.28;
+          ctx.globalAlpha = effectiveAlpha * (0.28 + hoverGlow * 0.3);
           ctx.fill();
         }
 
-        // If glisten is active, draw a natural soft optical diffraction flare
+        // Diffraction flare when glisten is active
         if (glistenCurve > 0.05) {
           const flareLength = renderSize * (3.5 + glistenCurve * 6.5);
           ctx.strokeStyle = "#ffffff";
           ctx.lineWidth = 0.8 * scale;
           ctx.globalAlpha = glistenCurve * 0.85;
 
-          // Main vertical and horizontal diffraction spikes
           ctx.beginPath();
           ctx.moveTo(p.projX - flareLength, p.projY);
           ctx.lineTo(p.projX + flareLength, p.projY);
@@ -353,7 +378,6 @@ export function GalaxyLogo({
           ctx.lineTo(p.projX + flareLength, p.projY);
           ctx.stroke();
 
-          // Soft diagonal micro-diffraction rays
           const diag = flareLength * 0.35;
           ctx.lineWidth = 0.5 * scale;
           ctx.globalAlpha = glistenCurve * 0.5;
@@ -364,7 +388,6 @@ export function GalaxyLogo({
           ctx.lineTo(p.projX - diag, p.projY + diag);
           ctx.stroke();
 
-          // Central core glow
           ctx.beginPath();
           ctx.arc(p.projX, p.projY, renderSize * (1 + glistenCurve * 0.8), 0, Math.PI * 2);
           ctx.fillStyle = "#ffffff";
@@ -378,12 +401,9 @@ export function GalaxyLogo({
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render();
+    animationFrameId = requestAnimationFrame(render);
 
     return () => {
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mousemove", handleMouseMoveWindow);
-      window.removeEventListener("mouseup", handleMouseUpWindow);
       window.removeEventListener("resize", handleResize);
       cancelAnimationFrame(animationFrameId);
     };
@@ -396,7 +416,7 @@ export function GalaxyLogo({
     >
       <canvas
         ref={canvasRef}
-        className="w-full h-full cursor-grab active:cursor-grabbing block"
+        className="w-full h-full cursor-pointer block"
       />
     </div>
   );
