@@ -14,55 +14,10 @@ export function GalaxyLogo({
   className = "",
   repelRadius = 90,
   repelStrength = 0.6,
-  triggerDisperse = 0,
 }: GalaxyLogoProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const mouseStateRef = useCanvasMouse(canvasRef, true);
-  const triggerRef = React.useRef(triggerDisperse);
-  const starsRef = React.useRef<GalaxyLogoStar[]>([]);
-
-  // Trigger deep cinematic dissolution & crystalline reformation shockwave
-  React.useEffect(() => {
-    if (triggerDisperse > 0 && triggerDisperse !== triggerRef.current) {
-      triggerRef.current = triggerDisperse;
-      const stars = starsRef.current;
-      const len = stars.length;
-      if (len > 0) {
-        let sumX = 0;
-        let sumY = 0;
-        for (let i = 0; i < len; i++) {
-          sumX += stars[i].originX;
-          sumY += stars[i].originY;
-        }
-        const cX = sumX / len;
-        const cY = sumY / len;
-
-        for (let i = 0; i < len; i++) {
-          const s = stars[i];
-          const dx = s.originX - cX;
-          const dy = s.originY - cY;
-          
-          // Organic spiral angle for cosmic galaxy vortex expansion
-          const angle = Math.atan2(dy, dx);
-          const swirl = (Math.random() - 0.5) * 0.9;
-          const blastAngle = angle + swirl;
-          
-          // Smooth outward initial velocity (4.5 - 11 px/frame)
-          const blastPower = 4.5 + Math.random() * 6.5;
-          s.vx = Math.cos(blastAngle) * blastPower;
-          s.vy = Math.sin(blastAngle) * blastPower;
-          
-          // Free expansion phase before spring gradually engages (35 - 55 frames)
-          s.disperseTimer = 35 + Math.floor(Math.random() * 20);
-          
-          // Staggered celestial glisten sparkles as they fly
-          s.glistenProgress = 0.02 + Math.random() * 0.1;
-          s.glistenDuration = 45 + Math.floor(Math.random() * 25);
-        }
-      }
-    }
-  }, [triggerDisperse]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -73,7 +28,6 @@ export function GalaxyLogo({
 
     let animationFrameId: number;
     const stars: GalaxyLogoStar[] = [];
-    starsRef.current = stars;
 
     const initScene = () => {
       const rect = container.getBoundingClientRect();
@@ -214,22 +168,13 @@ export function GalaxyLogo({
         const targetX = p.originX + Math.cos(time * p.speed + p.phase) * p.driftRadius;
         const targetY = p.originY + Math.sin(time * p.speed + p.phase) * p.driftRadius;
 
-        // Cinematic two-phase physics:
-        // Phase 1 (Free Flight): Stars coast outward uninhibited, drifting through space
-        // Phase 2 (Harmonic Reformation): Spring physics smoothly pulls them into place
-        if (p.disperseTimer && p.disperseTimer > 0) {
-          p.disperseTimer--;
-          p.vx *= 0.94;
-          p.vy *= 0.94;
-          p.x += p.vx;
-          p.y += p.vy;
-        } else {
-          const force = isHovered
-            ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 16, 0.38)
-            : { fx: 0, fy: 0 };
-          // Spring physics: stiffness 0.042 and friction 0.88 for precise, crisp reformation
-          applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.042, 0.88);
-        }
+        // Dispersion force calculation from cursor hover
+        const force = isHovered
+          ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 16, 0.38)
+          : { fx: 0, fy: 0 };
+
+        // Spring physics: stiffness 0.05 and friction 0.88 for crisp, organic cosmic drift
+        applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.05, 0.88);
 
         // Decay glisten flare via smooth bell-curve intensity using sin^1.6(progress * PI)
         let glistenCurve = 0;

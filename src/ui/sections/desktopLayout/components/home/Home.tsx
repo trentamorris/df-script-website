@@ -5,12 +5,6 @@ import { useCopyToClipboard } from "../../../../../hooks/useCopyToClipboard";
 
 export function Home() {
   const { copy, isCopied } = useCopyToClipboard();
-  const [disperseCount, setDisperseCount] = React.useState(0);
-
-  const handleCopy = () => {
-    copy("npm install df-script", "install");
-    setDisperseCount((prev) => prev + 1);
-  };
 
   return (
     <>
@@ -23,7 +17,7 @@ export function Home() {
           {/* Soft cosmic nebula depth aura */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[280px] bg-gradient-to-tr from-sky-500/10 via-blue-600/5 to-purple-500/5 blur-3xl pointer-events-none rounded-full -z-10" />
 
-          <GalaxyLogo text="df-script" triggerDisperse={disperseCount} className="animate-fade-in" />
+          <GalaxyLogo text="df-script" className="animate-fade-in" />
 
           <p className="text-sm md:text-base diamond-glisten max-w-lg leading-relaxed select-none">
             A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.
@@ -37,7 +31,7 @@ export function Home() {
             </div>
 
             <button
-              onClick={handleCopy}
+              onClick={() => copy("npm install df-script", "install")}
               className="flex items-center hover:text-[#ffffff] text-[#9c9c9c] transition-colors cursor-pointer"
               title="Copy install command"
             >

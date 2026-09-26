@@ -17,7 +17,6 @@ export interface GalaxyLogoStar extends BaseStar {
   driftRadius: number;
   glistenProgress?: number;
   glistenDuration?: number;
-  disperseTimer?: number;
 }
 
 export interface GalaxyBgStar extends BaseStar {
@@ -48,7 +47,6 @@ export interface GalaxyLogoProps {
   className?: string;
   repelRadius?: number;
   repelStrength?: number;
-  triggerDisperse?: number;
 }
 
 export interface ShootingStar {
