@@ -163,6 +163,7 @@ export function GalaxyBackground({
           color: getRandomStarColor(),
           hasGlow: isHighlight,
           phase: Math.random() * Math.PI * 2,
+          depth: 0.3 + Math.random() * 0.7,
         });
       }
 
@@ -189,6 +190,7 @@ export function GalaxyBackground({
           color: Math.random() < 0.3 ? "#7dd3fc" : "#ffffff",
           hasGlow: false,
           phase: Math.random() * Math.PI * 2,
+          depth: 0.15 + Math.random() * 0.5,
         });
       }
     };
@@ -284,13 +286,18 @@ export function GalaxyBackground({
 
         star.armAngle += star.orbitalSpeed;
         star.baseX = centerX + Math.cos(star.armAngle) * star.radius;
-        star.baseY = centerY + Math.sin(star.armAngle) * star.radius;
+        // Multi-plane parallax offset: deeper stars shift subtly with cursor movement
+        const parallaxFactor = (star.depth ?? 0.5) * 18;
+        const normMouseX = isHovered ? (mouseX - centerX) / (width * 0.5) : 0;
+        const normMouseY = isHovered ? (mouseY - centerY) / (height * 0.5) : 0;
+        const targetBaseX = star.baseX - normMouseX * parallaxFactor;
+        const targetBaseY = star.baseY - normMouseY * parallaxFactor;
 
         const force = isHovered
           ? calculateRepulsionForce(star.x, star.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.25)
           : { fx: 0, fy: 0 };
 
-        applySpringPhysics(star, star.baseX, star.baseY, force.fx, force.fy, 0.04, 0.88);
+        applySpringPhysics(star, targetBaseX, targetBaseY, force.fx, force.fy, 0.04, 0.88);
 
         // Decay micro-nova flare via smooth sinusoidal bell curve
         let glistenCurve = 0;
@@ -361,6 +368,25 @@ export function GalaxyBackground({
           ctx.restore();
         }
       }
+
+      // 3. Subtle cosmic constellation filament web (faint celestial line bridges)
+      ctx.save();
+      ctx.strokeStyle = "rgba(147, 197, 253, 0.055)";
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < len; i += 3) {
+        const s1 = stars[i];
+        for (let j = i + 1; j < Math.min(i + 8, len); j++) {
+          const s2 = stars[j];
+          const distSq = (s1.x - s2.x) ** 2 + (s1.y - s2.y) ** 2;
+          if (distSq < 2304) { // within 48px
+            ctx.beginPath();
+            ctx.moveTo(s1.x, s1.y);
+            ctx.lineTo(s2.x, s2.y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.restore();
 
 
       // Render subtle shooting stars

@@ -41,6 +41,7 @@ export interface GalaxyBgStar extends BaseStar {
   orbitalSpeed: number;
   alpha: number;
   phase: number;
+  depth: number;
   glistenProgress?: number;
   glistenDuration?: number;
 }

@@ -20,7 +20,7 @@ export function GalaxyLogo({
   const mouseStateRef = useCanvasMouse(canvasRef, false);
   const lastTriggerRef = React.useRef<number | undefined>(triggerPulse);
   const pulseStarsRef = React.useRef<() => void>(() => {});
-  const retriggerIntroRef = React.useRef<() => void>(() => {});
+  const retriggerIntroRef = React.useRef<(clickX?: number, clickY?: number) => void>(() => {});
 
   // Subtle 3D tilt angles for mouse hover (fixed orientation, no free spinning)
   const tiltRef = React.useRef({
@@ -197,26 +197,37 @@ export function GalaxyLogo({
     resizeObserver.observe(container);
     window.addEventListener("resize", setupCanvasResolution);
 
-    // Retrigger intro gathering on logo click for interactive delight
-    retriggerIntroRef.current = () => {
+    // In-place elastic bloom: stars burst outwards from click point, float, and spring snap back into letters
+    retriggerIntroRef.current = (clickX?: number, clickY?: number) => {
       if (stars.length === 0) return;
-      startTime = performance.now();
       const rect = container.getBoundingClientRect();
-      const centerTargetX = rect.left + rect.width / 2;
-      const centerTargetY = rect.top + rect.height / 2;
+      const originX = clickX ?? (rect.left + rect.width / 2);
+      const originY = clickY ?? (rect.top + rect.height / 2);
 
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
-        const spiralAngle = Math.random() * Math.PI * 4;
-        const disperseRadius = Math.max(canvasW, canvasH) * (0.65 + Math.random() * 0.55);
-        s.startX = centerTargetX + Math.cos(spiralAngle) * disperseRadius;
-        s.startY = centerTargetY + Math.sin(spiralAngle) * disperseRadius * 0.75;
-        s.startZ = (Math.random() - 0.5) * 350;
-        s.x = s.startX;
-        s.y = s.startY;
-        s.z = s.startZ;
-        s.buildDelay = Math.random() * 320;
-        s.buildDuration = 900 + Math.random() * 400;
+        const dx = s.x - originX;
+        const dy = s.y - originY;
+        const dist = Math.hypot(dx, dy) || 1;
+        const normX = dx / dist;
+        const normY = dy / dist;
+
+        // Radial explosion velocity with organic celestial swirl
+        const burstSpeed = 5.5 + Math.random() * 8.5;
+        const swirlAngle = 0.35 * (Math.random() < 0.5 ? 1 : -1);
+        const cosS = Math.cos(swirlAngle);
+        const sinS = Math.sin(swirlAngle);
+        const swirlX = normX * cosS - normY * sinS;
+        const swirlY = normX * sinS + normY * cosS;
+
+        s.vx = swirlX * burstSpeed;
+        s.vy = swirlY * burstSpeed;
+
+        // Trigger a couple of spark glints on impact
+        if (Math.random() < 0.08) {
+          s.glistenProgress = 0.01;
+          s.glistenDuration = 35 + Math.floor(Math.random() * 20);
+        }
       }
     };
 
@@ -496,9 +507,9 @@ export function GalaxyLogo({
   return (
     <div
       ref={containerRef}
-      onClick={() => retriggerIntroRef.current()}
+      onClick={(e) => retriggerIntroRef.current(e.clientX, e.clientY)}
       className={`relative w-full max-w-2xl h-24 sm:h-32 md:h-36 flex items-center justify-center select-none cursor-pointer group ${className}`}
-      title="Click constellation to reassemble"
+      title="Click constellation to scatter and gather"
     >
       <canvas
         ref={canvasRef}
