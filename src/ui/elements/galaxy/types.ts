@@ -15,9 +15,9 @@ export interface GalaxyLogoStar extends BaseStar {
   phase: number;
   speed: number;
   driftRadius: number;
-  glistenIntensity: number;
+  glistenProgress?: number;
+  glistenDuration?: number;
 }
-
 
 export interface GalaxyBgStar extends BaseStar {
   baseX: number;
@@ -27,8 +27,10 @@ export interface GalaxyBgStar extends BaseStar {
   orbitalSpeed: number;
   alpha: number;
   phase: number;
-  flareIntensity?: number;
+  glistenProgress?: number;
+  glistenDuration?: number;
 }
+
 
 export interface NebulaCloud {
   xFactor: number;

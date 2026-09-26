@@ -201,9 +201,10 @@ export function GalaxyBackground({
     let time = 0;
     let ticksSinceLastShootingStar = 0;
     let ticksSinceLastFlare = 0;
-    // Spawn shooting stars roughly every 4 to 9 seconds
-    let nextSpawnInterval = 200 + Math.random() * 300;
-    let nextFlareInterval = 240 + Math.random() * 240;
+    // Spawn shooting stars roughly every 4 to 8 seconds
+    let nextSpawnInterval = 200 + Math.random() * 260;
+    // Stellar glistens occur frequently across the vast field (every 0.5s - 1.2s)
+    let nextFlareInterval = 30 + Math.random() * 45;
 
     const render = () => {
       time += 0.02;
@@ -212,19 +213,25 @@ export function GalaxyBackground({
 
       if (enableShootingStars && ticksSinceLastShootingStar > nextSpawnInterval) {
         ticksSinceLastShootingStar = 0;
-        nextSpawnInterval = 220 + Math.random() * 320;
+        nextSpawnInterval = 220 + Math.random() * 280;
         spawnShootingStar();
       }
 
-      // Trigger a peaceful micro-nova on a distant background star
+      // Trigger 1 to 3 concurrent peaceful stellar glistens across background stars
       if (stars.length > 0 && ticksSinceLastFlare > nextFlareInterval) {
         ticksSinceLastFlare = 0;
-        nextFlareInterval = 300 + Math.random() * 300;
-        const luckyIdx = Math.floor(Math.random() * stars.length);
-        if (stars[luckyIdx]) {
-          stars[luckyIdx].flareIntensity = 1.0;
+        nextFlareInterval = 20 + Math.random() * 35;
+        const count = Math.random() < 0.35 ? 3 : Math.random() < 0.7 ? 2 : 1;
+        for (let k = 0; k < count; k++) {
+          const luckyIdx = Math.floor(Math.random() * stars.length);
+          const candidate = stars[luckyIdx];
+          if (candidate && (!candidate.glistenProgress || candidate.glistenProgress >= 1)) {
+            candidate.glistenProgress = 0.01;
+            candidate.glistenDuration = 36 + Math.floor(Math.random() * 24); // smooth 36-60 frame bloom
+          }
         }
       }
+
 
       ctx.clearRect(0, 0, width, height);
 
@@ -285,15 +292,21 @@ export function GalaxyBackground({
 
         applySpringPhysics(star, star.baseX, star.baseY, force.fx, force.fy, 0.04, 0.88);
 
-        // Decay micro-nova flare if active
-        if (star.flareIntensity && star.flareIntensity > 0) {
-          star.flareIntensity -= 0.018; // smooth 50-frame bloom and fade
-          if (star.flareIntensity < 0) star.flareIntensity = 0;
+        // Decay micro-nova flare via smooth sinusoidal bell curve
+        let glistenCurve = 0;
+        if (star.glistenProgress !== undefined && star.glistenProgress < 1) {
+          const step = 1 / (star.glistenDuration || 40);
+          star.glistenProgress += step;
+          if (star.glistenProgress >= 1) {
+            star.glistenProgress = undefined;
+          } else {
+            glistenCurve = Math.pow(Math.sin(star.glistenProgress * Math.PI), 1.6);
+          }
         }
 
         // Subtle organic twinkling & hover brightening
         const twinkle = 0.8 + 0.2 * Math.sin(time * 1.4 + star.phase);
-        const flareBonus = (star.flareIntensity || 0) * 0.7;
+        const flareBonus = glistenCurve * 0.7;
         let alpha = star.alpha * twinkle + flareBonus;
 
         if (isHovered) {
@@ -307,19 +320,40 @@ export function GalaxyBackground({
 
         drawStarParticle(ctx, star, alpha);
 
-        // If micro-nova is flaring, render a subtle lens flare
-        if (star.flareIntensity && star.flareIntensity > 0.15) {
-          const flareR = star.size * (2.5 + star.flareIntensity * 4);
+        // If micro-nova is flaring, render a natural soft lens flare
+        if (glistenCurve > 0.05) {
+          const flareR = star.size * (3 + glistenCurve * 5);
           ctx.save();
           ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 0.8;
-          ctx.globalAlpha = star.flareIntensity * 0.7;
+          ctx.lineWidth = 0.75;
+          ctx.globalAlpha = glistenCurve * 0.7;
+
+          // Main horizontal and vertical diffraction spikes
           ctx.beginPath();
           ctx.moveTo(star.x - flareR, star.y);
           ctx.lineTo(star.x + flareR, star.y);
           ctx.moveTo(star.x, star.y - flareR);
           ctx.lineTo(star.x, star.y + flareR);
           ctx.stroke();
+
+          // Soft diagonal micro-diffraction rays
+          const diag = flareR * 0.35;
+          ctx.lineWidth = 0.5;
+          ctx.globalAlpha = glistenCurve * 0.4;
+          ctx.beginPath();
+          ctx.moveTo(star.x - diag, star.y - diag);
+          ctx.lineTo(star.x + diag, star.y + diag);
+          ctx.moveTo(star.x + diag, star.y - diag);
+          ctx.lineTo(star.x - diag, star.y + diag);
+          ctx.stroke();
+
+          // Core flare halo
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * (1 + glistenCurve * 0.7), 0, Math.PI * 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.globalAlpha = glistenCurve * 0.75;
+          ctx.fill();
+
           ctx.restore();
         }
       }

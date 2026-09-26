@@ -89,7 +89,6 @@ export function GalaxyLogo({
               phase: Math.random() * Math.PI * 2,
               speed: 0.02 + Math.random() * 0.03,
               driftRadius: 0.35 + Math.random() * 0.55,
-              glistenIntensity: 0,
             });
           }
         }
@@ -117,9 +116,9 @@ export function GalaxyLogo({
           phase: Math.random() * Math.PI * 2,
           speed: 0.015 + Math.random() * 0.02,
           driftRadius: 0.7 + Math.random() * 0.8,
-          glistenIntensity: 0,
         });
       }
+
     };
 
     initScene();
@@ -129,21 +128,29 @@ export function GalaxyLogo({
 
     let time = 0;
     let ticksSinceLastGlisten = 0;
-    let nextGlistenInterval = 80 + Math.random() * 120; // glistens every 1.5 - 3.5s
+    // Glisten occurs frequently but naturally (every 0.35s - 0.8s)
+    let nextGlistenInterval = 20 + Math.random() * 30;
 
     const render = () => {
       time += 0.025;
       ticksSinceLastGlisten++;
 
-      // Trigger a random glisten flare on a prominent star
+      // Trigger 1 to 2 concurrent smooth glistening stars
       if (stars.length > 0 && ticksSinceLastGlisten > nextGlistenInterval) {
         ticksSinceLastGlisten = 0;
-        nextGlistenInterval = 90 + Math.random() * 150;
-        const luckyIndex = Math.floor(Math.random() * stars.length);
-        if (stars[luckyIndex]) {
-          stars[luckyIndex].glistenIntensity = 1.0;
+        nextGlistenInterval = 20 + Math.random() * 32;
+        const glistenBatch = Math.random() < 0.45 ? 2 : 1;
+        for (let b = 0; b < glistenBatch; b++) {
+          const luckyIndex = Math.floor(Math.random() * stars.length);
+          const candidate = stars[luckyIndex];
+          if (candidate && (!candidate.glistenProgress || candidate.glistenProgress >= 1)) {
+            candidate.glistenProgress = 0.01;
+            candidate.glistenDuration = 32 + Math.floor(Math.random() * 20); // 32-52 frames smooth lifecycle
+          }
         }
       }
+
+
 
       const rect = container.getBoundingClientRect();
       const width = Math.max(rect.width, 360);
@@ -168,43 +175,59 @@ export function GalaxyLogo({
 
         applySpringPhysics(p, targetX, targetY, force.fx, force.fy, 0.07, 0.84);
 
-        // Decay glisten flare
-        if (p.glistenIntensity > 0) {
-          p.glistenIntensity -= 0.035;
-          if (p.glistenIntensity < 0) p.glistenIntensity = 0;
+        // Decay glisten flare via smooth bell-curve intensity using sin^1.6(progress * PI)
+        let glistenCurve = 0;
+        if (p.glistenProgress !== undefined && p.glistenProgress < 1) {
+          const step = 1 / (p.glistenDuration || 35);
+          p.glistenProgress += step;
+          if (p.glistenProgress >= 1) {
+            p.glistenProgress = undefined;
+          } else {
+            glistenCurve = Math.pow(Math.sin(p.glistenProgress * Math.PI), 1.6);
+          }
         }
+
 
         // Twinkle factor & draw
         const twinkle = 0.88 + 0.12 * Math.sin(time * 1.6 + p.phase);
-        const effectiveAlpha = Math.min(1, p.baseAlpha * twinkle + p.glistenIntensity * 0.7);
+        const effectiveAlpha = Math.min(1, p.baseAlpha * twinkle + glistenCurve * 0.7);
 
         drawStarParticle(ctx, p, effectiveAlpha);
 
-        // If glisten is active, draw a refined 4-pointed diamond glint
-        if (p.glistenIntensity > 0.1) {
-          const flareSize = p.size * (3 + p.glistenIntensity * 4.5);
+        // If glisten is active, draw a natural soft optical diffraction flare
+        if (glistenCurve > 0.05) {
+          const flareLength = p.size * (3.5 + glistenCurve * 6.5);
           ctx.save();
           ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 1;
-          ctx.globalAlpha = p.glistenIntensity * 0.85;
+          ctx.lineWidth = 0.8;
+          ctx.globalAlpha = glistenCurve * 0.75;
 
-          // Cross glint arms
+          // Main vertical and horizontal diffraction spikes
           ctx.beginPath();
-          ctx.moveTo(p.x - flareSize, p.y);
-          ctx.lineTo(p.x + flareSize, p.y);
-          ctx.moveTo(p.x, p.y - flareSize);
-          ctx.lineTo(p.x, p.y + flareSize);
+          ctx.moveTo(p.x - flareLength, p.y);
+          ctx.lineTo(p.x + flareLength, p.y);
+          ctx.moveTo(p.x, p.y - flareLength);
+          ctx.lineTo(p.x, p.y + flareLength);
           ctx.stroke();
 
-          // Subtle diagonal secondary flare
-          const diag = flareSize * 0.45;
-          ctx.lineWidth = 0.7;
+          // Soft diagonal micro-diffraction rays
+          const diag = flareLength * 0.35;
+          ctx.lineWidth = 0.5;
+          ctx.globalAlpha = glistenCurve * 0.45;
           ctx.beginPath();
           ctx.moveTo(p.x - diag, p.y - diag);
           ctx.lineTo(p.x + diag, p.y + diag);
           ctx.moveTo(p.x + diag, p.y - diag);
           ctx.lineTo(p.x - diag, p.y + diag);
           ctx.stroke();
+
+          // Central core glow
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * (1 + glistenCurve * 0.8), 0, Math.PI * 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.globalAlpha = glistenCurve * 0.8;
+          ctx.fill();
+
           ctx.restore();
         }
       }
