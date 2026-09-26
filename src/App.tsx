@@ -10,6 +10,13 @@ function AppContent() {
   const { operationsIndex } = useGithubDocs(routerProps.activeVersion);
   const { isMobile } = useLayout();
 
+  // If no version was in the URL, automatically select the latest fetched version from GitHub
+  React.useEffect(() => {
+    if (!routerProps.activeVersion && versionOptions.length > 0) {
+      routerProps.setVersion(versionOptions[0]);
+    }
+  }, [routerProps.activeVersion, versionOptions]);
+
   return (
     <>
       {!isMobile ? (

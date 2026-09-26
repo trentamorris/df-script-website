@@ -11,7 +11,7 @@ export function Header({
   setIsMenuOpen,
   activeVersion,
   setActiveVersion,
-  versionOptions = ["v1.7.0"]
+  versionOptions = []
 }: HeaderProps) {
   const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = React.useState(false);
   const headerDropdownRef = React.useRef<HTMLDivElement>(null);

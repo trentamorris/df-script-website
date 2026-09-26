@@ -1,0 +1,77 @@
+export interface BaseStar {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  hasGlow: boolean;
+}
+
+export interface GalaxyLogoStar extends BaseStar {
+  originX: number;
+  originY: number;
+  baseAlpha: number;
+  phase: number;
+  speed: number;
+  driftRadius: number;
+  glistenIntensity: number;
+}
+
+
+export interface GalaxyBgStar extends BaseStar {
+  baseX: number;
+  baseY: number;
+  radius: number;
+  armAngle: number;
+  orbitalSpeed: number;
+  alpha: number;
+  phase: number;
+  flareIntensity?: number;
+}
+
+export interface NebulaCloud {
+  xFactor: number;
+  yFactor: number;
+  baseRadius: number;
+  colorStop0: string;
+  colorStop1: string;
+  phase: number;
+  driftSpeed: number;
+}
+
+export interface GalaxyLogoProps {
+  text?: string;
+  className?: string;
+  repelRadius?: number;
+  repelStrength?: number;
+}
+
+export interface ShootingStar {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  length: number;
+  speed: number;
+  thickness: number;
+  alpha: number;
+  maxAlpha: number;
+  life: number;
+  maxLife: number;
+  color: string;
+  isBolide?: boolean;
+}
+
+export interface GalaxyBackgroundProps {
+  spiralArms?: number;
+  starCount?: number;
+  repelRadius?: number;
+  repelStrength?: number;
+  rotationSpeed?: number;
+  className?: string;
+  enableShootingStars?: boolean;
+  enableNebula?: boolean;
+}
+
+

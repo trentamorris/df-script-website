@@ -1,12 +1,13 @@
 import React from "react";
 import type { DocsVersion } from "../types";
-import { KNOWN_VERSIONS } from "../constants";
-
 const DOCS_PATTERN = /^\/docs\/([^\/]+)\/(.+)$/;
 
 export function useRouter() {
   const [path, setPath] = React.useState(() => window.location.pathname);
-  const [activeVersion, setActiveVersion] = React.useState<DocsVersion>(KNOWN_VERSIONS[0]);
+  const docsMatch = path.match(DOCS_PATTERN);
+  const [activeVersion, setActiveVersion] = React.useState<DocsVersion>(
+    () => (docsMatch ? (docsMatch[1] as DocsVersion) : "")
+  );
 
   // Listen for browser back/forward navigation
   React.useEffect(() => {
@@ -32,7 +33,6 @@ export function useRouter() {
   }, []);
 
   // Sync activeVersion from URL when navigating directly to /docs/{version}/...
-  const docsMatch = path.match(DOCS_PATTERN);
   React.useEffect(() => {
     if (!docsMatch) return;
     const urlVersion = docsMatch[1] as DocsVersion;

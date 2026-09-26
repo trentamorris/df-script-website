@@ -27,7 +27,7 @@ export function DesktopLayout({
         path={path}
         isSidebarCollapsed={isSidebarCollapsed}
         setIsSidebarCollapsed={setIsSidebarCollapsed}
-        setIsMenuOpen={() => {}}
+        setIsMenuOpen={() => { }}
         activeVersion={activeVersion}
         setActiveVersion={setVersion}
         versionOptions={versionOptions}

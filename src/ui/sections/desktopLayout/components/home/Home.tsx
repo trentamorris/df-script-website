@@ -1,6 +1,6 @@
 import React from "react";
 import { ContentCopy } from "@mui/icons-material";
-import { MagneticParticles } from "../../../../elements";
+import { GalaxyBackground, GalaxyLogo } from "../../../../elements";
 import { useCopyToClipboard } from "../../../../../hooks/useCopyToClipboard";
 
 export function Home() {
@@ -8,23 +8,28 @@ export function Home() {
 
   return (
     <>
-      <MagneticParticles />
+      <GalaxyBackground />
+      {/* <MagneticParticles /> */}
       <main className="flex-grow overflow-y-auto h-full flex flex-col justify-between min-w-0 relative z-10">
-        {/* Centered Hero Contents */}
-        <div className="flex flex-col items-center justify-center text-center gap-6 max-w-2xl mx-auto flex-grow px-6 py-20">
-          <h1 className="text-5xl font-semibold tracking-tight text-[#ffffff] font-outfit sm:text-6xl md:text-7xl lowercase animate-fade-in">
-            df-script
-          </h1>
+
+        {/* Centered Hero Contents with subtle ambient cosmic glow */}
+        <div className="relative flex flex-col items-center justify-center text-center gap-6 max-w-2xl mx-auto flex-grow px-6 py-20">
+          {/* Soft cosmic nebula depth aura */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[280px] bg-gradient-to-tr from-sky-500/10 via-blue-600/5 to-purple-500/5 blur-3xl pointer-events-none rounded-full -z-10" />
+
+          <GalaxyLogo text="df-script" className="animate-fade-in" />
+
           <p className="text-sm md:text-base text-[#9c9c9c] max-w-lg leading-relaxed">
             A zero-dependency, high-performance, expression-based DataFrame engine designed for lighting-fast data processing in JavaScript and TypeScript.
           </p>
 
-          {/* Quick Install Pill */}
-          <div className="flex items-center justify-between gap-4 p-2 px-4 rounded bg-[#0a0a0a] border border-[#1e1e1e] font-mono text-[11px] text-[#e5e5e5] w-full max-w-sm mt-2">
+          {/* Quick Install Pill with subtle cosmic hover border */}
+          <div className="group flex items-center justify-between gap-4 p-2 px-4 rounded bg-[#0a0a0a]/90 backdrop-blur-sm border border-[#1e1e1e] hover:border-sky-500/30 transition-all duration-300 font-mono text-[11px] text-[#e5e5e5] w-full max-w-sm mt-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] hover:shadow-[0_0_25px_-5px_rgba(56,189,248,0.12)]">
             <div className="flex items-center gap-2">
-              <span className="text-[#5c5c5c] select-none">$</span>
+              <span className="text-[#5c5c5c] group-hover:text-sky-400/80 transition-colors select-none">$</span>
               <span>npm install df-script</span>
             </div>
+
             <button
               onClick={() => copy("npm install df-script", "install")}
               className="flex items-center hover:text-[#ffffff] text-[#9c9c9c] transition-colors cursor-pointer"

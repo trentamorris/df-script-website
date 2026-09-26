@@ -14,7 +14,7 @@ export function Sidebar({
   setIsMenuOpen,
   isDrawer = false,
   isMenuOpen = false,
-  versionOptions = ["v1.7.0"]
+  versionOptions = []
 }: SidebarProps) {
   const [explorerSearchQuery, setExplorerSearchQuery] = React.useState("");
   const [isVersionDropdownOpen, setIsVersionDropdownOpen] = React.useState(false);
@@ -76,7 +76,7 @@ export function Sidebar({
 
   // Dynamically find categories present in the operations index
   const categoriesList: string[] = df
-    ? (df.select("category").unique().sort({ by: "category" }).to_array("category") as string[])
+    ? (df.select("category").unique().sort({ by: "category" }).toArray("category") as string[])
     : [];
 
   const getFilteredOps = (category: string): OperationItem[] => {
@@ -90,7 +90,7 @@ export function Sidebar({
       );
     }
 
-    return filtered.sort({ by: "name" }).to_dicts() as OperationItem[];
+    return filtered.sort({ by: "name" }).toDicts() as OperationItem[];
   };
 
   const getFolderDisplayName = (category: string) => {

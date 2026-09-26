@@ -2,8 +2,8 @@ import { DataFrame } from "df-script";
 
 export default function DataFrameGrid({ df }: { df: DataFrame }) {
   const cols = df.columns;
-  const schema = df.get_schema();
-  const rows = df.to_dicts() as any[];
+  const schema = df.schema;
+  const rows = df.toDicts() as any[];
 
   const maxRows = 100;
   const isTruncated = rows.length > maxRows;

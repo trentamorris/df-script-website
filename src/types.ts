@@ -6,7 +6,7 @@ export interface OperationParam {
   children?: OperationParam[];
 }
 
-export type DocsVersion = "v1.7.0" | (string & {});
+export type DocsVersion = "v2.3.0" | (string & {});
 
 export interface OperationItem {
   name: string;
