@@ -291,19 +291,21 @@ export function GalaxyLogo({
         mouseY >= rect.top - 30 &&
         mouseY <= rect.bottom + 30;
 
-      // Astra Hover Behavior: subtle camera parallax tilt
+      // Astra Hover Behavior: subtle camera parallax tilt on hover, gentle zero-G cosmic wave when idle
       if (isLogoHovered) {
         const normX = (mouseX - currentCenterX) / (rect.width * 0.5);
         const normY = (mouseY - currentCenterY) / (rect.height * 0.5);
         tilt.targetYaw = Math.max(-0.14, Math.min(0.14, normX * 0.12));
         tilt.targetPitch = Math.max(-0.12, Math.min(0.12, -normY * 0.10));
       } else {
-        tilt.targetYaw = 0;
-        tilt.targetPitch = 0;
+        // Peaceful zero-G celestial wave (~3.5 deg yaw, ~2 deg pitch on a smooth 9s cycle)
+        const waveTime = time * 0.7;
+        tilt.targetYaw = Math.sin(waveTime) * 0.055;
+        tilt.targetPitch = Math.cos(waveTime * 0.85) * 0.035;
       }
 
-      tilt.yaw += (tilt.targetYaw - tilt.yaw) * 0.08;
-      tilt.pitch += (tilt.targetPitch - tilt.pitch) * 0.08;
+      tilt.yaw += (tilt.targetYaw - tilt.yaw) * 0.05;
+      tilt.pitch += (tilt.targetPitch - tilt.pitch) * 0.05;
 
       const cosYaw = Math.cos(tilt.yaw);
       const sinYaw = Math.sin(tilt.yaw);
