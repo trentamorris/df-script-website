@@ -17,6 +17,7 @@ export interface GalaxyLogoStar extends BaseStar {
   driftRadius: number;
   glistenProgress?: number;
   glistenDuration?: number;
+  disperseTimer?: number;
 }
 
 export interface GalaxyBgStar extends BaseStar {
