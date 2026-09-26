@@ -387,52 +387,43 @@ export function GalaxyLogo({
           ctx.fill();
         }
 
-        // Diffraction flare when glisten is active
+        // Diffraction flare when glisten is active: elegant 4-pointed diamond star
         if (glistenCurve > 0.05) {
           const flareMult = p.glistenScale ?? 1;
-          const flareLength = renderSize * (3.5 + glistenCurve * 6.5) * flareMult;
+          const outerR = renderSize * (4.2 + glistenCurve * 7.8) * flareMult;
+          const waistR = Math.max(0.7, renderSize * (0.35 + glistenCurve * 0.25) * flareMult);
+
           ctx.save();
-          ctx.lineCap = "round";
-          ctx.strokeStyle = "#ffffff";
 
-          // Primary cross rays (+ shape)
-          ctx.lineWidth = Math.max(0.7, 0.9 * scale);
-          ctx.globalAlpha = glistenCurve * 0.85;
-
-          // Horizontal ray
+          // 1. Soft radiant cosmic aura
+          const auraRadius = outerR * 0.85;
+          const grad = ctx.createRadialGradient(p.projX, p.projY, 0, p.projX, p.projY, auraRadius);
+          grad.addColorStop(0, "rgba(255, 255, 255, " + (glistenCurve * 0.85) + ")");
+          grad.addColorStop(0.38, "rgba(186, 230, 253, " + (glistenCurve * 0.32) + ")");
+          grad.addColorStop(1, "rgba(56, 189, 248, 0)");
+          ctx.fillStyle = grad;
           ctx.beginPath();
-          ctx.moveTo(p.projX - flareLength, p.projY);
-          ctx.lineTo(p.projX + flareLength, p.projY);
-          ctx.stroke();
+          ctx.arc(p.projX, p.projY, auraRadius, 0, Math.PI * 2);
+          ctx.fill();
 
-          // Vertical ray
+          // 2. Curvilinear 4-pointed diamond star (pinched concave curves)
           ctx.beginPath();
-          ctx.moveTo(p.projX, p.projY - flareLength);
-          ctx.lineTo(p.projX, p.projY + flareLength);
-          ctx.stroke();
+          ctx.moveTo(p.projX, p.projY - outerR);
+          ctx.quadraticCurveTo(p.projX + waistR, p.projY - waistR, p.projX + outerR, p.projY);
+          ctx.quadraticCurveTo(p.projX + waistR, p.projY + waistR, p.projX, p.projY + outerR);
+          ctx.quadraticCurveTo(p.projX - waistR, p.projY + waistR, p.projX - outerR, p.projY);
+          ctx.quadraticCurveTo(p.projX - waistR, p.projY - waistR, p.projX, p.projY - outerR);
+          ctx.closePath();
 
-          // Secondary diagonal rays (x shape) - symmetrical and passing cleanly through center
-          const diag = flareLength * 0.42;
-          ctx.lineWidth = Math.max(0.5, 0.6 * scale);
-          ctx.globalAlpha = glistenCurve * 0.5;
-
-          // Diagonal 1 (\)
-          ctx.beginPath();
-          ctx.moveTo(p.projX - diag, p.projY - diag);
-          ctx.lineTo(p.projX + diag, p.projY + diag);
-          ctx.stroke();
-
-          // Diagonal 2 (/)
-          ctx.beginPath();
-          ctx.moveTo(p.projX - diag, p.projY + diag);
-          ctx.lineTo(p.projX + diag, p.projY - diag);
-          ctx.stroke();
-
-          // Central circular core glow
-          ctx.beginPath();
-          ctx.arc(p.projX, p.projY, renderSize * (1 + glistenCurve * 0.8), 0, Math.PI * 2);
           ctx.fillStyle = "#ffffff";
-          ctx.globalAlpha = glistenCurve * 0.9;
+          ctx.globalAlpha = Math.min(1, glistenCurve * 0.95);
+          ctx.fill();
+
+          // 3. Dense luminous central core
+          ctx.beginPath();
+          ctx.arc(p.projX, p.projY, renderSize * (1.1 + glistenCurve * 0.8), 0, Math.PI * 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.globalAlpha = glistenCurve;
           ctx.fill();
 
           ctx.restore();
