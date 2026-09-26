@@ -37,11 +37,11 @@ export function Home() {
 
             <button
               onClick={handleCopy}
-              className="flex items-center hover:text-[#ffffff] text-[#9c9c9c] transition-colors cursor-pointer"
+              className="flex items-center hover:text-[#ffffff] text-[#9c9c9c] transition-colors cursor-pointer select-none"
               title="Copy install command"
             >
               {isCopied("install") ? (
-                <span className="text-emerald-400 text-[10px] font-sans font-medium">COPIED!</span>
+                <span className="text-[#e5e5e5] text-[10px] font-mono tracking-wider transition-opacity duration-200">COPIED!</span>
               ) : (
                 <ContentCopy style={{ fontSize: "12px" }} />
               )}

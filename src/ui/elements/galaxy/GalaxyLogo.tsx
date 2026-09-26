@@ -182,8 +182,8 @@ export function GalaxyLogo({
     // Function to trigger a dramatic constellation pulse across the letters
     pulseStarsRef.current = () => {
       if (stars.length === 0) return;
-      // Pick 5 to 7 stars dispersed across different letters
-      const count = 5 + Math.floor(Math.random() * 3);
+      // Pick 8 to 11 stars dispersed across different letters
+      const count = 8 + Math.floor(Math.random() * 4);
       for (let i = 0; i < count; i++) {
         // Divide stars into segments to guarantee spread across the whole word
         const segmentStart = Math.floor((i / count) * stars.length);
@@ -192,7 +192,8 @@ export function GalaxyLogo({
         const s = stars[index];
         if (s) {
           s.glistenProgress = 0.01;
-          s.glistenDuration = 38 + Math.floor(Math.random() * 24);
+          s.glistenDuration = 45 + Math.floor(Math.random() * 25);
+          s.glistenScale = 1.7; // Obvious, luminous flare size multiplier
         }
       }
     };
@@ -327,6 +328,7 @@ export function GalaxyLogo({
           p.glistenProgress += step;
           if (p.glistenProgress >= 1) {
             p.glistenProgress = undefined;
+            p.glistenScale = undefined;
           }
         }
       }
@@ -387,7 +389,8 @@ export function GalaxyLogo({
 
         // Diffraction flare when glisten is active
         if (glistenCurve > 0.05) {
-          const flareLength = renderSize * (3.5 + glistenCurve * 6.5);
+          const flareMult = p.glistenScale ?? 1;
+          const flareLength = renderSize * (3.5 + glistenCurve * 6.5) * flareMult;
           ctx.save();
           ctx.lineCap = "round";
           ctx.strokeStyle = "#ffffff";
