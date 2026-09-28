@@ -1,135 +1,56 @@
 import React from "react";
-import { $df } from "df-script";
-import {
-  PlaylistPlay,
-  Add,
-  DeleteSweep,
-  RestartAlt,
-  Save,
-  FolderOpen,
-  Edit
-} from "@mui/icons-material"
-import { CellState } from "./types";
-import Cell from "./components/cell/Cell";
+import { CellLayout, CellState, CellType, NotebookPage, PageGridConfig } from "./types";
+import { DEFAULT_GRID_CONFIG, WELCOME_NOTEBOOK } from "./constants";
+import { downloadNotebookFile, parseNotebookJson, reorderArray } from "./utils";
+import { buildExecutableBody, executeCodeScope, loadBabel } from "./execution";
+import NotebookHeader from "./ui/sections/header/NotebookHeader";
+import CanvasPageBar from "./ui/sections/canvas-bar/CanvasPageBar";
+import CanvasBody from "./ui/sections/canvas-body/CanvasBody";
 import "./styles.css";
-
-const WELCOME_NOTEBOOK: CellState[] = [
-  {
-    id: "cell-intro",
-    type: "markdown",
-    code: `# DFScript Notebook Workspace
-Welcome to your interactive notebook workspace!
-* Run cells using the **YouTube-style play buttons** in the left margin.
-* Alignments and spacing visual guides are synced natively.
-* Double-click any Markdown cell to edit, and run it to render.
-* Hover between cells to insert new **Code** or **Markdown** components!`,
-    output: null,
-    error: null,
-    timeTaken: null,
-    execIndex: null,
-    logs: [],
-    metadata: {},
-    isCodeCollapsed: true,
-    isOutputCollapsed: false
-  },
-  {
-    id: "cell-1",
-    type: "code",
-    code: `// 1. Let's create our initial dataset using $df.data()
-console.log("Initializing dataset 'sales'...");
-const sales = $df.data({
-  userId: ["usr-1", "usr-2", "usr-1", "usr-3", "usr-2"],
-  price: [120, 450, 80, 200, 310],
-  amount: [2, 1, 5, 2, 3],
-  category: ["Books", "Electronics", "Books", "Toys", "Electronics"]
-});
-
-console.log("Success! 'sales' created with height:", sales.height);
-sales`,
-    output: null,
-    error: null,
-    timeTaken: null,
-    execIndex: null,
-    logs: [],
-    metadata: {},
-    isCodeCollapsed: false,
-    isOutputCollapsed: false
-  },
-  {
-    id: "cell-2",
-    type: "code",
-    code: `// 2. We can perform column expression math to calculate order value
-const salesWithTotal = sales.with_columns(
-  ($df.col("price").mul($df.col("amount"))).alias("total")
-);
-
-salesWithTotal`,
-    output: null,
-    error: null,
-    timeTaken: null,
-    execIndex: null,
-    logs: [],
-    metadata: {},
-    isCodeCollapsed: false,
-    isOutputCollapsed: false
-  },
-  {
-    id: "cell-3",
-    type: "code",
-    code: `// 3. Next, aggregate total sales and average price by category
-const summary = salesWithTotal
-  .groupby("category")
-  .agg([
-    $df.col("total").sum().alias("categoryTotal"),
-    $df.col("price").mean().alias("avgPrice")
-  ]);
-
-summary`,
-    output: null,
-    error: null,
-    timeTaken: null,
-    execIndex: null,
-    logs: [],
-    metadata: {},
-    isCodeCollapsed: false,
-    isOutputCollapsed: false
-  }
-];
 
 export default function DFScriptNotebook() {
   const [notebookName, setNotebookName] = React.useState("untitled_notebook.dfnb");
   const [isEditingName, setIsEditingName] = React.useState(false);
-  const [cells, setCells] = React.useState<CellState[]>(WELCOME_NOTEBOOK);
+  const [pages, setPages] = React.useState<NotebookPage[]>([
+    {
+      id: "page-1",
+      title: "Canvas 1",
+      cellIds: WELCOME_NOTEBOOK.map((c) => c.id),
+      gridConfig: DEFAULT_GRID_CONFIG,
+    },
+  ]);
+  const [activePageId, setActivePageId] = React.useState<string>("page-1");
+  const [editingPageId, setEditingPageId] = React.useState<string | null>(null);
+  const [showGridConfigModal, setShowGridConfigModal] = React.useState(false);
+
+  const [cells, setCells] = React.useState<CellState[]>(() =>
+    WELCOME_NOTEBOOK.map((c, idx) => ({
+      ...c,
+      layout: {
+        x: (idx % 2) * 6,
+        y: Math.floor(idx / 2) * 8,
+        w: 6,
+        h: 8,
+      },
+    }))
+  );
+
   const [activeCellId, setActiveCellId] = React.useState<string | null>(null);
   const [copiedCellId, setCopiedCellId] = React.useState<string | null>(null);
   const [copiedCellCodeId, setCopiedCellCodeId] = React.useState<string | null>(null);
 
+  const draggedCellIndexRef = React.useRef<number | null>(null);
   const nextExecIndexRef = React.useRef(1);
   const sharedStateRef = React.useRef<Record<string, any>>({});
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const babelRef = React.useRef<any>(null);
-  const [isBabelLoading, setIsBabelLoading] = React.useState(false);
 
-  // Shared button styles
-  const BTN_BASE = "flex items-center gap-1.5 font-mono tracking-wider uppercase border border-[(--nb-border-default)] bg-[(--nb-bg-surface)] hover:bg-[(--nb-bg-hover)] text-[(--nb-text-secondary)] hover:text-[(--nb-text-primary)] transition-colors rounded cursor-pointer";
-  const BTN_SM = `${BTN_BASE} px-2.5 py-1.5 text-[9px] font-semibold`;
-  const BTN_MD = `${BTN_BASE} px-3 py-1.5 text-[10px] font-medium`;
-
-  const CELL_TYPES = [
-    { type: "code" as const, label: "Code" },
-    { type: "jsx" as const, label: "JSX" },
-    { type: "markdown" as const, label: "Markdown" },
-  ];
-
-  const findLastExpressionLine = (code: string) => {
-    const lines = code.split("\n");
-    for (let i = lines.length - 1; i >= 0; i--) {
-      if (lines[i].trim() && !lines[i].trim().startsWith("//") && !lines[i].trim().startsWith("/*")) {
-        return { lastLine: lines[i].trim(), lastLineIndex: i };
-      }
-    }
-    return { lastLine: "", lastLineIndex: -1 };
-  };
+  const activePage = pages.find((p) => p.id === activePageId);
+  const isCanvas = (activePage?.layoutMode ?? "canvas") === "canvas";
+  const gridConfig = activePage?.gridConfig ?? DEFAULT_GRID_CONFIG;
+  const pageCellIds = activePage ? activePage.cellIds : [];
+  const activeCells = pageCellIds
+    .map((id) => cells.find((c) => c.id === id))
+    .filter((c): c is CellState => !!c);
 
   const copyFlash = (id: string, type: "cell" | "code" = "cell") => {
     if (type === "code") {
@@ -141,52 +62,24 @@ export default function DFScriptNotebook() {
     }
   };
 
-  const loadBabel = async () => {
-    if (babelRef.current) return babelRef.current;
-    setIsBabelLoading(true);
-    try {
-      // @ts-ignore
-      const module = await import("https://esm.sh/@babel/standalone");
-      babelRef.current = module.default || module;
-      return babelRef.current;
-    } catch (e) {
-      console.error("Failed to load Babel: ", e);
-      throw new Error("Failed to load Babel standalone transpiler from CDN. Please check your internet connection.");
-    } finally {
-      setIsBabelLoading(false);
-    }
-  };
-
-  const extractDeclaredVars = (code: string) => {
-    const vars: string[] = [];
-    const regex = /(?:const|let|var)\s+([a-zA-Z_$][\w$]*)\s*=|function\s+([a-zA-Z_$][\w$]*)\s*\(/g;
-    let match;
-    while ((match = regex.exec(code)) !== null) {
-      const name = match[1] || match[2];
-      if (name && !vars.includes(name)) {
-        vars.push(name);
-      }
-    }
-    return vars;
-  };
-
   const runCell = async (cellId: string) => {
-    const cellIndex = cells.findIndex(c => c.id === cellId);
+    const cellIndex = cells.findIndex((c) => c.id === cellId);
     if (cellIndex === -1) return;
 
     const cell = cells[cellIndex];
-
     if (cell.type === "markdown") {
-      setCells(prev => prev.map(c => c.id === cellId ? { ...c, isCodeCollapsed: true } : c));
+      setCells((prev) => prev.map((c) => (c.id === cellId ? { ...c, isCodeCollapsed: true } : c)));
       return;
     }
 
     const code = cell.code.trim();
     if (!code) return;
 
-    setCells(prev => prev.map(c => c.id === cellId ? { ...c, execIndex: null, error: null, timeTaken: "..." } : c));
+    setCells((prev) =>
+      prev.map((c) => (c.id === cellId ? { ...c, execIndex: null, error: null, timeTaken: "..." } : c))
+    );
 
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     const t0 = performance.now();
     const cellLogs: string[] = [];
@@ -197,18 +90,20 @@ export default function DFScriptNotebook() {
 
     const collectLog = (...args: any[]) => {
       originalLog(...args);
-      const msg = args.map(arg => {
-        if (arg === null) return "null";
-        if (arg === undefined) return "undefined";
-        if (typeof arg === "object") {
-          try {
-            return JSON.stringify(arg);
-          } catch {
-            return String(arg);
+      const msg = args
+        .map((arg) => {
+          if (arg === null) return "null";
+          if (arg === undefined) return "undefined";
+          if (typeof arg === "object") {
+            try {
+              return JSON.stringify(arg);
+            } catch {
+              return String(arg);
+            }
           }
-        }
-        return String(arg);
-      }).join(" ");
+          return String(arg);
+        })
+        .join(" ");
       cellLogs.push(msg);
     };
 
@@ -219,126 +114,59 @@ export default function DFScriptNotebook() {
 
     try {
       let finalJSCode = code;
-
       if (cell.type === "jsx") {
-        let babel;
-        try {
-          babel = await loadBabel();
-        } catch (babelErr: any) {
-          throw babelErr;
-        }
-
-        const transpiled = babel.transform(code, {
-          presets: [["react", { runtime: "classic" }]],
-          compact: true,
-          filename: "cell.tsx"
-        }).code || "";
+        const babel = await loadBabel();
+        const transpiled =
+          babel.transform(code, {
+            presets: [["react", { runtime: "classic" }]],
+            compact: true,
+            filename: "cell.tsx",
+          }).code || "";
         finalJSCode = transpiled;
       }
 
-      const declaredVars = extractDeclaredVars(code);
-      const filteredKeys = Object.keys(sharedStateRef.current).filter(k => !declaredVars.includes(k));
-      const filteredVals = filteredKeys.map(k => sharedStateRef.current[k]);
-      const varExports = declaredVars.map(v => `${v}: typeof ${v} !== 'undefined' ? ${v} : undefined`).join(',\n');
+      const { bodyCode, declaredVars } = buildExecutableBody(code, cell.type, finalJSCode);
+      const { returnValue, updatedVars } = await executeCodeScope(
+        bodyCode,
+        declaredVars,
+        sharedStateRef.current
+      );
 
-      let bodyCode = "";
-      if (cell.type === "jsx") {
-        const { lastLine, lastLineIndex } = findLastExpressionLine(finalJSCode);
-        const lines = finalJSCode.split("\n");
+      Object.assign(sharedStateRef.current, updatedVars);
 
-        let componentBody = "";
-        if (lastLine && !/^(const|let|var|function|class|return|if|for|while|try|import|throw)\b/.test(lastLine)) {
-          const cleanLastLine = lastLine.endsWith(";") ? lastLine.slice(0, -1) : lastLine;
-          const prefix = lines.slice(0, lastLineIndex).join("\n");
-          componentBody = `
-            ${prefix}
-            return (${cleanLastLine});
-          `;
-        } else {
-          componentBody = `
-            ${finalJSCode}
-          `;
-        }
-
-        bodyCode = `
-          const CellComponent = () => {
-            try {
-              ${componentBody}
-            } catch (innerErr) {
-              return React.createElement("div", { className: "text-rose-500 font-mono text-xs p-2 bg-rose-950/10 border border-rose-900/30 rounded" }, "Render Error: " + innerErr.message);
-            }
-          };
-          return {
-            _returnValue: React.createElement(CellComponent, null),
-            ${varExports}
-          };
-        `;
-      } else {
-        const { lastLine, lastLineIndex } = findLastExpressionLine(finalJSCode);
-        const lines = finalJSCode.split("\n");
-
-        if (lastLine && !/^(const|let|var|function|class|return|if|for|while|try|import|throw)\b/.test(lastLine)) {
-          const cleanLastLine = lastLine.endsWith(";") ? lastLine.slice(0, -1) : lastLine;
-          const prefix = lines.slice(0, lastLineIndex).join("\n");
-          bodyCode = `
-            ${prefix}
-            const _cell_result = (${cleanLastLine});
-            return {
-              _returnValue: _cell_result,
-              ${varExports}
-            };
-          `;
-        } else {
-          bodyCode = `
-            ${finalJSCode}
-            return {
-              _returnValue: undefined,
-              ${varExports}
-            };
-          `;
-        }
-      }
-
-      const htmlHelper = (str: string) => ({ toHTML: () => str });
-      const hookKeys = ["React.useState", "React.useEffect", "React.useRef", "useMemo", "useCallback", "useContext", "html"];
-      const hookVals = [React.useState, React.useEffect, React.useRef, React.useMemo, React.useCallback, React.useContext, htmlHelper];
-
-      ($df as any).html = htmlHelper;
-
-      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-      const fn = new AsyncFunction("$df", "React", ...hookKeys, ...filteredKeys, bodyCode);
-      const execRes = await fn($df, React, ...hookVals, ...filteredVals);
       const elapsed = performance.now() - t0;
-
-      let outputVal = undefined;
-      if (execRes) {
-        outputVal = execRes._returnValue;
-        for (const key of Object.keys(execRes)) {
-          if (key !== "_returnValue") {
-            sharedStateRef.current[key] = execRes[key];
-          }
-        }
-      }
-
       const runNum = nextExecIndexRef.current++;
-      setCells(prev => prev.map(c => c.id === cellId ? {
-        ...c,
-        output: outputVal,
-        error: null,
-        timeTaken: `${elapsed.toFixed(2)}ms`,
-        execIndex: runNum,
-        logs: cellLogs
-      } : c));
+
+      setCells((prev) =>
+        prev.map((c) =>
+          c.id === cellId
+            ? {
+                ...c,
+                output: returnValue,
+                error: null,
+                timeTaken: `${elapsed.toFixed(2)}ms`,
+                execIndex: runNum,
+                logs: cellLogs,
+              }
+            : c
+        )
+      );
     } catch (err: any) {
       const elapsed = performance.now() - t0;
-      setCells(prev => prev.map(c => c.id === cellId ? {
-        ...c,
-        output: null,
-        error: err?.message || String(err),
-        timeTaken: `${elapsed.toFixed(2)}ms`,
-        execIndex: nextExecIndexRef.current++,
-        logs: cellLogs
-      } : c));
+      setCells((prev) =>
+        prev.map((c) =>
+          c.id === cellId
+            ? {
+                ...c,
+                output: null,
+                error: err?.message || String(err),
+                timeTaken: `${elapsed.toFixed(2)}ms`,
+                execIndex: nextExecIndexRef.current++,
+                logs: cellLogs,
+              }
+            : c
+        )
+      );
     } finally {
       console.log = originalLog;
       console.warn = originalWarn;
@@ -356,35 +184,42 @@ export default function DFScriptNotebook() {
       chain = chain.then(() => {
         if (cell.type === "code" || cell.type === "jsx") {
           return runCell(cell.id);
-        } else {
-          setCells(prev => prev.map(c => c.id === cell.id ? { ...c, isCodeCollapsed: true } : c));
-          return Promise.resolve();
         }
+        setCells((prev) => prev.map((c) => (c.id === cell.id ? { ...c, isCodeCollapsed: true } : c)));
+        return Promise.resolve();
       });
     });
   };
 
-  const addCellAtIndex = (index: number, type: "code" | "jsx" | "markdown") => {
-    const newId = `cell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
+  const addCellAtIndex = (index: number, type: CellType) => {
+    const newId = `cell-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     let initialCode = "";
     if (type === "markdown") {
       initialCode = "## Double-click to edit Markdown\n* Bullet point 1\n* Bullet point 2";
     } else if (type === "jsx") {
-      initialCode = `// JSX Cells let you render interactive React components natively!
-const [count, setCount] = React.useState(0);
-
-<div className="flex flex-col gap-3 items-start font-sans">
-  <h4 className="text-sm font-semibold text-emerald-400">JSX Live Component Output</h4>
-  <p className="text-xs text-text-muted">This is a fully reactive cell rendering directly inside the virtual DOM!</p>
-  <button
-    onClick={() => setCount(count + 1)}
-    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition-all text-black font-mono text-xs rounded font-bold cursor-pointer"
-  >
-    Clicked: {count} times
-  </button>
-</div>`;
+      initialCode = `// JSX Cells let you render interactive React components natively!\nconst [count, setCount] = React.useState(0);\n\n<div className="flex flex-col gap-3 items-start font-sans">\n  <h4 className="text-sm font-semibold text-emerald-400">JSX Live Component Output</h4>\n  <p className="text-xs text-text-muted">This is a fully reactive cell rendering directly inside the virtual DOM!</p>\n  <button\n    onClick={() => setCount(count + 1)}\n    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition-all text-black font-mono text-xs rounded font-bold cursor-pointer"\n  >\n    Clicked: {count} times\n  </button>\n</div>`;
     }
+
+    // Find next available non-overlapping slot on the canvas
+    const activePageCells = (activePage?.cellIds || [])
+      .map((id) => cells.find((c) => c.id === id))
+      .filter((c): c is CellState => !!c);
+
+    let nextY = 0;
+    if (activePageCells.length > 0) {
+      nextY = Math.max(
+        ...activePageCells.map((c) => (c.layout ? c.layout.y + c.layout.h : 0))
+      );
+    }
+
+    const defaultCols = gridConfig.columns >= 12 ? 6 : Math.min(6, gridConfig.columns);
+    const newCellLayout: CellLayout = {
+      x: 0,
+      y: nextY,
+      w: defaultCols,
+      h: 8,
+      z: 1,
+    };
 
     const newCell: CellState = {
       id: newId,
@@ -395,66 +230,80 @@ const [count, setCount] = React.useState(0);
       timeTaken: null,
       execIndex: null,
       isCodeCollapsed: false,
-      isOutputCollapsed: false
+      isOutputCollapsed: false,
+      layout: newCellLayout,
     };
-    setCells(prev => {
+
+    setCells((prev) => {
       const copy = [...prev];
       copy.splice(index, 0, newCell);
       return copy;
     });
+
+    setPages((prev) =>
+      prev.map((p) => {
+        if (p.id !== activePageId) return p;
+        const ids = [...p.cellIds];
+        ids.splice(index, 0, newId);
+        return { ...p, cellIds: ids };
+      })
+    );
     setActiveCellId(newId);
   };
 
-  const addCell = () => {
-    addCellAtIndex(cells.length, "code");
-  };
-
   const deleteCell = (id: string) => {
-    setCells(prev => prev.filter(c => c.id !== id));
-    if (activeCellId === id) {
-      setActiveCellId(null);
-    }
+    setCells((prev) => prev.filter((c) => c.id !== id));
+    setPages((prev) =>
+      prev.map((p) => ({
+        ...p,
+        cellIds: p.cellIds.filter((cellId) => cellId !== id),
+      }))
+    );
+    if (activeCellId === id) setActiveCellId(null);
   };
 
   const moveCellUp = (index: number) => {
     if (index === 0) return;
-    setCells(prev => {
-      const copy = [...prev];
-      const temp = copy[index];
-      copy[index] = copy[index - 1];
-      copy[index - 1] = temp;
-      return copy;
-    });
+    if (activePage) {
+      const updated = reorderArray(activePage.cellIds, index, index - 1);
+      setPages((prev) => prev.map((p) => (p.id === activePageId ? { ...p, cellIds: updated } : p)));
+    } else {
+      setCells((prev) => reorderArray(prev, index, index - 1));
+    }
   };
 
   const moveCellDown = (index: number) => {
-    if (index === cells.length - 1) return;
-    setCells(prev => {
-      const copy = [...prev];
-      const temp = copy[index];
-      copy[index] = copy[index + 1];
-      copy[index + 1] = temp;
-      return copy;
-    });
+    if (activePage) {
+      if (index >= activePage.cellIds.length - 1) return;
+      const updated = reorderArray(activePage.cellIds, index, index + 1);
+      setPages((prev) => prev.map((p) => (p.id === activePageId ? { ...p, cellIds: updated } : p)));
+    } else {
+      if (index >= cells.length - 1) return;
+      setCells((prev) => reorderArray(prev, index, index + 1));
+    }
   };
 
-  const toggleCodeCollapse = (id: string) => {
-    setCells(prev => prev.map(c => c.id === id ? { ...c, isCodeCollapsed: !c.isCodeCollapsed } : c));
-  };
-
-  const toggleOutputCollapse = (id: string) => {
-    setCells(prev => prev.map(c => c.id === id ? { ...c, isOutputCollapsed: !c.isOutputCollapsed } : c));
+  const togglePageLayoutMode = () => {
+    setPages((prev) =>
+      prev.map((p) => {
+        if (p.id !== activePageId) return p;
+        const currentMode = p.layoutMode ?? "canvas";
+        return { ...p, layoutMode: currentMode === "canvas" ? "document" : "canvas" };
+      })
+    );
   };
 
   const clearOutputs = () => {
-    setCells(prev => prev.map(c => ({
-      ...c,
-      output: null,
-      error: null,
-      timeTaken: null,
-      execIndex: null,
-      logs: []
-    })));
+    setCells((prev) =>
+      prev.map((c) => ({
+        ...c,
+        output: null,
+        error: null,
+        timeTaken: null,
+        execIndex: null,
+        logs: [],
+      }))
+    );
   };
 
   const resetNotebook = () => {
@@ -471,25 +320,111 @@ const [count, setCount] = React.useState(0);
           timeTaken: null,
           execIndex: null,
           isCodeCollapsed: false,
-          isOutputCollapsed: false
-        }
+          isOutputCollapsed: false,
+        },
       ]);
     }
   };
 
-  const saveNotebook = () => {
-    const dataStr = JSON.stringify({ name: notebookName, cells }, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = notebookName.endsWith(".dfnb") ? notebookName : `${notebookName}.dfnb`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const updateCellLayout = (id: string, newLayout: Partial<CellLayout>) => {
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== id) return c;
+        const current = c.layout ?? { x: 0, y: 0, w: 12, h: 6, z: 1 };
+        return {
+          ...c,
+          layout: {
+            x: newLayout.x !== undefined ? newLayout.x : current.x,
+            y: newLayout.y !== undefined ? newLayout.y : current.y,
+            w: newLayout.w !== undefined ? newLayout.w : current.w,
+            h: newLayout.h !== undefined ? newLayout.h : current.h,
+            z: newLayout.z !== undefined ? newLayout.z : (current.z ?? 1),
+          },
+        };
+      })
+    );
   };
 
-  const triggerLoadNotebook = () => {
-    fileInputRef.current?.click();
+  const updatePageGridConfig = (config: Partial<PageGridConfig>) => {
+    setPages((prev) =>
+      prev.map((p) => {
+        if (p.id !== activePageId) return p;
+        return {
+          ...p,
+          gridConfig: {
+            columns: config.columns ?? p.gridConfig?.columns ?? DEFAULT_GRID_CONFIG.columns,
+            rows: config.rows ?? p.gridConfig?.rows ?? DEFAULT_GRID_CONFIG.rows,
+            rowHeight: config.rowHeight ?? p.gridConfig?.rowHeight ?? DEFAULT_GRID_CONFIG.rowHeight,
+            showGridLines: config.showGridLines ?? p.gridConfig?.showGridLines ?? DEFAULT_GRID_CONFIG.showGridLines,
+          },
+        };
+      })
+    );
+  };
+
+  const addPage = () => {
+    const newPageId = `page-${Date.now()}`;
+    const newPageNum = pages.length + 1;
+    const initialCellId = `cell-${Date.now()}`;
+    const initialCell: CellState = {
+      id: initialCellId,
+      type: "code",
+      code: "",
+      output: null,
+      error: null,
+      timeTaken: null,
+      execIndex: null,
+      width: "full",
+      isCodeCollapsed: false,
+      isOutputCollapsed: false,
+      layout: { x: 0, y: 0, w: 6, h: 8, z: 1 },
+    };
+    setCells((prev) => [...prev, initialCell]);
+    setPages((prev) => [
+      ...prev,
+      { id: newPageId, title: `Canvas ${newPageNum}`, cellIds: [initialCellId] },
+    ]);
+    setActivePageId(newPageId);
+  };
+
+  const deletePage = (pageId: string) => {
+    if (pages.length <= 1) return;
+    const pageToDelete = pages.find((p) => p.id === pageId);
+    if (pageToDelete) {
+      setCells((prev) => prev.filter((c) => !pageToDelete.cellIds.includes(c.id)));
+    }
+    const remaining = pages.filter((p) => p.id !== pageId);
+    setPages(remaining);
+    if (activePageId === pageId) setActivePageId(remaining[0].id);
+  };
+
+  const renamePage = (pageId: string, newTitle: string) => {
+    setPages((prev) => prev.map((p) => (p.id === pageId ? { ...p, title: newTitle || p.title } : p)));
+    setEditingPageId(null);
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    draggedCellIndexRef.current = index;
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    const sourceIndex = draggedCellIndexRef.current;
+    if (sourceIndex === null || sourceIndex === targetIndex) return;
+
+    if (activePage) {
+      const updated = reorderArray(activePage.cellIds, sourceIndex, targetIndex);
+      setPages((prev) => prev.map((p) => (p.id === activePageId ? { ...p, cellIds: updated } : p)));
+    } else {
+      setCells((prev) => reorderArray(prev, sourceIndex, targetIndex));
+    }
+    draggedCellIndexRef.current = null;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -499,124 +434,99 @@ const [count, setCount] = React.useState(0);
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const parsed = JSON.parse(event.target?.result as string);
-        if (parsed && Array.isArray(parsed.cells)) {
-          setNotebookName(parsed.name || file.name);
-          setCells(parsed.cells);
-          sharedStateRef.current = {};
-          nextExecIndexRef.current = 1;
-        } else {
-          alert("Invalid notebook format. Ensure it contains a valid cells list.");
+        const parsed = parseNotebookJson(event.target?.result as string, file.name);
+        setNotebookName(parsed.name);
+        setCells(parsed.cells);
+        if (parsed.pages && parsed.pages.length > 0) {
+          setPages(parsed.pages);
+          setActivePageId(parsed.activePageId || parsed.pages[0].id);
         }
-      } catch (err) {
-        alert("Failed to parse notebook file.");
+        sharedStateRef.current = {};
+        nextExecIndexRef.current = 1;
+      } catch (err: any) {
+        alert(err?.message || "Failed to parse notebook file.");
       }
     };
     reader.readAsText(file);
     e.target.value = "";
   };
 
-  const updateCellCode = (id: string, newCode: string) => {
-    setCells(prev => prev.map(c => c.id === id ? { ...c, code: newCode } : c));
-  };
-
   return (
-    <div id="df-script-notebook" className="grow h-full overflow-y-auto bg-[(--nb-bg-app)] flex flex-col min-w-0 select-text animate-fade-in">
+    <div
+      id="df-script-notebook"
+      className="grow h-full overflow-y-auto bg-[#060606] flex flex-col min-w-0 select-text animate-fade-in"
+    >
+      <NotebookHeader
+        notebookName={notebookName}
+        isEditingName={isEditingName}
+        layoutMode={isCanvas ? "canvas" : "document"}
+        onSetNotebookName={setNotebookName}
+        onSetIsEditingName={setIsEditingName}
+        onAddCell={(type) => addCellAtIndex(activeCells.length, type)}
+        onRunAll={runAllCells}
+        onClearOutputs={clearOutputs}
+        onResetNotebook={resetNotebook}
+        onSaveNotebook={() =>
+          downloadNotebookFile({ name: notebookName, cells, pages, activePageId })
+        }
+        onTriggerLoadNotebook={() => fileInputRef.current?.click()}
+        onToggleLayoutMode={togglePageLayoutMode}
+        onFileChange={handleFileChange}
+        fileInputRef={fileInputRef}
+      />
 
-      <div className="sticky top-0 bg-[(--nb-bg-app-rgb)/95] backdrop-blur-md z-30 border-b border-[(--nb-border-cell)] shadow-lg w-full flex justify-center py-4 px-6 md:px-10 select-none shrink-0">
-        <div className="w-full max-w-4xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📓</span>
-            {isEditingName ? (
-              <input
-                type="text"
-                value={notebookName}
-                onChange={(e) => setNotebookName(e.target.value)}
-                onBlur={() => setIsEditingName(false)}
-                onKeyDown={(e) => { if (e.key === "Enter") setIsEditingName(false); }}
-                autoFocus
-                className="bg-[(--nb-bg-surface)] border border-[(--nb-border-default)] rounded px-2 py-0.5 text-[(--nb-text-primary)] font-mono text-sm focus:outline-none focus:border-[(--nb-text-secondary)]"
-              />
-            ) : (
-              <h1
-                onClick={() => setIsEditingName(true)}
-                className="text-sm font-mono font-semibold text-[(--nb-text-primary)] cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-1.5"
-              >
-                {notebookName}
-                <span className="text-[(--nb-text-muted)] text-[10px]">
-                  <Edit className="w-3 h-3" />
-                </span>
-              </h1>
-            )}
-          </div>
+      {isCanvas && (
+        <CanvasPageBar
+          pages={pages}
+          activePageId={activePageId}
+          editingPageId={editingPageId}
+          gridConfig={gridConfig}
+          showGridConfigModal={showGridConfigModal}
+          onSelectPage={setActivePageId}
+          onAddPage={addPage}
+          onDeletePage={deletePage}
+          onRenamePage={renamePage}
+          onSetEditingPageId={setEditingPageId}
+          onToggleGridLines={() =>
+            updatePageGridConfig({ showGridLines: !gridConfig.showGridLines })
+          }
+          onToggleGridModal={() => setShowGridConfigModal(!showGridConfigModal)}
+          onUpdateGridConfig={updatePageGridConfig}
+        />
+      )}
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {CELL_TYPES.map(({ type, label }) => (
-              <button
-                key={type}
-                onClick={() => addCellAtIndex(cells.length, type)}
-                className={BTN_SM}
-              >
-                <Add className="w-3.5 h-3.5" /> + {label}
-              </button>
-            ))}
-            <button onClick={runAllCells} className={BTN_MD}>
-              <PlaylistPlay className="w-3.5 h-3.5" /> Run All
-            </button>
-            <button onClick={clearOutputs} className={BTN_MD}>
-              <DeleteSweep className="w-3.5 h-3.5" /> Clear Outputs
-            </button>
-            <button onClick={resetNotebook} className={BTN_MD}>
-              <RestartAlt className="w-3.5 h-3.5" /> Reset
-            </button>
-            <button onClick={saveNotebook} className={BTN_MD}>
-              <Save className="w-3.5 h-3.5" /> Save
-            </button>
-            <button onClick={triggerLoadNotebook} className={BTN_MD}>
-              <FolderOpen className="w-3.5 h-3.5" /> Load
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".dfnb"
-              className="hidden"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 px-6 md:px-10 pt-2 pb-24">
-        {cells.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center gap-3 border border-dashed border-[(--nb-border-default)] rounded bg-[(--nb-bg-surface-rgb)/40] select-none">
-            <span className="text-3xl">📓</span>
-            <p className="text-xs text-[(--nb-text-muted)]">Your notebook is empty. Click "+ Code" above to add a cell.</p>
-          </div>
-        ) : (
-          cells.map((cell, idx) => (
-            <Cell
-              key={cell.id}
-              cell={cell}
-              index={idx}
-              isActive={activeCellId === cell.id}
-              totalCells={cells.length}
-              copiedCellId={copiedCellId}
-              copiedCellCodeId={copiedCellCodeId}
-              onRun={runCell}
-              onDelete={deleteCell}
-              onMoveUp={moveCellUp}
-              onMoveDown={moveCellDown}
-              onToggleCodeCollapse={toggleCodeCollapse}
-              onToggleOutputCollapse={toggleOutputCollapse}
-              onUpdateCode={updateCellCode}
-              onAddCell={addCellAtIndex}
-              onCopyCell={(id) => copyFlash(id, "cell")}
-              onCopyCellCode={(id) => copyFlash(id, "code")}
-            />
-          ))
-        )}
-      </div>
-
+      <CanvasBody
+        activeCells={activeCells}
+        isCanvas={isCanvas}
+        gridConfig={gridConfig}
+        activeCellId={activeCellId}
+        copiedCellId={copiedCellId}
+        copiedCellCodeId={copiedCellCodeId}
+        onRunCell={runCell}
+        onDeleteCell={deleteCell}
+        onMoveCellUp={moveCellUp}
+        onMoveCellDown={moveCellDown}
+        onToggleCodeCollapse={(id) =>
+          setCells((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, isCodeCollapsed: !c.isCodeCollapsed } : c))
+          )
+        }
+        onToggleOutputCollapse={(id) =>
+          setCells((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, isOutputCollapsed: !c.isOutputCollapsed } : c))
+          )
+        }
+        onUpdateCellCode={(id, code) =>
+          setCells((prev) => prev.map((c) => (c.id === id ? { ...c, code } : c)))
+        }
+        onAddCellAtIndex={addCellAtIndex}
+        onCopyCell={(id) => copyFlash(id, "cell")}
+        onCopyCellCode={(id) => copyFlash(id, "code")}
+        onUpdateCellLayout={updateCellLayout}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      />
     </div>
   );
 }

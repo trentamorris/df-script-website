@@ -1,0 +1,72 @@
+.scrollableCanvasContainer {
+  --canvas-height: 36px;
+  --scroll-content-start-offset: 0px;
+  --scroll-content-end-offset: 0px;
+  --scroll-content-item-spacing: 0px;
+  --scroll-arrow-background-color: rgba(10, 10, 10, 0.95);
+  --scroll-arrow-color: rgba(241, 241, 241, 1);
+}
+
+.scrollableCanvasContainer .scrollableArea {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: var(--scroll-content-item-spacing);
+}
+
+.scrollableCanvasContainer .scrollableArea::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollableCanvasContainer .scrollableArea::before,
+.scrollableCanvasContainer .scrollableArea::after {
+  pointer-events: none;
+  flex-shrink: 0;
+  height: 100%;
+  content: "";
+}
+
+.scrollableArea.hasStartOffset::before {
+  width: var(--scroll-content-start-offset, 0px);
+  margin-left: calc(-1 * var(--scroll-content-item-spacing));
+}
+
+.scrollableArea.hasEndOffset::after {
+  width: var(--scroll-content-end-offset, 0px);
+  margin-left: calc(-1 * var(--scroll-content-item-spacing));
+}
+
+.scrollableCanvasContainer .arrowBtnContainer[data-direction="left"]::after,
+.scrollableCanvasContainer .arrowBtnContainer[data-direction="right"]::before {
+  pointer-events: none;
+  height: 100%;
+  width: 44px;
+  content: "";
+}
+
+.scrollableCanvasContainer .arrowBtnContainer[data-direction="left"]::after {
+  background: linear-gradient(to right, var(--scroll-arrow-background-color) 20%, rgba(0, 0, 0, 0) 100%);
+}
+
+.scrollableCanvasContainer .arrowBtnContainer[data-direction="right"]::before {
+  background: linear-gradient(to left, var(--scroll-arrow-background-color) 20%, rgba(0, 0, 0, 0) 100%);
+}
+
+.scrollableCanvasContainer .arrowBtnBg {
+  align-self: stretch;
+  background-color: var(--scroll-arrow-background-color);
+  display: flex;
+  align-items: center;
+}
+
+.scrollableCanvasContainer .arrowBtn {
+  aspect-ratio: 1 / 1;
+  height: var(--canvas-height);
+  width: auto;
+  min-width: unset !important;
+  padding: unset !important;
+  color: var(--scroll-arrow-color) !important;
+}
+
+.scrollableCanvasContainer .arrowBtn svg {
+  fill: currentColor;
+}

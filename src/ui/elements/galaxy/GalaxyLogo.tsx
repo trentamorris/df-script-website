@@ -14,6 +14,10 @@ export function GalaxyLogo({
   repelRadius = 75,
   repelStrength = 0.4,
   triggerPulse,
+  enableFilaments = true,
+  enableTransform = true,
+  minScale = 0.4,
+  maxScale = 2.4,
 }: GalaxyLogoProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -22,12 +26,43 @@ export function GalaxyLogo({
   const pulseStarsRef = React.useRef<() => void>(() => {});
   const retriggerIntroRef = React.useRef<(clickX?: number, clickY?: number) => void>(() => {});
 
-  // Subtle 3D tilt angles for mouse hover (fixed orientation, no free spinning)
+  // 3D tilt angles for mouse hover + zero-G wave
   const tiltRef = React.useRef({
     pitch: 0,
     yaw: 0,
     targetPitch: 0,
     targetYaw: 0,
+  });
+
+  // Interactive gesture state: target vs current smoothed angles (inertial dampening & silky spring return)
+  const gestureRef = React.useRef({
+    isInteracting: false,
+    dragDistance: 0,
+    // Current animated values
+    yaw: 0,
+    pitch: 0,
+    roll: 0,
+    scale: 1,
+    // Targets smoothly followed during drag
+    targetYaw: 0,
+    targetPitch: 0,
+    targetRoll: 0,
+    targetScale: 1,
+    // Velocities for momentum and spring return
+    vyaw: 0,
+    vpitch: 0,
+    vroll: 0,
+    vscale: 0,
+    // Delta time tracking
+    lastTimestamp: 0,
+    // Pointer drag / pinch tracking
+    pointers: new Map<number, { x: number; y: number }>(),
+    lastPointerX: 0,
+    lastPointerY: 0,
+    initialPinchDist: 0,
+    initialPinchAngle: 0,
+    startScale: 1,
+    startRoll: 0,
   });
 
   React.useEffect(() => {
@@ -186,6 +221,30 @@ export function GalaxyLogo({
           driftRadius: 0.7 + Math.random() * 0.8,
         });
       }
+
+      // Pre-compute 2-3 nearest neighbors within the same letter stroke (distance <= 14px)
+      // to form luminous constellation filaments during hover
+      const maxFilamentDistSq = 14 * 14;
+      for (let i = 0; i < stars.length; i++) {
+        const sA = stars[i];
+        const neighbors: GalaxyLogoStar[] = [];
+        for (let j = i + 1; j < stars.length; j++) {
+          const sB = stars[j];
+          const dx = sA.localOffsetX - sB.localOffsetX;
+          // Fast bounding box check
+          if (Math.abs(dx) > 14) continue;
+          const dy = sA.localOffsetY - sB.localOffsetY;
+          if (Math.abs(dy) > 14) continue;
+          const dSq = dx * dx + dy * dy;
+          if (dSq > 0.5 && dSq <= maxFilamentDistSq) {
+            neighbors.push(sB);
+            if (neighbors.length >= 3) break;
+          }
+        }
+        if (neighbors.length > 0) {
+          sA.neighbors = neighbors;
+        }
+      }
     };
 
     initScene();
@@ -197,38 +256,54 @@ export function GalaxyLogo({
     resizeObserver.observe(container);
     window.addEventListener("resize", setupCanvasResolution);
 
-    // In-place elastic bloom: stars burst outwards from click point, float, and spring snap back into letters
+    // Gravitational Singularity Bloom: stars first pull inward toward the click point for ~90ms,
+    // building kinetic tension before exploding outward in a celestial swirl and spring snapping back
+    let clickTimeoutId: number | null = null;
     retriggerIntroRef.current = (clickX?: number, clickY?: number) => {
       if (stars.length === 0) return;
+      if (clickTimeoutId) clearTimeout(clickTimeoutId);
+
       const rect = container.getBoundingClientRect();
       const originX = clickX ?? (rect.left + rect.width / 2);
       const originY = clickY ?? (rect.top + rect.height / 2);
 
+      // Phase 1: Micro-implosion singularity pull
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
-        const dx = s.x - originX;
-        const dy = s.y - originY;
+        const dx = originX - s.x;
+        const dy = originY - s.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const normX = dx / dist;
-        const normY = dy / dist;
-
-        // Radial explosion velocity with organic celestial swirl
-        const burstSpeed = 5.5 + Math.random() * 8.5;
-        const swirlAngle = 0.35 * (Math.random() < 0.5 ? 1 : -1);
-        const cosS = Math.cos(swirlAngle);
-        const sinS = Math.sin(swirlAngle);
-        const swirlX = normX * cosS - normY * sinS;
-        const swirlY = normX * sinS + normY * cosS;
-
-        s.vx = swirlX * burstSpeed;
-        s.vy = swirlY * burstSpeed;
-
-        // Trigger a couple of spark glints on impact
-        if (Math.random() < 0.08) {
-          s.glistenProgress = 0.01;
-          s.glistenDuration = 35 + Math.floor(Math.random() * 20);
-        }
+        const pullSpeed = Math.min(6, dist * 0.12);
+        s.vx = (dx / dist) * pullSpeed;
+        s.vy = (dy / dist) * pullSpeed;
       }
+
+      // Phase 2: Explosive outward cosmic dispersal
+      clickTimeoutId = window.setTimeout(() => {
+        for (let i = 0; i < stars.length; i++) {
+          const s = stars[i];
+          const dx = s.x - originX;
+          const dy = s.y - originY;
+          const dist = Math.hypot(dx, dy) || 1;
+          const normX = dx / dist;
+          const normY = dy / dist;
+
+          const burstSpeed = 6.5 + Math.random() * 9.5;
+          const swirlAngle = 0.4 * (Math.random() < 0.5 ? 1 : -1);
+          const cosS = Math.cos(swirlAngle);
+          const sinS = Math.sin(swirlAngle);
+          const swirlX = normX * cosS - normY * sinS;
+          const swirlY = normX * sinS + normY * cosS;
+
+          s.vx = swirlX * burstSpeed;
+          s.vy = swirlY * burstSpeed;
+
+          if (Math.random() < 0.12) {
+            s.glistenProgress = 0.01;
+            s.glistenDuration = 35 + Math.floor(Math.random() * 20);
+          }
+        }
+      }, 85);
     };
 
     // Trigger dramatic constellation pulse on copy
@@ -291,26 +366,114 @@ export function GalaxyLogo({
         mouseY >= rect.top - 30 &&
         mouseY <= rect.bottom + 30;
 
-      // Astra Hover Behavior: subtle camera parallax tilt on hover, gentle zero-G cosmic wave when idle
-      if (isLogoHovered) {
-        const normX = (mouseX - currentCenterX) / (rect.width * 0.5);
-        const normY = (mouseY - currentCenterY) / (rect.height * 0.5);
-        tilt.targetYaw = Math.max(-0.14, Math.min(0.14, normX * 0.12));
-        tilt.targetPitch = Math.max(-0.12, Math.min(0.12, -normY * 0.10));
+      // Astra Hover Behavior: stays clean and flat until clicked/dragged or touched
+      tilt.targetYaw = 0;
+      tilt.targetPitch = 0;
+      tilt.yaw += (tilt.targetYaw - tilt.yaw) * 0.08;
+      tilt.pitch += (tilt.targetPitch - tilt.pitch) * 0.08;
+
+      // Calculate frame delta time in seconds, clamped between 10ms and 50ms (avoids frame spikes/hiccups)
+      const gesture = gestureRef.current;
+      const lastTime = gesture.lastTimestamp || timestamp;
+      const dt = Math.max(0.01, Math.min(0.05, (timestamp - lastTime) / 1000));
+      gesture.lastTimestamp = timestamp;
+
+      // Ultra-smooth exponential lerp during dragging, and critically damped harmonic oscillation on release
+      if (gesture.isInteracting) {
+        // High-responsiveness exponential follower: responsive, immediate tracking without hardware jitter
+        const followSpeed = 1 - Math.exp(-38 * dt);
+        gesture.yaw += (gesture.targetYaw - gesture.yaw) * followSpeed;
+        gesture.pitch += (gesture.targetPitch - gesture.pitch) * followSpeed;
+        gesture.roll += (gesture.targetRoll - gesture.roll) * followSpeed;
+        gesture.scale += (gesture.targetScale - gesture.scale) * followSpeed;
+
+        // Reset release velocities
+        gesture.vyaw = 0;
+        gesture.vpitch = 0;
+        gesture.vroll = 0;
+        gesture.vscale = 0;
       } else {
-        // Peaceful zero-G celestial wave (~3.5 deg yaw, ~2 deg pitch on a smooth 9s cycle)
-        const waveTime = time * 0.7;
-        tilt.targetYaw = Math.sin(waveTime) * 0.055;
-        tilt.targetPitch = Math.cos(waveTime * 0.85) * 0.035;
+        // High-fidelity second-order critically damped return to zero
+        const omega = 12.0; // Natural angular frequency (~350ms settling time)
+        const dampingRatio = 1.0; // Exactly 1.0 = Critical damping (fastest return with zero overshoot or oscillation)
+
+        // Yaw spring return
+        const fYaw = -omega * omega * gesture.yaw - 2 * dampingRatio * omega * gesture.vyaw;
+        gesture.vyaw += fYaw * dt;
+        gesture.yaw += gesture.vyaw * dt;
+
+        // Pitch spring return
+        const fPitch = -omega * omega * gesture.pitch - 2 * dampingRatio * omega * gesture.vpitch;
+        gesture.vpitch += fPitch * dt;
+        gesture.pitch += gesture.vpitch * dt;
+
+        // Roll spring return
+        const fRoll = -omega * omega * gesture.roll - 2 * dampingRatio * omega * gesture.vroll;
+        gesture.vroll += fRoll * dt;
+        gesture.roll += gesture.vroll * dt;
+
+        // Scale spring return to 1.0
+        const scaleError = gesture.scale - 1;
+        const fScale = -omega * omega * scaleError - 2 * dampingRatio * omega * gesture.vscale;
+        gesture.vscale += fScale * dt;
+        gesture.scale += gesture.vscale * dt;
+
+        // Keep targets aligned to current values when settling
+        gesture.targetYaw = gesture.yaw;
+        gesture.targetPitch = gesture.pitch;
+        gesture.targetRoll = gesture.roll;
+        gesture.targetScale = gesture.scale;
+
+        // Clean snap threshold to prevent indefinite micro-calculations
+        if (
+          Math.abs(gesture.yaw) < 0.0001 &&
+          Math.abs(gesture.pitch) < 0.0001 &&
+          Math.abs(gesture.roll) < 0.0001 &&
+          Math.abs(gesture.scale - 1) < 0.0002
+        ) {
+          gesture.yaw = 0;
+          gesture.pitch = 0;
+          gesture.roll = 0;
+          gesture.scale = 1;
+          gesture.targetYaw = 0;
+          gesture.targetPitch = 0;
+          gesture.targetRoll = 0;
+          gesture.targetScale = 1;
+          gesture.vyaw = 0;
+          gesture.vpitch = 0;
+          gesture.vroll = 0;
+          gesture.vscale = 0;
+        }
       }
 
-      tilt.yaw += (tilt.targetYaw - tilt.yaw) * 0.05;
-      tilt.pitch += (tilt.targetPitch - tilt.pitch) * 0.05;
+      // Combine hover tilt + gesture rotation
+      const totalYaw = tilt.yaw + gesture.yaw;
+      const totalPitch = tilt.pitch + gesture.pitch;
+      const totalRoll = gesture.roll;
+      const activeScale = gesture.scale;
+      const activeCenterX = currentCenterX;
+      const activeCenterY = currentCenterY;
 
-      const cosYaw = Math.cos(tilt.yaw);
-      const sinYaw = Math.sin(tilt.yaw);
-      const cosPitch = Math.cos(tilt.pitch);
-      const sinPitch = Math.sin(tilt.pitch);
+      // Standard Right-Handed 3D Camera Rotation Matrix (Pitch around X, Yaw around Y, Roll around Z)
+      const cx = Math.cos(totalPitch);
+      const sx = Math.sin(totalPitch);
+      const cy = Math.cos(totalYaw);
+      const sy = Math.sin(totalYaw);
+      const cz = Math.cos(totalRoll);
+      const sz = Math.sin(totalRoll);
+
+      // R = Rz * Rx * Ry matrix elements
+      const m00 = cz * cy - sz * sx * sy;
+      const m01 = -sz * cx;
+      const m02 = cz * sy + sz * sx * cy;
+
+      const m10 = sz * cy + cz * sx * sy;
+      const m11 = cz * cx;
+      const m12 = sz * sy - cz * sx * cy;
+
+      const m20 = -cx * sy;
+      const m21 = sx;
+      const m22 = cx * cy;
 
       const cameraFov = 460;
       const len = stars.length;
@@ -350,31 +513,29 @@ export function GalaxyLogo({
         const driftY = assembledY + Math.sin(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
 
         // Cursor dispersion force on hover
-        const force = isLogoHovered && assembleProgress > 0.8
+        const force = isLogoHovered && assembleProgress > 0.8 && !gesture.isInteracting
           ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.35)
           : { fx: 0, fy: 0 };
 
         applySpringPhysics(p, driftX, driftY, force.fx, force.fy, 0.06, 0.86);
 
-        // Center relative coords for 3D tilt
-        const relX = p.x - currentCenterX;
-        const relY = p.y - currentCenterY;
-        const relZ = currentTargetZ;
+        // Center relative coords for 3D rotation & scaling
+        const relX = (p.x - currentCenterX) * activeScale;
+        const relY = (p.y - currentCenterY) * activeScale;
+        const relZ = currentTargetZ * activeScale;
 
-        // 3D camera tilt
-        const x1 = relX * cosYaw - relZ * sinYaw;
-        const z1 = relX * sinYaw + relZ * cosYaw;
-
-        const y2 = relY * cosPitch - z1 * sinPitch;
-        const z2 = relY * sinPitch + z1 * cosPitch;
+        // 3D camera rotation using full matrix
+        const xRot = m00 * relX + m01 * relY + m02 * relZ;
+        const yRot = m10 * relX + m11 * relY + m12 * relZ;
+        const zRot = m20 * relX + m21 * relY + m22 * relZ;
 
         // Perspective projection
-        const depth = cameraFov + z2;
-        const scale = cameraFov / Math.max(30, depth);
+        const depth = cameraFov + zRot;
+        const scale = (cameraFov / Math.max(30, depth)) * activeScale;
 
-        p.projX = currentCenterX + x1 * scale;
-        p.projY = currentCenterY + y2 * scale;
-        p.projZ = z2;
+        p.projX = activeCenterX + xRot * (scale / activeScale);
+        p.projY = activeCenterY + yRot * (scale / activeScale);
+        p.projZ = zRot;
         p.projScale = scale;
 
         // Glisten flare progression
@@ -391,7 +552,57 @@ export function GalaxyLogo({
       // 2. Depth sort back-to-front
       stars.sort((a, b) => (b.projZ ?? 0) - (a.projZ ?? 0));
 
-      // 3. Render luminous stars
+      // Optical Chromatic Dispersion Vector (sub-pixel chromatic aberration derived from 3D tilt)
+      const caDist = Math.hypot(tilt.yaw, tilt.pitch) * 2.8;
+      const caAngle = Math.atan2(tilt.pitch, tilt.yaw);
+      const caShiftX = Math.cos(caAngle) * caDist;
+      const caShiftY = Math.sin(caAngle) * caDist;
+
+      // 4. Render luminous constellation micro-filaments on hover
+      if (enableFilaments) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+
+        for (let i = 0; i < len; i++) {
+          const p = stars[i];
+          if (!p.neighbors || p.neighbors.length === 0) continue;
+          if (p.projX === undefined || p.projY === undefined) continue;
+
+          // Proximity to cursor determines filament visibility
+          const dxM = p.projX - mouseX;
+          const dyM = p.projY - mouseY;
+          const mouseDist = Math.hypot(dxM, dyM);
+          const filamentHoverRadius = repelRadius * 2.2;
+
+          if (isLogoHovered && mouseDist < filamentHoverRadius) {
+            const proximityFactor = Math.pow(1 - mouseDist / filamentHoverRadius, 1.2);
+
+            for (let n = 0; n < p.neighbors.length; n++) {
+              const nb = p.neighbors[n];
+              if (nb.projX === undefined || nb.projY === undefined) continue;
+
+              const lineDist = Math.hypot(p.projX - nb.projX, p.projY - nb.projY);
+              // Max distance threshold in projected screen space to avoid stretching when dispersed
+              if (lineDist < 30) {
+                const stretchFactor = 1 - lineDist / 30;
+                const alpha = proximityFactor * stretchFactor * 0.55;
+
+                if (alpha > 0.02) {
+                  ctx.lineWidth = 1.0;
+                  ctx.strokeStyle = `rgba(186, 230, 253, ${alpha.toFixed(3)})`;
+                  ctx.beginPath();
+                  ctx.moveTo(p.projX, p.projY);
+                  ctx.lineTo(nb.projX, nb.projY);
+                  ctx.stroke();
+                }
+              }
+            }
+          }
+        }
+        ctx.restore();
+      }
+
+      // 4. Render luminous stars
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
 
@@ -426,9 +637,23 @@ export function GalaxyLogo({
           p.baseAlpha * twinkle * depthAlpha + hoverGlow + glistenCurve * 0.7
         );
 
+        // Optical Chromatic Dispersion: slightly offset colored stars along tilt axis
+        const isCyanChannel = p.color === "#38bdf8" || p.color === "#7dd3fc" || p.color === "#bae6fd";
+        const isVioletChannel = p.color === "#c084fc" || p.color === "#e879f9";
+        const posX = isCyanChannel
+          ? p.projX + caShiftX * 0.45
+          : isVioletChannel
+          ? p.projX - caShiftX * 0.45
+          : p.projX;
+        const posY = isCyanChannel
+          ? p.projY + caShiftY * 0.45
+          : isVioletChannel
+          ? p.projY - caShiftY * 0.45
+          : p.projY;
+
         // Render point star
         ctx.beginPath();
-        ctx.arc(p.projX, p.projY, renderSize * (1 + hoverGlow * 0.5), 0, Math.PI * 2);
+        ctx.arc(posX, posY, renderSize * (1 + hoverGlow * 0.5), 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = effectiveAlpha;
         ctx.fill();
@@ -436,7 +661,7 @@ export function GalaxyLogo({
         // Core glow for prominent or hovered stars
         if (p.hasGlow || hoverGlow > 0.1) {
           ctx.beginPath();
-          ctx.arc(p.projX, p.projY, renderSize * (2.2 + hoverGlow * 1.2), 0, Math.PI * 2);
+          ctx.arc(posX, posY, renderSize * (2.2 + hoverGlow * 1.2), 0, Math.PI * 2);
           ctx.fillStyle = p.color;
           ctx.globalAlpha = effectiveAlpha * (0.28 + hoverGlow * 0.3);
           ctx.fill();
@@ -497,7 +722,7 @@ export function GalaxyLogo({
       window.removeEventListener("resize", setupCanvasResolution);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [text, repelRadius, repelStrength, mouseStateRef]);
+  }, [text, repelRadius, repelStrength, mouseStateRef, enableFilaments]);
 
   React.useEffect(() => {
     if (triggerPulse !== undefined && triggerPulse !== lastTriggerRef.current) {
@@ -506,11 +731,142 @@ export function GalaxyLogo({
     }
   }, [triggerPulse]);
 
+  // Pointer gesture handlers for pinch, drag, rotate and return
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!enableTransform) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.setPointerCapture(e.pointerId);
+    const gesture = gestureRef.current;
+    gesture.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    gesture.isInteracting = true;
+    gesture.dragDistance = 0;
+    gesture.lastPointerX = e.clientX;
+    gesture.lastPointerY = e.clientY;
+
+    if (gesture.pointers.size === 2) {
+      const pts = Array.from(gesture.pointers.values());
+      const p1 = pts[0];
+      const p2 = pts[1];
+      gesture.initialPinchDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      gesture.initialPinchAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      gesture.startScale = gesture.scale;
+      gesture.startRoll = gesture.roll;
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!enableTransform) return;
+    const gesture = gestureRef.current;
+    if (!gesture.isInteracting || !gesture.pointers.has(e.pointerId)) return;
+
+    gesture.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (gesture.pointers.size === 2) {
+      // Dual-pointer pinch zoom and twist rotation (touchscreen or multi-pointer)
+      const pts = Array.from(gesture.pointers.values());
+      const p1 = pts[0];
+      const p2 = pts[1];
+      const currentDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const currentAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+      if (gesture.initialPinchDist > 0) {
+        const pinchRatio = currentDist / gesture.initialPinchDist;
+        gesture.targetScale = Math.max(minScale, Math.min(maxScale, gesture.startScale * pinchRatio));
+      }
+
+      const angleDelta = currentAngle - gesture.initialPinchAngle;
+      gesture.targetRoll = gesture.startRoll + angleDelta;
+      gesture.dragDistance += 5;
+    } else if (gesture.pointers.size === 1) {
+      // Single-pointer drag
+      const dx = e.clientX - gesture.lastPointerX;
+      const dy = e.clientY - gesture.lastPointerY;
+      gesture.lastPointerX = e.clientX;
+      gesture.lastPointerY = e.clientY;
+      gesture.dragDistance += Math.hypot(dx, dy);
+
+      if (e.shiftKey || e.altKey) {
+        // Shift/Alt drag controls 2D twist roll
+        gesture.targetRoll += (dx * 0.008) + (dy * 0.008);
+      } else {
+        // Orbit 3D yaw and pitch rotation: equal and immediate angular responsiveness
+        const rotSensitivityX = 0.0075;
+        const rotSensitivityY = 0.0085;
+        gesture.targetYaw += dx * rotSensitivityX;
+        gesture.targetPitch -= dy * rotSensitivityY;
+      }
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const gesture = gestureRef.current;
+    gesture.pointers.delete(e.pointerId);
+
+    if (gesture.pointers.size === 0) {
+      gesture.isInteracting = false;
+
+      // If user performed a simple tap/click without dragging, trigger the singularity bloom
+      if (gesture.dragDistance < 6) {
+        retriggerIntroRef.current(e.clientX, e.clientY);
+      }
+    } else if (gesture.pointers.size === 1) {
+      // Reset single-pointer anchor coordinates
+      const remaining = Array.from(gesture.pointers.values())[0];
+      gesture.lastPointerX = remaining.x;
+      gesture.lastPointerY = remaining.y;
+    }
+  };
+
+  // Keyboard arrow keys rotate the 3D constellation in perspective space (matches Astra accessibility)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!enableTransform) return;
+    const gesture = gestureRef.current;
+    const step = 0.14;
+
+    if (e.key === "ArrowLeft") {
+      gesture.targetYaw -= step;
+      gesture.isInteracting = false;
+      e.preventDefault();
+    } else if (e.key === "ArrowRight") {
+      gesture.targetYaw += step;
+      gesture.isInteracting = false;
+      e.preventDefault();
+    } else if (e.key === "ArrowUp") {
+      gesture.targetPitch += step;
+      gesture.isInteracting = false;
+      e.preventDefault();
+    } else if (e.key === "ArrowDown") {
+      gesture.targetPitch -= step;
+      gesture.isInteracting = false;
+      e.preventDefault();
+    }
+  };
+
+  // Wheel event: only trackpad pinch-to-zoom (ctrlKey) adjusts scale; normal mouse wheel passes through to page scroll
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!enableTransform || !e.ctrlKey) return;
+    const gesture = gestureRef.current;
+    const zoomFactor = 0.02;
+    const delta = -e.deltaY * zoomFactor;
+    gesture.targetScale = Math.max(minScale, Math.min(maxScale, gesture.scale + delta));
+    gesture.isInteracting = false;
+  };
+
   return (
     <div
       ref={containerRef}
-      onClick={(e) => retriggerIntroRef.current(e.clientX, e.clientY)}
-      className={`relative w-full max-w-2xl h-24 sm:h-32 md:h-36 flex items-center justify-center select-none cursor-pointer group ${className}`}
+      role="button"
+      tabIndex={0}
+      aria-label="Drag or use arrow keys to rotate the star field"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onWheel={handleWheel}
+      onKeyDown={handleKeyDown}
+      className={`relative w-full max-w-2xl h-24 sm:h-32 md:h-36 flex items-center justify-center select-none touch-none focus:outline-none ${className}`}
     >
       <canvas
         ref={canvasRef}

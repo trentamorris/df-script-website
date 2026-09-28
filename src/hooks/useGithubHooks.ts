@@ -112,3 +112,73 @@ export function useGithubDocs(activeVersion: DocsVersion) {
 
   return { operationsIndex, isLoading };
 }
+
+/**
+ * Dynamically fetches and extracts a specific section from the repository README on GitHub.
+ * No hardcoded fallback text is stored or returned.
+ */
+export function useGithubReadme(sectionTitle?: string) {
+  const [markdown, setMarkdown] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let isCancelled = false;
+    setIsLoading(true);
+    setError(null);
+
+    fetch(`${GITHUB_RAW_BASE_URL}/main/README.md?t=${Date.now()}`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: Failed to fetch README from GitHub`);
+        }
+        return res.text();
+      })
+      .then((fullReadme) => {
+        if (isCancelled) return;
+
+        if (!sectionTitle) {
+          // Cleanly remove shields.io / badge links (e.g. [![...](https://img.shields.io/...)](...))
+          const cleanedReadme = fullReadme
+            .replace(/\[\!\[.*?\]\(https?:\/\/(?:img\.shields\.io|bundlephobia\.com)[^)]*\)\]\([^)]*\)\s*/gi, "")
+            .replace(/\!\[.*?\]\(https?:\/\/(?:img\.shields\.io|bundlephobia\.com)[^)]*\)\s*/gi, "")
+            .trim();
+
+          setMarkdown(cleanedReadme);
+          setError(null);
+          return;
+        }
+
+        // Escape special regex characters in section title
+        const escapedTitle = sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`##\\s+.*?${escapedTitle}[\\s\\S]*?\\n\\n([\\s\\S]*?)(?=\\n---\\n|\\n##\\s+|$)`, "i");
+        const match = fullReadme.match(regex);
+
+        if (match && match[1]) {
+          setMarkdown(match[1].trim());
+          setError(null);
+        } else {
+          throw new Error(`Section "${sectionTitle}" not found in GitHub README.`);
+        }
+      })
+      .catch((err) => {
+        if (isCancelled) return;
+        setMarkdown(null);
+        setError(err instanceof Error ? err.message : "Error fetching README from GitHub");
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [sectionTitle]);
+
+  return { markdown, isLoading, error };
+}
+
+// Backwards-compatible export
+export const useGithubReadmeSection = useGithubReadme;

@@ -1,6 +1,8 @@
 export interface BenchmarkResult {
   ms: number;
   isLive: boolean;
+  rowCount?: number;
+  sampleRows?: Record<string, any>[];
 }
 
 export interface BenchmarkCardProps {

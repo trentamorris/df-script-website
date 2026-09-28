@@ -1,0 +1,25 @@
+export const TOOLBAR_MUI_PILL = {
+  textTransform: "none" as const,
+  fontWeight: 500,
+  fontSize: "0.78rem",
+  fontFamily: "inherit",
+  borderRadius: "8px",
+  padding: "3px 12px",
+  minWidth: "auto",
+  lineHeight: 1.5,
+  whiteSpace: "nowrap" as const,
+  backgroundColor: "rgba(255, 255, 255, 0.08)",
+  color: "var(--nb-text-heading)",
+  boxShadow: "none",
+  border: "none",
+  transition: "all 0.15s ease",
+  "&:hover": {
+    backgroundColor: "rgba(255, 255, 255, 1)",
+    color: "rgba(3, 3, 3, 1)",
+    boxShadow: "none",
+  },
+  "& .MuiButton-startIcon": {
+    marginRight: "5px",
+    marginLeft: "-2px",
+  },
+};

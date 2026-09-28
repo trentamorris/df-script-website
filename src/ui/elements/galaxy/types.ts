@@ -31,6 +31,7 @@ export interface GalaxyLogoStar extends BaseStar {
   glistenProgress?: number;
   glistenDuration?: number;
   glistenScale?: number;
+  neighbors?: GalaxyLogoStar[];
 }
 
 export interface GalaxyBgStar extends BaseStar {
@@ -63,6 +64,10 @@ export interface GalaxyLogoProps {
   repelRadius?: number;
   repelStrength?: number;
   triggerPulse?: number;
+  enableFilaments?: boolean;
+  enableTransform?: boolean;
+  minScale?: number;
+  maxScale?: number;
 }
 
 export interface ShootingStar {

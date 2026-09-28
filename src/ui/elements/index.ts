@@ -10,3 +10,10 @@ export type {
 } from "./galaxy";
 export { CodeBlock } from "./code-block/CodeBlock";
 export type { CodeBlockProps } from "./code-block/types";
+export { ScrollableCanvas } from "./scrollable-canvas/ScrollableCanvas";
+export type {
+  ScrollableCanvasProps,
+  ScrollableCanvasHandle,
+  ScrollableCanvasDirection,
+  ScrollableCanvasArrowProps,
+} from "./scrollable-canvas/types";

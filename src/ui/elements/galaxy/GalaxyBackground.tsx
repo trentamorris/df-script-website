@@ -286,18 +286,13 @@ export function GalaxyBackground({
 
         star.armAngle += star.orbitalSpeed;
         star.baseX = centerX + Math.cos(star.armAngle) * star.radius;
-        // Multi-plane parallax offset: deeper stars shift subtly with cursor movement
-        const parallaxFactor = (star.depth ?? 0.5) * 18;
-        const normMouseX = isHovered ? (mouseX - centerX) / (width * 0.5) : 0;
-        const normMouseY = isHovered ? (mouseY - centerY) / (height * 0.5) : 0;
-        const targetBaseX = star.baseX - normMouseX * parallaxFactor;
-        const targetBaseY = star.baseY - normMouseY * parallaxFactor;
+        star.baseY = centerY + Math.sin(star.armAngle) * star.radius;
 
         const force = isHovered
           ? calculateRepulsionForce(star.x, star.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.25)
           : { fx: 0, fy: 0 };
 
-        applySpringPhysics(star, targetBaseX, targetBaseY, force.fx, force.fy, 0.04, 0.88);
+        applySpringPhysics(star, star.baseX, star.baseY, force.fx, force.fy, 0.04, 0.88);
 
         // Decay micro-nova flare via smooth sinusoidal bell curve
         let glistenCurve = 0;

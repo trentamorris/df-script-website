@@ -20,11 +20,12 @@ export function DesktopLayout({
   versionOptions,
   operationsIndex
 }: DesktopLayoutProps) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  // Only expand sidebar by default when actively viewing documentation
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(!isDocs);
   const isHomePage = !isDocs && path !== ABOUT_PATH && path !== SUPPORT_PATH && path !== NOTEBOOK_PATH;
 
   return (
-    <div className="h-screen w-screen flex flex-col justify-between relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased">
+    <div className="h-screen w-screen flex flex-col relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased">
       {isHomePage && <GalaxyBackground />}
       <Header
         path={path}
@@ -36,8 +37,8 @@ export function DesktopLayout({
         versionOptions={versionOptions}
       />
 
-      <div className="h-viewport-content w-full flex overflow-hidden shrink-0 relative z-10">
-        <aside className={`border-border-dark bg-bg-darker/85 backdrop-blur-sm pt-0 pb-6 px-0 flex flex-col h-full overflow-hidden shrink-0 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-0 border-r-0 opacity-0" : "w-80 border-r opacity-100"}`}>
+      <div className="flex-grow min-h-0 w-full flex overflow-hidden relative z-10">
+        <aside className={`border-border-dark bg-bg-darker/85 backdrop-blur-sm p-0 flex flex-col h-full overflow-hidden shrink-0 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-0 border-r-0 opacity-0" : "w-80 border-r opacity-100"}`}>
           <Sidebar
             activeVersion={activeVersion}
             setActiveVersion={setVersion}
