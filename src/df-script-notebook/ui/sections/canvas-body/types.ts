@@ -18,8 +18,10 @@ export interface CanvasBodyProps {
   onAddCellAtIndex: (index: number, type: CellType) => void;
   onCopyCell: (id: string) => void;
   onCopyCellCode: (id: string) => void;
+  onSelectCell?: (id: string) => void;
   onUpdateCellLayout: (id: string, layout: Partial<CellLayout>) => void;
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragOver: (e: React.DragEvent, index: number) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, index: number) => void;
 }

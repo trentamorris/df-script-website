@@ -1,16 +1,16 @@
 import React from "react";
 import { Button } from "@mui/material";
 import {
-  Add,
-  PlaylistPlay,
-  DeleteSweep,
-  RestartAlt,
-  Save,
-  FolderOpen,
+  AddRounded,
+  PlaylistPlayRounded,
+  DeleteSweepRounded,
+  RefreshRounded,
+  SaveRounded,
+  FolderOpenRounded,
   Edit,
   Description,
-  AutoAwesomeMosaic,
-  ViewStream,
+  AutoAwesomeMosaicRounded,
+  ViewStreamRounded,
 } from "@mui/icons-material";
 import { ScrollableCanvas } from "../../../../ui/elements";
 import { CELL_TYPES } from "../../../constants";
@@ -80,7 +80,7 @@ export default function NotebookHeader({
                 size="small"
                 onClick={() => onAddCell(type)}
                 sx={TOOLBAR_MUI_PILL}
-                startIcon={<Add sx={{ fontSize: "15px !important" }} />}
+                startIcon={<AddRounded sx={{ fontSize: "16px !important" }} />}
               >
                 {label}
               </Button>
@@ -94,7 +94,7 @@ export default function NotebookHeader({
               size="small"
               onClick={onRunAll}
               sx={TOOLBAR_MUI_PILL}
-              startIcon={<PlaylistPlay sx={{ fontSize: "16px !important" }} />}
+              startIcon={<PlaylistPlayRounded sx={{ fontSize: "18px !important" }} />}
             >
               Run All
             </Button>
@@ -105,7 +105,7 @@ export default function NotebookHeader({
               size="small"
               onClick={onClearOutputs}
               sx={TOOLBAR_MUI_PILL}
-              startIcon={<DeleteSweep sx={{ fontSize: "15px !important" }} />}
+              startIcon={<DeleteSweepRounded sx={{ fontSize: "16px !important" }} />}
             >
               Clear Outputs
             </Button>
@@ -116,7 +116,7 @@ export default function NotebookHeader({
               size="small"
               onClick={onResetNotebook}
               sx={TOOLBAR_MUI_PILL}
-              startIcon={<RestartAlt sx={{ fontSize: "15px !important" }} />}
+              startIcon={<RefreshRounded sx={{ fontSize: "16px !important" }} />}
             >
               Reset
             </Button>
@@ -127,7 +127,7 @@ export default function NotebookHeader({
               size="small"
               onClick={onSaveNotebook}
               sx={TOOLBAR_MUI_PILL}
-              startIcon={<Save sx={{ fontSize: "15px !important" }} />}
+              startIcon={<SaveRounded sx={{ fontSize: "16px !important" }} />}
             >
               Save
             </Button>
@@ -138,7 +138,7 @@ export default function NotebookHeader({
               size="small"
               onClick={onTriggerLoadNotebook}
               sx={TOOLBAR_MUI_PILL}
-              startIcon={<FolderOpen sx={{ fontSize: "15px !important" }} />}
+              startIcon={<FolderOpenRounded sx={{ fontSize: "16px !important" }} />}
             >
               Load
             </Button>
@@ -170,9 +170,9 @@ export default function NotebookHeader({
               }}
               startIcon={
                 isCanvas ? (
-                  <AutoAwesomeMosaic sx={{ fontSize: "14px !important" }} />
+                  <AutoAwesomeMosaicRounded sx={{ fontSize: "15px !important" }} />
                 ) : (
-                  <ViewStream sx={{ fontSize: "14px !important" }} />
+                  <ViewStreamRounded sx={{ fontSize: "15px !important" }} />
                 )
               }
             >

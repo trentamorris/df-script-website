@@ -413,10 +413,17 @@ export default function DFScriptNotebook() {
     e.dataTransfer.dropEffect = "move";
   };
 
+  const handleDragEnd = () => {
+    draggedCellIndexRef.current = null;
+  };
+
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     const sourceIndex = draggedCellIndexRef.current;
-    if (sourceIndex === null || sourceIndex === targetIndex) return;
+    if (sourceIndex === null || sourceIndex === targetIndex) {
+      draggedCellIndexRef.current = null;
+      return;
+    }
 
     if (activePage) {
       const updated = reorderArray(activePage.cellIds, sourceIndex, targetIndex);
@@ -522,9 +529,11 @@ export default function DFScriptNotebook() {
         onAddCellAtIndex={addCellAtIndex}
         onCopyCell={(id) => copyFlash(id, "cell")}
         onCopyCellCode={(id) => copyFlash(id, "code")}
+        onSelectCell={setActiveCellId}
         onUpdateCellLayout={updateCellLayout}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
         onDrop={handleDrop}
       />
     </div>

@@ -1,0 +1,50 @@
+# DFScript Notebook Backlog & TODO
+
+A prioritized roadmap of upcoming features, improvements, and keyboard shortcuts for the DFScript interactive notebook environment.
+
+---
+
+## ⚡ Active Focus: Execution Shortcuts
+
+- [x] **Cell Execution Shortcuts**:
+  - [x] **`Ctrl + Enter`**: Execute the focused cell and remain on the current cell.
+  - [x] **`Shift + Enter`**: Execute the focused cell and advance focus to the next cell (creating a new code cell if at the end of the notebook).
+  - [x] **`Alt + Enter`**: Execute the focused cell and immediately insert a new empty code cell below it.
+
+---
+
+## ⌨️ Notebook Keyboard Shortcuts Roadmap
+
+### 1. Cell Navigation & Insertion (Command Mode / `Esc`)
+- [ ] **`A`**: Insert a new cell above the current cell.
+- [ ] **`B`**: Insert a new cell below the current cell.
+- [ ] **`D, D` (Double Press)**: Delete the selected cell.
+- [ ] **`Z`**: Undo the last cell deletion or structural action.
+- [ ] **`Up` / `Down` (or `K` / `J`)**: Navigate focus between notebook cells.
+
+### 2. Cell Modes & Types
+- [ ] **Mode Switching**:
+  - [ ] **`Esc`**: Enter Command Mode (blur code editor, navigate cells).
+  - [ ] **`Enter`**: Enter Edit Mode (focus editor inside selected cell).
+- [ ] **Cell Type Conversion (Command Mode)**:
+  - [ ] **`Y`**: Convert selected cell to **Code**.
+  - [ ] **`M`**: Convert selected cell to **Markdown**.
+  - [ ] **`1` - `6`**: Convert selected cell to Markdown heading (`#` through `######`).
+
+### 3. Selection, Clipboard & Restructuring
+- [ ] **`Shift + Up` / `Shift + Down`**: Multi-cell range selection.
+- [ ] **`C` / `X` / `V`**: Copy, cut, and paste cells below.
+- [ ] **`Shift + V`**: Paste cell above current selection.
+- [ ] **`Shift + M`**: Merge selected cells (or merge with cell below).
+- [ ] **`Ctrl + Shift + -`**: Split current cell at cursor position.
+
+### 4. Display & View Toggles
+- [ ] **`O`**: Toggle / collapse cell output display.
+- [ ] **`L`**: Toggle line numbers in code editor.
+
+---
+
+## 🔮 Notebook Magic Commands & Utilities
+- [ ] **`%time` / `%%time`**: Measure and display cell/expression execution benchmark.
+- [ ] **`%reset`**: Reset notebook execution context and session variables.
+- [ ] **`%who` / `%whos`**: Inspect active in-memory variables, DataFrames, and types.

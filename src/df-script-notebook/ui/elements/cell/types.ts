@@ -18,9 +18,11 @@ export interface CellProps {
   onAddCell: (index: number, type: "code" | "jsx" | "markdown") => void;
   onCopyCell: (id: string) => void;
   onCopyCellCode: (id: string) => void;
+  onSelectCell?: (id: string) => void;
   onUpdateLayout?: (id: string, layout: Partial<CellLayout>) => void;
   onDragStart?: (e: React.DragEvent, index: number) => void;
   onDragOver?: (e: React.DragEvent, index: number) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, index: number) => void;
   isGridCanvasMode?: boolean;
   gridConfig?: PageGridConfig;

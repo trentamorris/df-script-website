@@ -20,9 +20,11 @@ export default function CanvasBody({
   onAddCellAtIndex,
   onCopyCell,
   onCopyCellCode,
+  onSelectCell,
   onUpdateCellLayout,
   onDragStart,
   onDragOver,
+  onDragEnd,
   onDrop,
 }: CanvasBodyProps) {
   if (activeCells.length === 0) {
@@ -39,7 +41,11 @@ export default function CanvasBody({
   // Document Mode: Clean linear notebook flow with natural auto sizing
   if (!isCanvas) {
     return (
-      <div className="w-full max-w-6xl mx-auto px-4 md:px-8 pt-4 pb-24 overflow-x-auto">
+      <div
+        className="w-full max-w-6xl mx-auto px-4 md:px-8 pt-4 pb-24 overflow-x-auto min-h-[400px]"
+        onDragOver={(e) => onDragOver?.(e, activeCells.length - 1)}
+        onDrop={(e) => onDrop?.(e, activeCells.length - 1)}
+      >
         <div className="flex flex-col gap-6 max-w-4xl mx-auto">
           {activeCells.map((cell, idx) => (
             <Cell
@@ -60,9 +66,11 @@ export default function CanvasBody({
               onAddCell={onAddCellAtIndex}
               onCopyCell={onCopyCell}
               onCopyCellCode={onCopyCellCode}
+              onSelectCell={onSelectCell}
               onUpdateLayout={onUpdateCellLayout}
               onDragStart={onDragStart}
               onDragOver={onDragOver}
+              onDragEnd={onDragEnd}
               onDrop={onDrop}
               isGridCanvasMode={false}
               gridConfig={gridConfig}
@@ -131,6 +139,7 @@ export default function CanvasBody({
             onAddCell={onAddCellAtIndex}
             onCopyCell={onCopyCell}
             onCopyCellCode={onCopyCellCode}
+            onSelectCell={onSelectCell}
             onUpdateLayout={onUpdateCellLayout}
             onDragStart={onDragStart}
             onDragOver={onDragOver}

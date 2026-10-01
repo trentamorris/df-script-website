@@ -60,29 +60,42 @@ export const CELL_MUI_STYLES = {
     },
   },
 
-  // Primary Run Play Button
+  // Primary Run Play Button (Matching Tag Button Chip Style, Flat, Seamless)
   playButton: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     borderRadius: "9999px",
-    backgroundColor: "var(--nb-bg-hover)",
-    color: "var(--nb-text-primary)",
-    boxShadow: "var(--cell-shadow-play)",
-    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+    backgroundColor: "var(--cell-play-bg)",
+    border: "none",
+    color: "var(--cell-play-fg)",
+    boxShadow: "none",
+    transition: "all 0.18s ease",
     "&:hover": {
-      backgroundColor: "var(--cell-bg-chip-hover)",
-      color: "var(--cell-text-dark)",
-      transform: "scale(1.06)",
+      backgroundColor: "var(--cell-play-hover)",
+      color: "var(--nb-text-primary)",
+      transform: "scale(1.04)",
     },
     "&:active": {
       transform: "scale(0.96)",
     },
     "&.Mui-disabled": {
-      opacity: 0.35,
+      opacity: 0.5,
       color: "var(--nb-text-muted)",
     },
   },
 };
+
+/**
+ * Returns dynamic MUI sx overrides for the flat play/pause button states.
+ * No rings or borders around the button.
+ */
+export function getPlayButtonStyle(
+  hasRun: boolean,
+  timeTaken: string | null,
+  error: string | null
+): Record<string, any> {
+  return {};
+}
 
 /**
  * Computes gridColumn and gridRow CSS strings for 2D canvas positioning.
@@ -100,6 +113,26 @@ export function calculateGridStyle(
 }
 
 /**
+ * Returns the status dot class for the subtle status LED next to the cell index.
+ */
+export function getStatusDotClass(
+  hasRun: boolean,
+  timeTaken: string | null,
+  error: string | null
+): string {
+  if (timeTaken === "...") {
+    return "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse";
+  }
+  if (error) {
+    return "bg-[var(--cell-accent-rose)] shadow-[var(--cell-glow-rose)]";
+  }
+  if (hasRun) {
+    return "bg-[var(--cell-accent-green)] shadow-[var(--cell-glow-green)]";
+  }
+  return "bg-zinc-600/70";
+}
+
+/**
  * Returns the status accent bar class for YouTube Music aesthetic indicator.
  */
 export function getAccentBarClass(
@@ -109,16 +142,16 @@ export function getAccentBarClass(
   error: string | null
 ): string {
   if (timeTaken === "...") {
-    return "bg-[var(--cell-accent-red)] shadow-[var(--cell-glow-red)]";
+    return "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse";
   }
   if (error) {
     return "bg-[var(--cell-accent-rose)] shadow-[var(--cell-glow-rose)]";
   }
   if (hasRun) {
-    return "bg-[var(--cell-accent-executed)]";
+    return "bg-[var(--cell-accent-green)] shadow-[var(--cell-glow-green)]";
   }
   if (isActive) {
-    return "bg-[var(--cell-accent-red)]";
+    return "bg-[var(--panel-nav-accent)]";
   }
   return "bg-transparent";
 }

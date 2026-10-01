@@ -19,6 +19,7 @@
   --rgb-rose-soft: 252, 165, 165;
   --rgb-neutral: 113, 113, 122;
   --rgb-blue: 62, 166, 255;
+  --rgb-green: 34, 197, 94;
   --rgb-panel-surface: 28, 28, 28;
 
   /* ================================================================= */
@@ -65,7 +66,9 @@
   /* Accents & Brand */
   --cell-accent-red: rgb(var(--rgb-red));
   --cell-accent-rose: rgb(var(--rgb-rose));
-  --cell-accent-executed: rgba(var(--rgb-white), 0.4);
+  --cell-accent-blue: rgb(var(--rgb-blue));
+  --cell-accent-green: rgb(var(--rgb-green));
+  --cell-accent-executed: rgba(var(--rgb-green), 0.7);
 
   /* Subtle Borders / Separators */
   --cell-border-glass: rgba(var(--rgb-white), 0.1);
@@ -73,13 +76,18 @@
   --cell-border-strong: rgba(var(--rgb-white), 0.15);
   --cell-border-log: rgba(var(--rgb-white), 0.2);
 
-  /* Shadows & Glows */
-  --cell-shadow-play: 0 2px 8px rgba(var(--rgb-black), 0.5);
+  /* Play Button State Tokens (Matching Tag Button Chip Style) */
+  --cell-play-bg: var(--nb-bg-hover);
+  --cell-play-hover: rgba(var(--rgb-white), 0.14);
+  --cell-play-fg: var(--nb-text-heading);
   --cell-shadow-insert: 0 4px 24px rgba(var(--rgb-black), 0.85);
   --cell-shadow-active: 0 8px 32px rgba(var(--rgb-black), 0.85);
+  --cell-shadow-active-aura: 0 0 0 1px rgba(var(--rgb-blue), 0.5), 0 0 24px -2px rgba(var(--rgb-blue), 0.35), 0 0 48px -8px rgba(var(--rgb-blue), 0.18);
   --cell-shadow-float: 0 4px 16px rgba(var(--rgb-black), 0.6);
   --cell-glow-red: 0 0 8px rgba(var(--rgb-red), 1);
   --cell-glow-rose: 0 0 8px rgba(var(--rgb-rose), 0.6);
+  --cell-glow-blue: 0 0 8px rgba(var(--rgb-blue), 0.7);
+  --cell-glow-green: 0 0 8px rgba(var(--rgb-green), 0.5);
 
   /* Monaco Editor Themes */
   --cell-editor-bg: rgb(var(--rgb-bg-code));

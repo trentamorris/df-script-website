@@ -62,7 +62,7 @@ export default function CellOutput({
   if (cell.timeTaken === "...") {
     return (
       <div className="mt-2.5 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-[var(--cell-bg-collapsed)] text-xs font-mono text-[var(--nb-text-secondary)]">
-        <CircularProgress size={14} thickness={5} sx={{ color: "var(--cell-accent-red)" }} />
+        <CircularProgress size={14} thickness={5} sx={{ color: "var(--cell-accent-blue)" }} />
         <span className="tracking-wide">Executing...</span>
       </div>
     );

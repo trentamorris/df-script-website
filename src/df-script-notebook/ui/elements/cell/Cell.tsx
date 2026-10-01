@@ -1,8 +1,9 @@
 import React from "react";
 import Editor from "@monaco-editor/react";
-import { Button, IconButton } from "@mui/material";
+import { Button, IconButton, CircularProgress } from "@mui/material";
 import {
   PlayArrow,
+  Pause,
   Check,
   ContentCopy,
   KeyboardArrowUp,
@@ -18,12 +19,14 @@ import {
   Remove,
 } from "@mui/icons-material";
 import { CellProps } from "./types";
+import { useCellGridDrag } from "./useCellGridDrag";
 import {
   CELL_MUI_STYLES,
   calculateGridStyle,
-  getAccentBarClass,
+  getPlayButtonStyle,
   defineMonacoTheme,
 } from "./utils";
+import { registerCellKeyboardShortcuts } from "../../../keyboardShortcutsUtils";
 import CellInsertZone from "./components/cell-insert-zone/CellInsertZone";
 import CellOutput from "./components/cell-output/CellOutput";
 import MarkdownRenderer from "../markdown-renderer/MarkdownRenderer";
@@ -116,161 +119,57 @@ export default function Cell({
   onAddCell,
   onCopyCell,
   onCopyCellCode,
+  onSelectCell,
   onUpdateLayout,
   onDragStart,
   onDragOver,
+  onDragEnd,
   onDrop,
   isGridCanvasMode,
   gridConfig,
   onInteractionChange,
 }: CellProps) {
-  const [isResizing, setIsResizing] = React.useState(false);
-  const [isMoving, setIsMoving] = React.useState(false);
-  const [activePanelTab, setActivePanelTab] = React.useState<"position" | "size" | null>(null);
-  const [liveLayout, setLiveLayout] = React.useState<import("../../../types").CellLayout | null>(null);
   const cellRef = React.useRef<HTMLDivElement>(null);
   const positionTabRef = React.useRef<HTMLButtonElement>(null);
   const dimensionsTabRef = React.useRef<HTMLButtonElement>(null);
+  const [activePanelTab, setActivePanelTab] = React.useState<"position" | "size" | null>(null);
+
+  const {
+    isMoving,
+    isResizing,
+    liveLayout,
+    handleMovePointerDown,
+    handleResizePointerDown,
+  } = useCellGridDrag({
+    cellId: cell.id,
+    layout: cell.layout,
+    isGridCanvasMode,
+    gridConfig,
+    cellElementRef: cellRef,
+    onUpdateLayout,
+    onInteractionChange,
+  });
 
   const hasRun = cell.execIndex !== null || cell.timeTaken !== null;
   const currentLayout = liveLayout || cell.layout;
   const gridStyle = calculateGridStyle(isGridCanvasMode, currentLayout);
 
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizing(true);
-    onInteractionChange?.(true);
+  const cellIdRef = React.useRef(cell.id);
+  cellIdRef.current = cell.id;
 
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const baseLayout = cell.layout ?? { x: 0, y: 0, w: 12, h: 6 };
-    const initialW = baseLayout.w;
-    const initialH = baseLayout.h;
+  const onRunRef = React.useRef(onRun);
+  onRunRef.current = onRun;
 
-    const parent = cellRef.current?.parentElement;
-    const parentWidth = parent ? parent.clientWidth : 1000;
-    const totalCols = gridConfig?.columns ?? 12;
-    const gapPx = 12;
-    const colWidthPx = Math.max(15, (parentWidth - (totalCols - 1) * gapPx) / totalCols);
-    const rowStepPx = (gridConfig?.rowHeight ?? 48) + gapPx;
+  const onAddCellRef = React.useRef(onAddCell);
+  onAddCellRef.current = onAddCell;
 
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      // Auto-scroll when near boundaries
-      const scrollableParent = cellRef.current?.closest(".overflow-x-auto") || cellRef.current?.closest("#df-script-notebook");
-      if (scrollableParent) {
-        const bounds = scrollableParent.getBoundingClientRect();
-        const edgeThreshold = 40;
-        const scrollSpeed = 12;
-        if (moveEvent.clientX > bounds.right - edgeThreshold) {
-          scrollableParent.scrollLeft += scrollSpeed;
-        } else if (moveEvent.clientX < bounds.left + edgeThreshold) {
-          scrollableParent.scrollLeft -= scrollSpeed;
-        }
-        if (moveEvent.clientY > bounds.bottom - edgeThreshold) {
-          scrollableParent.scrollTop += scrollSpeed;
-        } else if (moveEvent.clientY < bounds.top + edgeThreshold) {
-          scrollableParent.scrollTop -= scrollSpeed;
-        }
-      }
+  const indexRef = React.useRef(index);
+  indexRef.current = index;
 
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
-
-      const unitWDelta = Math.round(deltaX / (colWidthPx + gapPx));
-      const unitHDelta = Math.round(deltaY / rowStepPx);
-
-      const maxColsForCell = totalCols - baseLayout.x;
-      const newW = Math.max(1, Math.min(maxColsForCell, initialW + unitWDelta));
-      const newH = Math.max(1, Math.min(100, initialH + unitHDelta));
-
-      const updated = { ...baseLayout, w: newW, h: newH };
-      setLiveLayout(updated);
-      onUpdateLayout?.(cell.id, { w: newW, h: newH });
-    };
-
-    const onMouseUp = () => {
-      setIsResizing(false);
-      setLiveLayout(null);
-      onInteractionChange?.(false);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
-
-  const handleMoveStart = (e: React.MouseEvent) => {
-    if (!isGridCanvasMode || !onUpdateLayout) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMoving(true);
-    onInteractionChange?.(true);
-
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const baseLayout = cell.layout ?? { x: 0, y: 0, w: 12, h: 6 };
-    const initialX = baseLayout.x;
-    const initialY = baseLayout.y;
-
-    const parent = cellRef.current?.parentElement;
-    const parentWidth = parent ? parent.clientWidth : 1000;
-    const totalCols = gridConfig?.columns ?? 12;
-    const totalRows = gridConfig?.rows ?? 24;
-    const gapPx = 12;
-    const colStepPx = Math.max(15, (parentWidth - (totalCols - 1) * gapPx) / totalCols) + gapPx;
-    const rowStepPx = (gridConfig?.rowHeight ?? 48) + gapPx;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      // Auto-scroll when dragging near edges of the canvas scroll container
-      const scrollableParent = cellRef.current?.closest(".overflow-x-auto") || cellRef.current?.closest("#df-script-notebook");
-      if (scrollableParent) {
-        const bounds = scrollableParent.getBoundingClientRect();
-        const edgeThreshold = 40;
-        const scrollSpeed = 12;
-        if (moveEvent.clientX > bounds.right - edgeThreshold) {
-          scrollableParent.scrollLeft += scrollSpeed;
-        } else if (moveEvent.clientX < bounds.left + edgeThreshold) {
-          scrollableParent.scrollLeft -= scrollSpeed;
-        }
-        if (moveEvent.clientY > bounds.bottom - edgeThreshold) {
-          scrollableParent.scrollTop += scrollSpeed;
-        } else if (moveEvent.clientY < bounds.top + edgeThreshold) {
-          scrollableParent.scrollTop -= scrollSpeed;
-        }
-      }
-
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
-
-      const unitXDelta = Math.round(deltaX / colStepPx);
-      const unitYDelta = Math.round(deltaY / rowStepPx);
-
-      const maxX = Math.max(0, totalCols - baseLayout.w);
-      const maxY = Math.max(0, totalRows - baseLayout.h);
-      const newX = Math.max(0, Math.min(maxX, initialX + unitXDelta));
-      const newY = Math.max(0, Math.min(maxY, initialY + unitYDelta));
-
-      const updated = { ...baseLayout, x: newX, y: newY };
-      setLiveLayout(updated);
-      onUpdateLayout?.(cell.id, { x: newX, y: newY });
-    };
-
-    const onMouseUp = () => {
-      setIsMoving(false);
-      setLiveLayout(null);
-      onInteractionChange?.(false);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
+  const totalCellsRef = React.useRef(totalCells);
+  totalCellsRef.current = totalCells;
 
   const isRenderedMarkdown = !isGridCanvasMode && cell.type === "markdown" && cell.isCodeCollapsed;
-  const accentBarClass = getAccentBarClass(hasRun, isActive, cell.timeTaken, cell.error);
 
   return (
     <div
@@ -280,6 +179,7 @@ export default function Cell({
       draggable={!isGridCanvasMode}
       onDragStart={(e) => !isGridCanvasMode && onDragStart?.(e, index)}
       onDragOver={(e) => !isGridCanvasMode && onDragOver?.(e, index)}
+      onDragEnd={(e) => !isGridCanvasMode && onDragEnd?.(e)}
       onDrop={(e) => !isGridCanvasMode && onDrop?.(e, index)}
     >
       {!isGridCanvasMode && (
@@ -347,24 +247,20 @@ export default function Cell({
         </div>
       ) : (
         <div
-          className={`group/cell relative flex flex-col rounded-2xl p-4 transition-all duration-200 min-h-0 min-w-0 ${
-            isGridCanvasMode ? "h-full overflow-hidden" : "h-auto"
-          } ${
-            isActive
-              ? "bg-[var(--cell-bg-active)] shadow-[var(--cell-shadow-active)]"
-              : "bg-[var(--cell-bg-base)] hover:bg-[var(--cell-bg-hover)]"
-          }`}
+          onClick={() => onSelectCell?.(cell.id)}
+          className={`group/cell relative flex flex-col rounded-2xl px-4 pt-4 pb-8 transition-all duration-200 min-h-0 min-w-0 ${isGridCanvasMode ? "h-full overflow-hidden" : "h-auto"
+            } ${isActive
+              ? "bg-[var(--cell-bg-active)] shadow-[var(--cell-shadow-active-aura)] border border-[rgba(var(--rgb-blue),0.45)]"
+              : "bg-[var(--cell-bg-base)] hover:bg-[var(--cell-bg-hover)] border border-transparent"
+            }`}
         >
-          {/* Edge Indicator */}
-          <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-all duration-200 ${accentBarClass}`} />
-
           {/* Top Meta Bar */}
-          <div className="flex justify-between items-center mb-3 select-none pl-2">
+          <div className="flex justify-between items-center mb-3 select-none pl-1">
             <div className="flex items-center gap-2">
               {isGridCanvasMode && (
                 <span
-                  onMouseDown={handleMoveStart}
-                  className="cursor-grab active:cursor-grabbing text-[var(--nb-text-muted)] hover:text-[var(--nb-text-secondary)] transition-colors flex items-center"
+                  onPointerDown={handleMovePointerDown}
+                  className="cursor-grab active:cursor-grabbing text-[var(--nb-text-muted)] hover:text-[var(--nb-text-secondary)] transition-colors flex items-center touch-none select-none"
                   title="Drag to move cell on grid"
                 >
                   <DragIndicator sx={{ fontSize: 16 }} />
@@ -387,13 +283,12 @@ export default function Cell({
                       e.stopPropagation();
                       setActivePanelTab(activePanelTab === "position" ? null : "position");
                     }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-sans font-medium tracking-wide transition-colors cursor-pointer border-0 select-none flex items-center gap-1.5 ${
-                      isMoving
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-sans font-medium tracking-wide transition-colors cursor-pointer border-0 select-none flex items-center gap-1.5 ${isMoving
                         ? "bg-[var(--panel-nav-accent)] text-black shadow-[0_0_12px_rgba(var(--rgb-blue),0.5)] font-semibold"
                         : activePanelTab === "position"
-                        ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
-                        : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
-                    }`}
+                          ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
+                          : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
+                      }`}
                     title="Click to edit grid position (X, Y, Z)"
                   >
                     <span>x:{currentLayout.x}</span>
@@ -408,13 +303,12 @@ export default function Cell({
                       e.stopPropagation();
                       setActivePanelTab(activePanelTab === "size" ? null : "size");
                     }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-sans font-medium tracking-wide transition-colors cursor-pointer border-0 select-none flex items-center gap-1.5 ${
-                      isResizing
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-sans font-medium tracking-wide transition-colors cursor-pointer border-0 select-none flex items-center gap-1.5 ${isResizing
                         ? "bg-[var(--panel-nav-accent)] text-black shadow-[0_0_12px_rgba(var(--rgb-blue),0.5)] font-semibold"
                         : activePanelTab === "size"
-                        ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
-                        : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
-                    }`}
+                          ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
+                          : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
+                      }`}
                     title="Click to edit cell dimensions (Width, Height)"
                   >
                     <span>w:{currentLayout.w}</span>
@@ -422,17 +316,6 @@ export default function Cell({
                     <span>h:{currentLayout.h}</span>
                   </button>
                 </>
-              )}
-              {cell.timeTaken && cell.timeTaken !== "..." && (
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-medium ${
-                    cell.error
-                      ? "bg-[var(--cell-bg-error-chip)] text-[var(--cell-text-error)]"
-                      : "bg-[var(--cell-border-subtle)] text-[var(--nb-text-muted)]"
-                  }`}
-                >
-                  {cell.timeTaken}
-                </span>
               )}
             </div>
 
@@ -615,18 +498,56 @@ export default function Cell({
           {/* Cell Body & Execution Action */}
           <div className="flex gap-3.5 items-stretch pl-1 grow min-h-0 min-w-0 overflow-hidden">
             {(cell.type === "code" || cell.type === "jsx") && (
-              <div className="flex flex-col items-center justify-start select-none w-10 shrink-0 self-stretch py-1">
+              <div className="flex flex-col items-center justify-start select-none w-12 shrink-0 self-stretch py-0.5 gap-1.5">
                 <IconButton
                   onClick={(e) => {
                     e.stopPropagation();
                     onRun(cell.id);
                   }}
                   disabled={cell.timeTaken === "..."}
-                  title="Run Cell (Ctrl + Enter)"
-                  sx={CELL_MUI_STYLES.playButton}
+                  title={cell.timeTaken === "..." ? "Executing cell..." : "Run Cell (Ctrl + Enter)"}
+                  sx={{
+                    ...CELL_MUI_STYLES.playButton,
+                    ...getPlayButtonStyle(hasRun, cell.timeTaken, cell.error),
+                  }}
                 >
-                  <PlayArrow sx={{ fontSize: 22, ml: "2px" }} />
+                  {/* YouTube Music Smooth Play/Pause Transition */}
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="overflow-visible"
+                  >
+                    {/* Left Bar / Left half of triangle */}
+                    <path
+                      d={
+                        cell.timeTaken === "..."
+                          ? "M6 5 L10 5 L10 19 L6 19 Z"
+                          : "M8 5 L13 8.5 L13 15.5 L8 19 Z"
+                      }
+                      className="transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] origin-center"
+                    />
+                    {/* Right Bar / Right half of triangle */}
+                    <path
+                      d={
+                        cell.timeTaken === "..."
+                          ? "M14 5 L18 5 L18 19 L14 19 Z"
+                          : "M13 8.5 L19 12 L19 12 L13 15.5 Z"
+                      }
+                      className="transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] origin-center"
+                    />
+                  </svg>
                 </IconButton>
+                {cell.timeTaken && cell.timeTaken !== "..." && (
+                  <span
+                    className={`text-[9px] font-mono font-medium tracking-tight text-center truncate max-w-full select-none ${cell.error ? "text-rose-400/80" : "text-zinc-500 hover:text-zinc-300"
+                      }`}
+                    title={cell.error ? `Failed in ${cell.timeTaken}` : `Executed in ${cell.timeTaken}`}
+                  >
+                    {cell.timeTaken}
+                  </span>
+                )}
               </div>
             )}
 
@@ -652,8 +573,18 @@ export default function Cell({
                       theme="dfnb-dark"
                       beforeMount={defineMonacoTheme}
                       onMount={(editor, monaco) => {
-                        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-                          onRun(cell.id);
+                        editor.onDidFocusEditorText(() => {
+                          onSelectCell?.(cellIdRef.current);
+                        });
+                        registerCellKeyboardShortcuts({
+                          editor,
+                          monaco,
+                          getCellId: () => cellIdRef.current,
+                          getIndex: () => indexRef.current,
+                          getTotalCells: () => totalCellsRef.current,
+                          onRun: (id) => onRunRef.current(id),
+                          onAddCell: (idx, type) => onAddCellRef.current(idx, type),
+                          cellContainerRef: cellRef,
                         });
                       }}
                       value={cell.code}
@@ -749,14 +680,34 @@ export default function Cell({
               </div>
             </div>
           </div>
+
+          {/* Cell Container Footer (Aligned with Resize Arrow) */}
+          {(cell.type === "code" || cell.type === "jsx") && (
+            <div className="absolute bottom-1.5 left-4 right-8 z-20 flex items-center gap-2.5 text-[9.5px] font-mono text-zinc-500 opacity-40 hover:opacity-90 transition-opacity select-none pointer-events-auto">
+              <span className="flex items-center gap-1 text-zinc-400">
+                <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-zinc-300 font-semibold text-[9px]">Ctrl+Enter</kbd>
+                <span>run</span>
+              </span>
+              <span className="text-zinc-600">•</span>
+              <span className="flex items-center gap-1 text-zinc-400">
+                <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-zinc-300 font-semibold text-[9px]">Shift+Enter</kbd>
+                <span>run & next</span>
+              </span>
+              <span className="text-zinc-600">•</span>
+              <span className="flex items-center gap-1 text-zinc-400">
+                <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-zinc-300 font-semibold text-[9px]">Alt+Enter</kbd>
+                <span>run & insert</span>
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {/* Resize Handle */}
       {isGridCanvasMode && onUpdateLayout && (
         <div
-          onMouseDown={handleResizeStart}
-          className="absolute bottom-1 right-1 w-4 h-4 cursor-se-resize flex items-end justify-end p-0.5 opacity-40 hover:opacity-100 group-hover:opacity-90 transition-opacity select-none z-30 text-[var(--nb-text-muted)] hover:text-[var(--nb-text-primary)]"
+          onPointerDown={handleResizePointerDown}
+          className="absolute bottom-1 right-1 w-4 h-4 cursor-se-resize flex items-end justify-end p-0.5 opacity-40 hover:opacity-100 group-hover:opacity-90 transition-opacity select-none touch-none z-30 text-[var(--nb-text-muted)] hover:text-[var(--nb-text-primary)]"
           title="Drag corner to resize cell dimensions"
         >
           <SouthEast sx={{ fontSize: 13 }} />
