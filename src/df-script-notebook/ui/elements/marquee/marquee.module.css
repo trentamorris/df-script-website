@@ -1,0 +1,108 @@
+@keyframes continuousScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pausedScroll {
+  0%,
+  10% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes leftFadeSyncWithPause {
+  0%,
+  10% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.marqueeContainer {
+  width: 100%;
+  overflow: hidden;
+  cursor: default;
+  position: relative;
+}
+
+.marqueeContainer.isOverflowing::before,
+.marqueeContainer.isOverflowing::after {
+  --marquee-fade-width: 20px;
+  width: var(--marquee-fade-width);
+  pointer-events: none;
+  position: absolute;
+  inset-block: 0;
+  height: 100%;
+  content: "";
+  z-index: 2;
+}
+
+.marqueeContainer.isOverflowing::after {
+  right: calc(var(--marquee-fade-width) * -0.25);
+  background: linear-gradient(
+    to left,
+    var(--marquee-fade-color, var(--mui-palette-background-default, #060606)) 20%,
+    rgba(0, 0, 0, 0) 80%
+  );
+}
+
+.marqueeContainer.isOverflowing::before {
+  left: calc(var(--marquee-fade-width) * -0.25);
+  background: linear-gradient(
+    to right,
+    var(--marquee-fade-color, var(--mui-palette-background-default, #060606)) 20%,
+    rgba(0, 0, 0, 0) 80%
+  );
+}
+
+.marqueeContainer.isOverflowing.paused::before {
+  animation-name: leftFadeSyncWithPause;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: inherit;
+}
+
+.marqueeContainer.noFadeLeft::before {
+  display: none;
+}
+
+.marqueeContainer.noFadeRight::after {
+  display: none;
+}
+
+.marqueeContent {
+  display: flex;
+  width: fit-content;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: inherit;
+}
+
+.marqueeContainer.paused .marqueeContent {
+  animation-name: pausedScroll;
+}
+
+.marqueeContainer.continuous .marqueeContent {
+  animation-name: continuousScroll;
+}
+
+.marqueeText {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  white-space: nowrap;
+}

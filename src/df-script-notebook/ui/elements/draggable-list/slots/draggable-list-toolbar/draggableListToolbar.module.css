@@ -1,0 +1,12 @@
+.searchInputWrapper[data-variant="filled"] .searchInputIcon {
+  font-size: 1.375rem !important;
+}
+
+.searchInputWrapper[data-variant="filled"] .searchInputField {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.searchInputWrapper[data-variant="filled"] .searchInputClearIcon {
+  font-size: 1.375rem !important;
+}

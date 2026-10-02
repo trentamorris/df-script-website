@@ -1,0 +1,51 @@
+.slidingPillContainer {
+  --sliding-pill-border-radius: 50px;
+  --sliding-pill-height: 40px;
+  position: relative;
+  display: inline-flex;
+}
+
+.slidingPillContainer :global(.MuiToggleButtonGroup-root) {
+  height: var(--sliding-pill-height) !important;
+  border-radius: var(--sliding-pill-border-radius) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border: none !important;
+  padding: 2px !important;
+  position: relative;
+}
+
+.slidingPillContainer :global(.MuiButtonBase-root) {
+  height: calc(var(--sliding-pill-height) - 4px) !important;
+  border-radius: var(--sliding-pill-border-radius) !important;
+  border: none !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
+  padding: 0 10px !important;
+  text-transform: none !important;
+  transition: color 180ms ease !important;
+  z-index: 1;
+}
+
+.slidingPillContainer :global(.MuiButtonBase-root):not(:global(.overlay)) {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.slidingPillContainer :global(.MuiButtonBase-root):not(:global(.overlay)):hover {
+  color: rgba(255, 255, 255, 0.8) !important;
+  background-color: transparent !important;
+}
+
+.slidingPillContainer :global(.MuiButtonBase-root):not(:global(.overlay)):global(.Mui-selected) {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  background-color: transparent !important;
+}
+
+.slidingPillContainer :global(.MuiButtonBase-root):global(.overlay) {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  z-index: 0 !important;
+}

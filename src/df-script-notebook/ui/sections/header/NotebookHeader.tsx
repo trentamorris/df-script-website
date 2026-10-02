@@ -11,11 +11,13 @@ import {
   Description,
   AutoAwesomeMosaicRounded,
   ViewStreamRounded,
+  KeyboardCommandKeyRounded,
 } from "@mui/icons-material";
 import { ScrollableCanvas } from "../../../../ui/elements";
 import { CELL_TYPES } from "../../../constants";
 import { NotebookHeaderProps } from "./types";
 import { TOOLBAR_MUI_PILL } from "./utils";
+import { NotebookCommandsPanel } from "../canvas-bar/components/command-menu";
 
 export default function NotebookHeader({
   notebookName,
@@ -34,6 +36,8 @@ export default function NotebookHeader({
   fileInputRef,
 }: NotebookHeaderProps) {
   const isCanvas = layoutMode === "canvas";
+  const [commandsAnchorEl, setCommandsAnchorEl] = React.useState<HTMLElement | null>(null);
+  const isCommandsOpen = Boolean(commandsAnchorEl);
 
   return (
     <div className="sticky top-0 bg-[var(--nb-bg-app)] border-b border-white/[0.06] z-30 w-full flex items-center justify-between py-2 px-4 md:px-6 select-none shrink-0">
@@ -178,6 +182,29 @@ export default function NotebookHeader({
             >
               {isCanvas ? "Canvas" : "Document"}
             </Button>
+
+            {/* Commands & Keybindings Trigger */}
+            <Button
+              variant="contained"
+              disableElevation
+              size="small"
+              onClick={(e) => setCommandsAnchorEl(commandsAnchorEl ? null : e.currentTarget)}
+              sx={{
+                ...TOOLBAR_MUI_PILL,
+                backgroundColor: isCommandsOpen ? "white/[0.12]" : "var(--nb-bg-raised)",
+                color: isCommandsOpen ? "white" : "var(--nb-text-primary)",
+              }}
+              startIcon={<KeyboardCommandKeyRounded sx={{ fontSize: "15px !important" }} />}
+              title="View all notebook commands & keybindings"
+            >
+              Commands
+            </Button>
+
+            <NotebookCommandsPanel
+              isOpen={isCommandsOpen}
+              onClose={() => setCommandsAnchorEl(null)}
+              anchorEl={commandsAnchorEl}
+            />
           </div>
         </div>
       </div>

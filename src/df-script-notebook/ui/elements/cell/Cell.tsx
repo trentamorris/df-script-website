@@ -32,6 +32,7 @@ import CellOutput from "./components/cell-output/CellOutput";
 import MarkdownRenderer from "../markdown-renderer/MarkdownRenderer";
 import PanelNavigation from "../panel-navigation/PanelNavigation";
 import { NavigationPanelItem } from "../panel-navigation/types";
+import DraggableDivider from "../draggable-divider/DraggableDivider";
 
 interface NumericStepperProps {
   val: number;
@@ -133,6 +134,9 @@ export default function Cell({
   const positionTabRef = React.useRef<HTMLButtonElement>(null);
   const dimensionsTabRef = React.useRef<HTMLButtonElement>(null);
   const [activePanelTab, setActivePanelTab] = React.useState<"position" | "size" | null>(null);
+  const [cursorPosition, setCursorPosition] = React.useState<{ line: number; col: number }>({ line: 1, col: 1 });
+  const [customEditorHeight, setCustomEditorHeight] = React.useState<number | null>(null);
+  const editorBoxRef = React.useRef<HTMLDivElement>(null);
 
   const {
     isMoving,
@@ -284,10 +288,10 @@ export default function Cell({
                       setActivePanelTab(activePanelTab === "position" ? null : "position");
                     }}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-sans font-medium tracking-wide transition-colors cursor-pointer border-0 select-none flex items-center gap-1.5 ${isMoving
-                        ? "bg-[var(--panel-nav-accent)] text-black shadow-[0_0_12px_rgba(var(--rgb-blue),0.5)] font-semibold"
-                        : activePanelTab === "position"
-                          ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
-                          : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
+                      ? "bg-[var(--panel-nav-accent)] text-black shadow-[0_0_12px_rgba(var(--rgb-blue),0.5)] font-semibold"
+                      : activePanelTab === "position"
+                        ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
+                        : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
                       }`}
                     title="Click to edit grid position (X, Y, Z)"
                   >
@@ -304,10 +308,10 @@ export default function Cell({
                       setActivePanelTab(activePanelTab === "size" ? null : "size");
                     }}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-sans font-medium tracking-wide transition-colors cursor-pointer border-0 select-none flex items-center gap-1.5 ${isResizing
-                        ? "bg-[var(--panel-nav-accent)] text-black shadow-[0_0_12px_rgba(var(--rgb-blue),0.5)] font-semibold"
-                        : activePanelTab === "size"
-                          ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
-                          : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
+                      ? "bg-[var(--panel-nav-accent)] text-black shadow-[0_0_12px_rgba(var(--rgb-blue),0.5)] font-semibold"
+                      : activePanelTab === "size"
+                        ? "bg-[var(--panel-nav-accent)] text-black font-semibold"
+                        : "bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] hover:bg-[var(--cell-badge-hover)] hover:text-white"
                       }`}
                     title="Click to edit cell dimensions (Width, Height)"
                   >
@@ -554,19 +558,23 @@ export default function Cell({
             <div className={`grow flex flex-col min-w-0 min-h-0 ${isGridCanvasMode ? "h-full overflow-hidden" : "h-auto"} pr-1`}>
               {!cell.isCodeCollapsed ? (
                 <div
+                  ref={editorBoxRef}
                   style={{
                     height:
-                      isGridCanvasMode && currentLayout
-                        ? cell.output || cell.logs?.length || cell.error
-                          ? "45%"
-                          : "100%"
-                        : `${Math.max(75, Math.min(500, cell.code.split("\n").length * 19 + 24))}px`,
+                      customEditorHeight !== null
+                        ? `${customEditorHeight}px`
+                        : isGridCanvasMode && currentLayout
+                          ? cell.output || cell.logs?.length || cell.error
+                            ? "45%"
+                            : "100%"
+                          : `${Math.max(75, Math.min(500, cell.code.split("\n").length * 19 + 24))}px`,
                     minHeight: isGridCanvasMode ? "60px" : "75px",
                     maxHeight: isGridCanvasMode ? "100%" : undefined,
                   }}
-                  className="relative rounded-xl bg-[var(--nb-bg-code)] py-2.5 group/editor overflow-hidden shrink-0 flex flex-col"
+                  className="relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border transition-all duration-200 bg-[var(--nb-bg-code)] border-white/[0.04] focus-within:bg-[#0c0c0e] focus-within:border-white/[0.18] focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
                 >
-                  <div className="w-full h-full min-h-0 min-w-0 grow">
+                  {/* Monaco Code Scroll Area */}
+                  <div className="w-full grow min-h-0 min-w-0 pt-2.5">
                     <Editor
                       height="100%"
                       language={cell.type === "markdown" ? "markdown" : "javascript"}
@@ -575,6 +583,12 @@ export default function Cell({
                       onMount={(editor, monaco) => {
                         editor.onDidFocusEditorText(() => {
                           onSelectCell?.(cellIdRef.current);
+                        });
+                        editor.onDidChangeCursorPosition((e) => {
+                          setCursorPosition({
+                            line: e.position.lineNumber,
+                            col: e.position.column,
+                          });
                         });
                         registerCellKeyboardShortcuts({
                           editor,
@@ -603,7 +617,7 @@ export default function Cell({
                           horizontal: "auto",
                           handleMouseWheel: true,
                         },
-                        renderLineHighlight: "none",
+                        renderLineHighlight: "line",
                         overviewRulerBorder: false,
                         hideCursorInOverviewRuler: true,
                       }}
@@ -636,9 +650,64 @@ export default function Cell({
                     {copiedCellCodeId === cell.id ? "Copied" : "Copy"}
                   </Button>
 
-                  <span className="absolute bottom-2.5 right-3.5 z-20 text-[9px] font-sans text-[var(--cell-text-tag)] font-medium tracking-widest select-none pointer-events-none uppercase">
-                    {cell.type === "markdown" ? "Markdown" : cell.type === "jsx" ? "Visual JSX" : "JavaScript"}
-                  </span>
+                  {/* Dedicated Padded Editor Footer Bar — Scrollable code never overlaps this */}
+                  <div className="h-6 shrink-0 flex items-center justify-between px-3 border-t border-white/[0.03] select-none pointer-events-none transition-colors duration-200 group-has-[:focus-within]/editor:border-white/[0.06]">
+                    {/* Left: Dynamic Cursor & Line Telemetry */}
+                    <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-500/70 transition-colors group-has-[:focus-within]/editor:text-zinc-400">
+                      <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-300 font-medium">
+                        Ln {cursorPosition.line}, Col {cursorPosition.col}
+                      </span>
+                      <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-700">•</span>
+                      <span>
+                        {cell.code.split("\n").length} {cell.code.split("\n").length === 1 ? "line" : "lines"}
+                      </span>
+                    </div>
+
+                    {/* Right: Execution duration + Status LED + Language Badge */}
+                    <div className="flex items-center gap-2">
+                      {cell.timeTaken && cell.timeTaken !== "..." && (
+                        <span
+                          className={`text-[9px] font-mono transition-colors ${cell.error ? "text-rose-400/90 font-medium" : "text-emerald-400/80"
+                            }`}
+                        >
+                          {cell.timeTaken}
+                        </span>
+                      )}
+
+                      <span className="inline-flex items-center gap-1.5 text-[9px] font-sans font-medium tracking-widest uppercase transition-all duration-200 text-[var(--cell-text-tag)] group-has-[:focus-within]/editor:text-white/80">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full transition-all duration-200 opacity-40 group-has-[:focus-within]/editor:opacity-100 group-has-[:focus-within]/editor:animate-pulse ${cell.timeTaken === "..."
+                              ? "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse opacity-100"
+                              : cell.error
+                                ? "bg-[var(--cell-accent-rose)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-rose)]"
+                                : hasRun
+                                  ? "bg-[var(--cell-accent-green)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-green)]"
+                                  : "bg-[var(--panel-nav-accent)] group-has-[:focus-within]/editor:shadow-[0_0_6px_rgba(var(--rgb-blue),0.9)]"
+                            }`}
+                        />
+                        {cell.type === "markdown" ? "Markdown" : cell.type === "jsx" ? "Visual JSX" : "JavaScript"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Reusable DraggableDivider anchored to bottom of code editor */}
+                  <DraggableDivider
+                    containerRef={editorBoxRef}
+                    orientation="vertical"
+                    anchor="bottom"
+                    dragDirection="down"
+                    thicknessPx={6}
+                    clampMin={65}
+                    clampMax={800}
+                    onPointerDown={() => onInteractionChange?.(true)}
+                    onPointerMove={({ payload }) => {
+                      setCustomEditorHeight(payload.px);
+                    }}
+                    onPointerUp={() => {
+                      onInteractionChange?.(false);
+                    }}
+                    className="hover:shadow-[0_0_8px_rgba(var(--rgb-blue),0.9)] transition-colors duration-150"
+                  />
                 </div>
               ) : (
                 <div
@@ -669,6 +738,7 @@ export default function Cell({
                   )}
                 </div>
               )}
+
 
               <div className="min-h-0 grow overflow-y-auto">
                 <CellOutput
