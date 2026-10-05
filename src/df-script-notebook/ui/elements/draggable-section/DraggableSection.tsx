@@ -1,19 +1,13 @@
 import React from "react";
 import clsx from "clsx";
-import { DraggableSectionProps } from "./draggableSectionTypes";
+import { DraggableSectionProps } from "./types";
 import {
-  HandleDragSession,
+  DragPointerType,
   getMovingEdgePoint,
   getKeyboardResizeOffset,
-  startHandleDragSession,
-  trackTouchDrag,
-  toAxis,
-  getScrollableAncestor,
-  createDragEvent,
-  RESIZE_HANDLE,
-  useLatestRef,
-  useWindowPointerDrag,
-} from "../utils/dragUtils";
+  startDragSession,
+} from "../../../utils/dragUtils";
+import { usePointerDrag } from "../../../hooks/usePointerDrag";
 
 export const DraggableSection = React.forwardRef<HTMLDivElement, DraggableSectionProps>(
   (props, ref) => {
@@ -21,6 +15,7 @@ export const DraggableSection = React.forwardRef<HTMLDivElement, DraggableSectio
       containerRef,
       orientation,
       anchor,
+      invert,
       clampMin,
       clampMax,
       snapPoints,
@@ -49,9 +44,11 @@ export const DraggableSection = React.forwardRef<HTMLDivElement, DraggableSectio
       [ref]
     );
 
-    const latestRef = useLatestRef(props);
-    const startDrag = useWindowPointerDrag();
-    const getLatestProps = React.useCallback(() => latestRef.current, [latestRef]);
+    const latestRef = React.useRef(props);
+    latestRef.current = props;
+
+    const { startDragSession: trackPointerDrag } = usePointerDrag();
+    const getLatestProps = React.useCallback(() => latestRef.current, []);
 
     const handlePointerDown = React.useCallback(
       (e: React.PointerEvent<HTMLDivElement>) => {
@@ -59,21 +56,25 @@ export const DraggableSection = React.forwardRef<HTMLDivElement, DraggableSectio
         const container = containerRef.current;
         const el = innerRef.current;
         if (!container || !el) return;
+        e.stopPropagation();
 
-        const session = startHandleDragSession({
+        const pointerType: DragPointerType =
+          e.pointerType === "touch" ? "touch" : "mouse";
+
+        const session = startDragSession({
           getProps: getLatestProps,
           container,
           handleEl: el,
           clientX: e.clientX,
           clientY: e.clientY,
-          pointerType: "mouse",
+          pointerType,
         });
 
-        startDrag({
+        trackPointerDrag({
           handleEl: el,
           pointerId: e.pointerId,
           origin: { x: e.clientX, y: e.clientY },
-          cursor: RESIZE_HANDLE[orientation].bodyCursor,
+          cursor: orientation === "horizontal" ? "col-resize" : "row-resize",
           onMove: (evt, frameTime) => {
             session.move(evt.clientX, evt.clientY, frameTime);
           },
@@ -82,12 +83,12 @@ export const DraggableSection = React.forwardRef<HTMLDivElement, DraggableSectio
               session.end(evt.clientX, evt.clientY);
             }
             if (!result.hasDragged && !result.cancelled) {
-              latestRef.current.onClick?.(createDragEvent(evt.clientX, evt.clientY, "mouse"));
+              latestRef.current.onClick?.({ clientX: evt.clientX, clientY: evt.clientY, pointerType });
             }
           },
         });
       },
-      [draggable, containerRef, getLatestProps, startDrag, orientation, latestRef]
+      [draggable, containerRef, getLatestProps, trackPointerDrag, orientation]
     );
 
     /** Arrow keys on the section itself (not its content) step it, or jump between snap points. */
@@ -103,7 +104,7 @@ export const DraggableSection = React.forwardRef<HTMLDivElement, DraggableSectio
 
         e.preventDefault();
         const origin = getMovingEdgePoint(e.currentTarget, currentProps.orientation, currentProps.anchor);
-        startHandleDragSession({
+        startDragSession({
           getProps: getLatestProps,
           container,
           handleEl: e.currentTarget,
@@ -112,70 +113,13 @@ export const DraggableSection = React.forwardRef<HTMLDivElement, DraggableSectio
           pointerType: "keyboard",
         }).nudge(offset);
       },
-      [containerRef, getLatestProps, latestRef, onKeyDown]
+      [containerRef, getLatestProps, onKeyDown]
     );
-
-    React.useEffect(() => {
-      const el = innerRef.current;
-      if (!el) return;
-
-      let session: HandleDragSession | null = null;
-      // The scrollable element under the finger at touchstart, if any (e.g. a sheet's scrolling body).
-      let gestureScroller: HTMLElement | null = null;
-
-      return trackTouchDrag({
-        el,
-        canStart: () => latestRef.current.draggable ?? true,
-        getAxis: () => toAxis(latestRef.current.orientation),
-        onGestureStart: (target) => {
-          gestureScroller = containerRef.current
-            ? getScrollableAncestor({
-                el: target,
-                stopEl: el,
-                checkScrollbounds: true,
-                includeSelf: true,
-                axis: toAxis(latestRef.current.orientation),
-              })
-            : null;
-        },
-        shouldStartDrag: ({ deltaY }) => {
-          if (!containerRef.current) return false;
-
-          // A bottom sheet only takes over from its scrolling content once that content hits an end.
-          const { orientation: currentOrientation, anchor: currentAnchor } = latestRef.current;
-          if (!gestureScroller || currentOrientation !== "vertical" || currentAnchor !== "bottom") return true;
-
-          const { scrollTop, scrollHeight, clientHeight } = gestureScroller;
-          const isPullingDown = deltaY > 0;
-          const atTop = scrollTop <= 0;
-          const atBottom = scrollTop >= scrollHeight - clientHeight - 1;
-          return (isPullingDown && atTop) || (!isPullingDown && atBottom);
-        },
-        onStart: (touch) => {
-          const container = containerRef.current;
-          if (!container) return;
-          session = startHandleDragSession({
-            getProps: getLatestProps,
-            container,
-            handleEl: el,
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-            pointerType: "touch",
-          });
-        },
-        onMove: (touch, now) => session?.move(touch.clientX, touch.clientY, now),
-        onEnd: (touch) => {
-          session?.end(touch.clientX, touch.clientY);
-          session = null;
-        },
-        onTap: (touch) =>
-          latestRef.current.onClick?.(createDragEvent(touch.clientX, touch.clientY, "touch")),
-      });
-    }, [containerRef, getLatestProps, latestRef]);
 
     const sectionClasses = React.useMemo(() => {
       const touchClass = orientation === "horizontal" ? "touch-pan-y" : "touch-none";
-      return clsx("draggable-section", touchClass, RESIZE_HANDLE[orientation].className, className);
+      const cursorClass = orientation === "horizontal" ? "cursor-ew-resize" : "cursor-ns-resize";
+      return clsx("draggable-section", touchClass, cursorClass, className);
     }, [orientation, className]);
 
     return (

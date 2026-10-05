@@ -1,7 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { SlidingPillProps } from "./slidingPillTypes";
+import { SlidingPillProps } from "./types";
 import styles from "./slidingPill.module.css";
 
 export function SlidingPill<T extends string>({
@@ -10,6 +10,8 @@ export function SlidingPill<T extends string>({
   onChange,
   height,
   radius,
+  className,
+  groupClassName,
 }: SlidingPillProps<T>) {
   const groupRef = React.useRef<HTMLDivElement | null>(null);
   const [pillStyle, setPillStyle] = React.useState<{ left: number; width: number }>({
@@ -72,7 +74,7 @@ export function SlidingPill<T extends string>({
 
   return (
     <div
-      className={clsx(styles.slidingPillContainer, "relative")}
+      className={clsx(styles.slidingPillContainer, "relative", className)}
       style={containerStyle}
     >
       <ToggleButtonGroup
@@ -80,6 +82,7 @@ export function SlidingPill<T extends string>({
         value={activeValue}
         exclusive
         onChange={handleOptionsChange}
+        className={groupClassName}
       >
         {options.map((opt) => (
           <ToggleButton

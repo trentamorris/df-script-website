@@ -7,15 +7,13 @@ import {
   DragConfig,
   DraggableListItemHandleProps,
   DraggableListItemProps,
-} from "./draggableListTypes";
+} from "./types";
 import { mergeRefs } from "../../../utils/layoutUtils";
 import {
   clamp,
-  isPrimaryPress,
   useDragAutoScroll,
-  useLatestRef,
-  useWindowPointerDrag,
-} from "../utils/dragUtils";
+} from "../../../utils/dragUtils";
+import { usePointerDrag } from "../../../hooks/usePointerDrag";
 
 const IDLE_DRAG_CONFIG: DragConfig = {
   draggedIndex: null,
@@ -125,9 +123,14 @@ export const DraggableList = React.forwardRef<HTMLUListElement, DraggableListPro
     }, []);
 
     const [dragConfig, setDragConfig] = React.useState<DragConfig>(IDLE_DRAG_CONFIG);
-    const dragConfigRef = useLatestRef(dragConfig);
-    const onReorderRef = useLatestRef(onReorder);
-    const layoutRef = useLatestRef({ childCount, rowHeight });
+    const dragConfigRef = React.useRef(dragConfig);
+    dragConfigRef.current = dragConfig;
+
+    const onReorderRef = React.useRef(onReorder);
+    onReorderRef.current = onReorder;
+
+    const layoutRef = React.useRef({ childCount, rowHeight });
+    layoutRef.current = { childCount, rowHeight };
 
     const isDragActive = dragConfig.draggedIndex !== null;
     const pointerYRef = React.useRef<number | null>(null);
@@ -159,7 +162,7 @@ export const DraggableList = React.forwardRef<HTMLUListElement, DraggableListPro
 
     // Drag Session (shared window-pointer engine: one move per frame, Escape/pointercancel discard)
 
-    const startDrag = useWindowPointerDrag();
+    const { startDragSession } = usePointerDrag();
 
     /** Single exit point for every reorder (pointer or keyboard). */
     const commitReorder = React.useCallback(
@@ -195,7 +198,7 @@ export const DraggableList = React.forwardRef<HTMLUListElement, DraggableListPro
 
     const handlePointerStart = React.useCallback(
       (event: React.PointerEvent<HTMLElement>, index: number) => {
-        if (!isPrimaryPress(event)) return;
+        if (event.button !== 0) return;
         event.preventDefault();
 
         activeScrollContainerRef.current = getActiveScrollParent();
@@ -209,7 +212,7 @@ export const DraggableList = React.forwardRef<HTMLUListElement, DraggableListPro
           currentScrollTop: startScrollTop,
         });
 
-        startDrag({
+        startDragSession({
           pointerId: event.pointerId,
           cursor: "grabbing",
           onMove: (evt) => {
@@ -233,7 +236,7 @@ export const DraggableList = React.forwardRef<HTMLUListElement, DraggableListPro
           },
         });
       },
-      [commitReorder, dragConfigRef, getActiveScrollParent, getIndexAt, startDrag, updateAutoScroll]
+      [commitReorder, dragConfigRef, getActiveScrollParent, getIndexAt, startDragSession, updateAutoScroll]
     );
 
     // Context Value

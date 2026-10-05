@@ -5,13 +5,14 @@
   /* ================================================================= */
   --rgb-white: 255, 255, 255;
   --rgb-black: 0, 0, 0;
-  --rgb-bg-dark: 6, 6, 6;
+  --rgb-bg-dark: 3, 3, 3;
   --rgb-bg-surface: 14, 14, 14;
   --rgb-bg-code: 5, 5, 5;
   --rgb-bg-collapsed: 18, 18, 18;
-  --rgb-cell-base: 11, 11, 11;
-  --rgb-cell-hover: 17, 17, 17;
-  --rgb-cell-active: 20, 20, 20;
+  --rgb-bg-toolbar: 33, 33, 33;
+  --rgb-cell-base: 17, 17, 17;
+  --rgb-cell-hover: 24, 24, 24;
+  --rgb-cell-active: 28, 28, 28;
 
   /* Brand & Status Channels */
   --rgb-red: 255, 0, 51;
@@ -27,13 +28,16 @@
   /* ================================================================= */
   --nb-bg-app: rgb(var(--rgb-bg-dark));
   --nb-bg-surface: rgb(var(--rgb-bg-surface));
+  --nb-bg-toolbar: rgb(var(--rgb-bg-toolbar));
   --nb-bg-code: rgb(var(--rgb-bg-code));
   --nb-bg-raised: rgba(var(--rgb-white), 0.05);
   --nb-bg-hover: rgba(var(--rgb-white), 0.08);
 
-  --nb-border-default: rgba(var(--rgb-white), 0.08);
-  --nb-border-cell: rgba(var(--rgb-white), 0.06);
-  --nb-border-subtle: rgba(var(--rgb-white), 0.04);
+  --nb-border-default: rgba(var(--rgb-white), 0.15);
+  --nb-border-cell: rgba(var(--rgb-white), 0.15);
+  --nb-border-subtle: rgba(var(--rgb-white), 0.1);
+  --nb-border-strong: rgba(var(--rgb-white), 0.2);
+  --nb-border-focus: rgba(var(--rgb-blue), 0.5);
 
   --nb-text-primary: rgb(var(--rgb-white));
   --nb-text-heading: rgba(var(--rgb-white), 0.95);
@@ -41,11 +45,24 @@
   --nb-text-muted: rgba(var(--rgb-white), 0.63);
   --nb-text-subtle: rgba(var(--rgb-white), 0.44);
 
+  /* Status & Semantic Tokens */
+  --nb-kbd-bg: rgba(var(--rgb-blue), 0.25);
+  --nb-kbd-fg: rgb(var(--rgb-white));
+  --nb-kbd-bg-hover: rgba(var(--rgb-blue), 0.35);
+  --nb-warning: rgb(251, 191, 36);
+  --nb-warning-muted: rgba(251, 191, 36, 0.85);
+
+  /* Canvas Grid Interaction Tokens (Snap points & tactile feel) */
+  --nb-grid-dot: rgba(var(--rgb-white), 0.38);
+  --nb-grid-dot-accent: rgba(var(--rgb-blue), 0.5);
+  --nb-grid-crosshair: rgba(var(--rgb-white), 0.28);
+  --nb-grid-interactive-bg: rgba(var(--rgb-white), 0.015);
+
   /* ================================================================= */
   /*  3. Cell Specific Aesthetic Tokens (--cell-*)                     */
   /* ================================================================= */
   /* Typography & Fonts */
-  --cell-font-sans: 'Roboto', system-ui, -apple-system, sans-serif;
+  --cell-font-sans: 'Roboto', 'Noto Naskh Arabic UI', 'Noto Naskh Arabic', Arial, sans-serif;
   --cell-font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Surfaces & Backgrounds */
@@ -83,6 +100,7 @@
   --cell-shadow-insert: 0 4px 24px rgba(var(--rgb-black), 0.85);
   --cell-shadow-active: 0 8px 32px rgba(var(--rgb-black), 0.85);
   --cell-shadow-active-aura: 0 0 0 1px rgba(var(--rgb-blue), 0.5), 0 0 24px -2px rgba(var(--rgb-blue), 0.35), 0 0 48px -8px rgba(var(--rgb-blue), 0.18);
+  --cell-shadow-lifted: 0 0 0 1px rgba(var(--rgb-blue), 0.65), 0 16px 40px -8px rgba(var(--rgb-black), 0.85), 0 0 32px -4px rgba(var(--rgb-blue), 0.45);
   --cell-shadow-float: 0 4px 16px rgba(var(--rgb-black), 0.6);
   --cell-glow-red: 0 0 8px rgba(var(--rgb-red), 1);
   --cell-glow-rose: 0 0 8px rgba(var(--rgb-rose), 0.6);
@@ -112,6 +130,7 @@
   --panel-nav-text-secondary: rgba(var(--rgb-white), 0.65);
   --panel-nav-accent: rgba(var(--rgb-blue), 1);
   --panel-nav-shadow: 0 4px 32px rgba(var(--rgb-black), 0.7);
+  --panel-nav-backdrop: rgba(var(--rgb-black), 0.5);
 
   /* Default Font */
   font-family: var(--cell-font-sans);

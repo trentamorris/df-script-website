@@ -5,7 +5,7 @@ import {
   DraggableListToolbarSortButtonProps,
   DraggableListToolbarExpandAllButtonProps,
   DraggableListToolbarRefreshButtonProps,
-} from "./draggableListToolbarTypes";
+} from "./types";
 import styles from "./draggableListToolbar.module.css";
 
 export const DraggableListToolbarSearchInput = React.forwardRef<HTMLInputElement, DraggableListToolbarSearchInputProps>(

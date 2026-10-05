@@ -3,13 +3,12 @@ import { CELL_MUI_STYLES } from "../../utils";
 
 const INSERT_BUTTONS = [
   { type: "code" as const, label: "+ Code" },
-  { type: "jsx" as const, label: "+ Visual" },
   { type: "markdown" as const, label: "+ Text" },
 ];
 
 export interface CellInsertZoneProps {
   index: number;
-  onAdd: (type: "code" | "jsx" | "markdown") => void;
+  onAdd: (type: "code" | "markdown") => void;
 }
 
 export default function CellInsertZone({ index, onAdd }: CellInsertZoneProps) {

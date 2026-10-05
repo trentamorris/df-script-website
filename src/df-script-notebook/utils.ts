@@ -53,33 +53,3 @@ export function reorderArray<T>(list: readonly T[], sourceIndex: number, targetI
   result.splice(targetIndex, 0, removed);
   return result;
 }
-
-/**
- * Extracts declared variable and function identifiers from JavaScript code.
- */
-export function extractDeclaredVars(code: string): string[] {
-  const vars: string[] = [];
-  const regex = /(?:const|let|var)\s+([a-zA-Z_$][\w$]*)\s*=|function\s+([a-zA-Z_$][\w$]*)\s*\(/g;
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(code)) !== null) {
-    const name = match[1] || match[2];
-    if (name && !vars.includes(name)) {
-      vars.push(name);
-    }
-  }
-  return vars;
-}
-
-/**
- * Finds the last non-comment line of code to support expression return value capture.
- */
-export function findLastExpressionLine(code: string): { lastLine: string; lastLineIndex: number } {
-  const lines = code.split("\n");
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const trimmed = lines[i].trim();
-    if (trimmed && !trimmed.startsWith("//") && !trimmed.startsWith("/*")) {
-      return { lastLine: trimmed, lastLineIndex: i };
-    }
-  }
-  return { lastLine: "", lastLineIndex: -1 };
-}

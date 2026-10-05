@@ -1,5 +1,4 @@
-import React from "react";
-import { CellLayout, CellState, PageGridConfig } from "../../../types";
+import { CellLayout, CellState, CellType, PageGridConfig } from "../../../types";
 
 export interface CellProps {
   cell: CellState;
@@ -15,10 +14,16 @@ export interface CellProps {
   onToggleCodeCollapse: (id: string) => void;
   onToggleOutputCollapse: (id: string) => void;
   onUpdateCode: (id: string, code: string) => void;
-  onAddCell: (index: number, type: "code" | "jsx" | "markdown") => void;
+  onAddCell: (index: number, type: CellType) => void;
+  onSplitCell?: (index: number, beforeCode: string, afterCode: string) => void;
   onCopyCell: (id: string) => void;
   onCopyCellCode: (id: string) => void;
   onSelectCell?: (id: string) => void;
+  onAdvanceCell?: (index: number) => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   onUpdateLayout?: (id: string, layout: Partial<CellLayout>) => void;
   onDragStart?: (e: React.DragEvent, index: number) => void;
   onDragOver?: (e: React.DragEvent, index: number) => void;
@@ -27,4 +32,5 @@ export interface CellProps {
   isGridCanvasMode?: boolean;
   gridConfig?: PageGridConfig;
   onInteractionChange?: (isInteracting: boolean) => void;
+  onOpenCommands?: () => void;
 }

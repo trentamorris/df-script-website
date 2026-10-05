@@ -171,3 +171,86 @@ export function defineMonacoTheme(monaco: any): void {
     },
   });
 }
+
+/**
+ * Calculates column step and row step in pixels based on container width and grid config.
+ */
+export function calculateGridSteps(gridWidth: number, totalCols: number, rowHeight: number, gapPx: number) {
+  const colStepPx = Math.max(15, (gridWidth - (totalCols - 1) * gapPx) / totalCols) + gapPx;
+  const rowStepPx = rowHeight + gapPx;
+  return { colStepPx, rowStepPx };
+}
+
+/**
+ * Calculates bounded 2D cell grid position (x, y) from cursor coordinates and offsets.
+ */
+export function calculateCellMoveCoordinates(params: {
+  clientX: number;
+  clientY: number;
+  gridRect: DOMRect;
+  scrollLeft: number;
+  scrollTop: number;
+  grabOffsetX: number;
+  grabOffsetY: number;
+  colStepPx: number;
+  rowStepPx: number;
+  totalCols: number;
+  totalRows: number;
+  cellW: number;
+  cellH: number;
+}): { x: number; y: number } {
+  const {
+    clientX, clientY, gridRect, scrollLeft, scrollTop,
+    grabOffsetX, grabOffsetY, colStepPx, rowStepPx,
+    totalCols, totalRows, cellW, cellH,
+  } = params;
+
+  const relativeX = clientX - gridRect.left + scrollLeft - grabOffsetX;
+  const relativeY = clientY - gridRect.top + scrollTop - grabOffsetY;
+
+  const rawGridX = Math.round(relativeX / colStepPx);
+  const rawGridY = Math.round(relativeY / rowStepPx);
+
+  const maxX = Math.max(0, totalCols - cellW);
+  const maxY = Math.max(0, totalRows - cellH);
+
+  return {
+    x: Math.min(maxX, Math.max(0, rawGridX)),
+    y: Math.min(maxY, Math.max(0, rawGridY)),
+  };
+}
+
+/**
+ * Calculates bounded 2D cell grid size (w, h) from cursor coordinates and cell origin.
+ */
+export function calculateCellResizeDimensions(params: {
+  clientX: number;
+  clientY: number;
+  gridRect: DOMRect;
+  scrollLeft: number;
+  scrollTop: number;
+  originX: number;
+  originY: number;
+  colStepPx: number;
+  rowStepPx: number;
+  totalCols: number;
+}): { w: number; h: number } {
+  const {
+    clientX, clientY, gridRect, scrollLeft, scrollTop,
+    originX, originY, colStepPx, rowStepPx, totalCols,
+  } = params;
+
+  const cellLeft = gridRect.left - scrollLeft + originX * colStepPx;
+  const cellTop = gridRect.top - scrollTop + originY * rowStepPx;
+
+  const rawGridW = Math.round((clientX - cellLeft) / colStepPx);
+  const rawGridH = Math.round((clientY - cellTop) / rowStepPx);
+
+  const maxW = totalCols - originX;
+
+  return {
+    w: Math.min(maxW, Math.max(1, rawGridW)),
+    h: Math.min(100, Math.max(1, rawGridH)),
+  };
+}
+

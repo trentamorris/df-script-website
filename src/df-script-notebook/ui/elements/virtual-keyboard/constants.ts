@@ -1,5 +1,5 @@
 import { VirtualKeyboardLayoutType } from "./types";
-import { SlidingPillOption } from "../sliding-pill/slidingPillTypes";
+import { SlidingPillOption } from "../sliding-pill/types";
 
 export const NUMBER_ROW = ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="] as const;
 

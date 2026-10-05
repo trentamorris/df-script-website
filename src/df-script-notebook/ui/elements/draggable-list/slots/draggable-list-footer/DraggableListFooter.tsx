@@ -1,6 +1,6 @@
 import React from "react";
 import { Add, DeleteSweep } from "@mui/icons-material";
-import { DraggableListFooterButtonProps } from "./draggableListTypes";
+import { DraggableListFooterButtonProps } from "./types";
 
 export const DraggableListFooterButton = React.forwardRef<HTMLButtonElement, DraggableListFooterButtonProps>(
   ({ className, label, render, ...props }, ref) => {

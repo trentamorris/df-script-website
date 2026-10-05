@@ -8,7 +8,7 @@
 .slidingPillContainer :global(.MuiToggleButtonGroup-root) {
   height: var(--sliding-pill-height) !important;
   border-radius: var(--sliding-pill-border-radius) !important;
-  background-color: rgba(255, 255, 255, 0.06) !important;
+  background-color: transparent !important;
   border: none !important;
   padding: 2px !important;
   position: relative;
@@ -37,13 +37,13 @@
 }
 
 .slidingPillContainer :global(.MuiButtonBase-root):not(:global(.overlay)):global(.Mui-selected) {
-  color: #ffffff !important;
+  color: #000000 !important;
   font-weight: 600 !important;
   background-color: transparent !important;
 }
 
 .slidingPillContainer :global(.MuiButtonBase-root):global(.overlay) {
-  background-color: rgba(255, 255, 255, 0.18) !important;
+  background-color: color-mix(in oklab, var(--color-white, #ffffff) 80%, transparent) !important;
   border: none !important;
   box-shadow: none !important;
   pointer-events: none;

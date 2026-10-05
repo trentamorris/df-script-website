@@ -1,5 +1,5 @@
 export type CellWidth = "full" | "half";
-export type CellType = "code" | "markdown" | "jsx";
+export type CellType = "code" | "markdown";
 export type LayoutMode = "document" | "canvas";
 
 export interface CellLayout {
@@ -17,6 +17,7 @@ export interface CellState {
   output: any;
   error: string | null;
   timeTaken: string | null;
+  lastRunTime?: string | null;
   execIndex: number | null;
   width?: CellWidth;
   layout?: CellLayout;
@@ -46,4 +47,14 @@ export interface NotebookFile {
   cells: CellState[];
   pages?: NotebookPage[];
   activePageId?: string;
+}
+
+export type CommandScope = "global" | "cell" | "editor";
+export type CommandMode = "Global" | "Command Mode" | "Edit Mode";
+
+export interface NotebookCommand {
+  id: string;
+  name: string;
+  defaultKeybinding: string;
+  mode: CommandMode;
 }

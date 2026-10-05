@@ -1,6 +1,6 @@
 import React from "react";
 import { VirtualKeyboardProps } from "./types";
-import { NUMBER_ROW, ALPHA_ROWS, ARROWS, MODIFIERS } from "./constants";
+import { NUMBER_ROW, ALPHA_ROWS, ARROWS, MODIFIERS, LAYOUT_OPTIONS } from "./constants";
 
 interface KeyButtonProps {
   keyId: string;
@@ -11,7 +11,7 @@ interface KeyButtonProps {
   title?: string;
 }
 
-/** Atomic Key button helper to eliminate repetitive markup and styling */
+/** Atomic Key button helper: borderless, clean, with subtle depth */
 function KeyButton({
   keyId,
   label,
@@ -20,22 +20,18 @@ function KeyButton({
   className = "flex-1 min-w-[18px]",
   title,
 }: KeyButtonProps) {
-  const isMod = (MODIFIERS as readonly string[]).includes(keyId);
+  const activeStyle =
+    "bg-[#a8c7fa] text-[#041e49] font-bold shadow-[0_1px_4px_rgba(0,0,0,0.3)]";
 
-  const activeStyle = isMod
-    ? "bg-blue-600/30 border-blue-500 text-blue-300 font-semibold shadow-[0_0_8px_rgba(59,130,246,0.3)]"
-    : "bg-emerald-500/30 border-emerald-500 text-emerald-300 font-semibold shadow-[0_0_8px_rgba(16,185,129,0.3)]";
-
-  const defaultStyle = isMod
-    ? "bg-white/[0.05] border-white/[0.07] text-white/70 hover:bg-white/[0.12] hover:text-white"
-    : "bg-white/[0.05] border-white/[0.06] text-white/70 hover:bg-white/[0.12] hover:text-white";
+  const defaultStyle =
+    "bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white active:bg-white/[0.12]";
 
   return (
     <button
       type="button"
       title={title || keyId}
       onClick={() => onClick(keyId)}
-      className={`h-6 rounded border transition-all flex items-center justify-center text-center ${
+      className={`relative h-7 rounded-md border-0 transition-all flex items-center justify-center text-center select-none cursor-pointer ${
         isSelected ? activeStyle : defaultStyle
       } ${className}`}
     >
@@ -46,21 +42,56 @@ function KeyButton({
 
 export function VirtualKeyboard({
   layout = "qwerty",
+  onLayoutChange,
   selectedKeys,
   onKeyToggle,
   className = "",
 }: VirtualKeyboardProps) {
   const activeAlpha = ALPHA_ROWS[layout];
-  const has = (key: string) => selectedKeys.includes(key);
+  const selectedKeySet = React.useMemo(() => new Set(selectedKeys), [selectedKeys]);
+  const has = (key: string) => selectedKeySet.has(key);
 
   return (
     <div
-      className={`flex flex-col gap-1 p-2 bg-[#121214] rounded-xl border border-white/[0.08] shadow-inner text-[11px] font-mono select-none ${className}`}
+      className={`flex flex-col gap-1.5 p-2.5 bg-[#121214] rounded-xl shadow-inner text-[11px] font-mono select-none w-full box-border ${className}`}
     >
+      {/* Integrated Layout Switcher Header */}
+      {onLayoutChange && (
+        <div className="flex items-center justify-between px-1 pb-1 border-b border-white/[0.04]">
+          <span className="text-[10px] uppercase font-sans font-medium text-white/30 tracking-wider">
+            Layout
+          </span>
+          <div className="flex items-center gap-0.5">
+            {LAYOUT_OPTIONS.map((opt) => {
+              const isActive = layout === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onLayoutChange(opt.value)}
+                  className={`text-[9px] font-sans px-2 py-0.5 rounded transition-all border-0 cursor-pointer ${
+                    isActive
+                      ? "text-white bg-white/[0.12] font-semibold shadow-sm"
+                      : "text-white/40 hover:text-white/80 hover:bg-white/[0.05]"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Row 1: Numbers + Backspace */}
       <div className="flex gap-1 justify-between">
         {NUMBER_ROW.map((key) => (
-          <KeyButton key={key} keyId={key} isSelected={has(key)} onClick={onKeyToggle} />
+          <KeyButton
+            key={key}
+            keyId={key}
+            isSelected={has(key)}
+            onClick={onKeyToggle}
+          />
         ))}
         <KeyButton
           keyId="Backspace"
@@ -81,7 +112,12 @@ export function VirtualKeyboard({
           className="px-1.5 text-[9px]"
         />
         {activeAlpha.row1.map((key) => (
-          <KeyButton key={key} keyId={key} isSelected={has(key)} onClick={onKeyToggle} />
+          <KeyButton
+            key={key}
+            keyId={key}
+            isSelected={has(key)}
+            onClick={onKeyToggle}
+          />
         ))}
       </div>
 
@@ -95,7 +131,12 @@ export function VirtualKeyboard({
           className="px-1.5 text-[9px]"
         />
         {activeAlpha.row2.map((key) => (
-          <KeyButton key={key} keyId={key} isSelected={has(key)} onClick={onKeyToggle} />
+          <KeyButton
+            key={key}
+            keyId={key}
+            isSelected={has(key)}
+            onClick={onKeyToggle}
+          />
         ))}
         <KeyButton
           keyId="Enter"
@@ -116,7 +157,12 @@ export function VirtualKeyboard({
           className="px-2.5 text-[10px] font-medium"
         />
         {activeAlpha.row3.map((key) => (
-          <KeyButton key={key} keyId={key} isSelected={has(key)} onClick={onKeyToggle} />
+          <KeyButton
+            key={key}
+            keyId={key}
+            isSelected={has(key)}
+            onClick={onKeyToggle}
+          />
         ))}
       </div>
 

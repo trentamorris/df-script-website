@@ -2,14 +2,14 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Roboto', system-ui, sans-serif;
+  --font-sans: 'Roboto', 'Noto Naskh Arabic UI', 'Noto Naskh Arabic', Arial, sans-serif;
   --font-condensed: 'Roboto Condensed', system-ui, sans-serif;
   --font-outfit: 'Outfit', system-ui, sans-serif;
   --font-mono: 'Roboto Mono', monospace;
 
   /* Theme Color Variables */
-  --color-border-dark: #1a1a1a;
-  --color-border-light: #1e1e1e;
+  --color-border-dark: rgba(255, 255, 255, 0.15);
+  --color-border-light: rgba(255, 255, 255, 0.18);
   --color-text-muted: #9c9c9c;
   --color-text-dim: #5c5c5c;
   --color-bg-darker: #0c0c0c;
@@ -150,4 +150,52 @@ body {
 .animate-hero-pill {
   opacity: 0;
   animation: heroEntrance 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+}
+
+/* Reusable subtle shake animation for limits, collisions, and invalid inputs */
+@keyframes subtleShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-3px);
+  }
+  40%, 80% {
+    transform: translateX(3px);
+  }
+}
+
+.animate-subtle-shake {
+  animation: subtleShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Audio waveform dynamic bar animation */
+@keyframes waveformPulse {
+  0%, 100% {
+    transform: scaleY(0.3);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Subtle button press feedback animation */
+@keyframes scale-response {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(0.94);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.press-fdbk:active {
+  animation-duration: 0.5s;
+  animation-name: scale-response;
+  animation-timing-function: cubic-bezier(0.05, 0, 0, 1);
 }

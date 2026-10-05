@@ -1,7 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 import styles from "./marquee.module.css";
-import { MarqueeProps } from "./marqueeTypes";
+import { MarqueeProps } from "./types";
 
 export const Marquee = React.forwardRef<HTMLDivElement, MarqueeProps>(
   (

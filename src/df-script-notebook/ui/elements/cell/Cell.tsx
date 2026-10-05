@@ -1,6 +1,6 @@
 import React from "react";
 import Editor from "@monaco-editor/react";
-import { Button, IconButton, CircularProgress } from "@mui/material";
+import { Button, IconButton } from "@mui/material";
 import {
   PlayArrow,
   Pause,
@@ -17,6 +17,8 @@ import {
   SouthEast,
   Add,
   Remove,
+  Undo,
+  Redo,
 } from "@mui/icons-material";
 import { CellProps } from "./types";
 import { useCellGridDrag } from "./useCellGridDrag";
@@ -31,8 +33,8 @@ import CellInsertZone from "./components/cell-insert-zone/CellInsertZone";
 import CellOutput from "./components/cell-output/CellOutput";
 import MarkdownRenderer from "../markdown-renderer/MarkdownRenderer";
 import PanelNavigation from "../panel-navigation/PanelNavigation";
-import { NavigationPanelItem } from "../panel-navigation/types";
 import DraggableDivider from "../draggable-divider/DraggableDivider";
+import { PlayPauseIcon } from "../../../svgs";
 
 interface NumericStepperProps {
   val: number;
@@ -118,9 +120,15 @@ export default function Cell({
   onToggleOutputCollapse,
   onUpdateCode,
   onAddCell,
+  onSplitCell,
   onCopyCell,
   onCopyCellCode,
   onSelectCell,
+  onAdvanceCell,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onUpdateLayout,
   onDragStart,
   onDragOver,
@@ -129,6 +137,7 @@ export default function Cell({
   isGridCanvasMode,
   gridConfig,
   onInteractionChange,
+  onOpenCommands,
 }: CellProps) {
   const cellRef = React.useRef<HTMLDivElement>(null);
   const positionTabRef = React.useRef<HTMLButtonElement>(null);
@@ -136,6 +145,8 @@ export default function Cell({
   const [activePanelTab, setActivePanelTab] = React.useState<"position" | "size" | null>(null);
   const [cursorPosition, setCursorPosition] = React.useState<{ line: number; col: number }>({ line: 1, col: 1 });
   const [customEditorHeight, setCustomEditorHeight] = React.useState<number | null>(null);
+  const editorInstanceRef = React.useRef<any>(null);
+  const [isEditorResizing, setIsEditorResizing] = React.useState(false);
   const editorBoxRef = React.useRef<HTMLDivElement>(null);
 
   const {
@@ -167,6 +178,12 @@ export default function Cell({
   const onAddCellRef = React.useRef(onAddCell);
   onAddCellRef.current = onAddCell;
 
+  const onSplitCellRef = React.useRef(onSplitCell);
+  onSplitCellRef.current = onSplitCell;
+
+  const onAdvanceCellRef = React.useRef(onAdvanceCell);
+  onAdvanceCellRef.current = onAdvanceCell;
+
   const indexRef = React.useRef(index);
   indexRef.current = index;
 
@@ -178,7 +195,11 @@ export default function Cell({
   return (
     <div
       ref={cellRef}
-      style={gridStyle}
+      data-cell-id={cell.id}
+      style={{
+        ...gridStyle,
+        zIndex: isMoving ? 50 : gridStyle?.zIndex ?? 1,
+      }}
       className={`relative flex flex-col w-full min-h-0 min-w-0 ${isGridCanvasMode ? "h-full" : "h-auto"}`}
       draggable={!isGridCanvasMode}
       onDragStart={(e) => !isGridCanvasMode && onDragStart?.(e, index)}
@@ -192,8 +213,15 @@ export default function Cell({
 
       {isRenderedMarkdown ? (
         <div
-          onClick={() => onToggleCodeCollapse(cell.id)}
-          className="group relative flex flex-col rounded-2xl p-4 cursor-pointer transition-all duration-200 min-h-0 min-w-0 h-auto bg-transparent hover:bg-[var(--cell-border-subtle)]"
+          onClick={() => {
+            onSelectCell?.(cell.id);
+            onToggleCodeCollapse(cell.id);
+          }}
+          className={`group relative flex flex-col rounded-2xl p-4 cursor-pointer transition-all duration-200 min-h-0 min-w-0 h-auto ${
+            isActive
+              ? "bg-[var(--cell-bg-active)] shadow-[var(--cell-shadow-active-aura)] border border-[rgba(var(--rgb-blue),0.45)]"
+              : "bg-transparent hover:bg-[var(--cell-border-subtle)] border border-transparent"
+          }`}
           title="Click to edit Markdown"
         >
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-20 bg-[var(--cell-bg-floating-toolbar)] backdrop-blur-md p-1 rounded-full shadow-[var(--cell-shadow-float)]">
@@ -252,10 +280,12 @@ export default function Cell({
       ) : (
         <div
           onClick={() => onSelectCell?.(cell.id)}
-          className={`group/cell relative flex flex-col rounded-2xl px-4 pt-4 pb-8 transition-all duration-200 min-h-0 min-w-0 ${isGridCanvasMode ? "h-full overflow-hidden" : "h-auto"
-            } ${isActive
-              ? "bg-[var(--cell-bg-active)] shadow-[var(--cell-shadow-active-aura)] border border-[rgba(var(--rgb-blue),0.45)]"
-              : "bg-[var(--cell-bg-base)] hover:bg-[var(--cell-bg-hover)] border border-transparent"
+          className={`group/cell relative flex flex-col rounded-2xl px-4 pt-4 pb-8 min-h-0 min-w-0 transition-[transform,box-shadow,background-color,border-color] duration-200 ease-out ${isGridCanvasMode ? "h-full overflow-hidden" : "h-auto"
+            } ${isMoving
+              ? "scale-[1.015] bg-[var(--cell-bg-active)] shadow-[var(--cell-shadow-lifted)] border border-[rgba(var(--rgb-blue),0.7)] backdrop-blur-md cursor-grabbing"
+              : isActive
+                ? "bg-[var(--cell-bg-active)] shadow-[var(--cell-shadow-active-aura)] border border-[rgba(var(--rgb-blue),0.45)]"
+                : "bg-[var(--cell-bg-base)] hover:bg-[var(--cell-bg-hover)] border border-transparent"
             }`}
         >
           {/* Top Meta Bar */}
@@ -274,7 +304,7 @@ export default function Cell({
                 [{index + 1}]
               </span>
               <span className="px-2.5 py-1 rounded-md text-[11px] font-sans font-medium tracking-wide bg-[var(--nb-bg-hover)] text-[var(--nb-text-heading)] select-none">
-                {cell.type === "markdown" ? "Markdown" : cell.type === "jsx" ? "Visual" : "Code"}
+                {cell.type === "markdown" ? "Markdown" : "Code"}
               </span>
 
               {/* Separate Position and Dimensions Tabs (Matching Code tag style) */}
@@ -451,6 +481,38 @@ export default function Cell({
               >
                 {cell.isCodeCollapsed ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}
               </IconButton>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (editorInstanceRef.current) {
+                    editorInstanceRef.current.trigger("toolbar", "undo", null);
+                    editorInstanceRef.current.focus();
+                  } else if (onUndo) {
+                    onUndo();
+                  }
+                }}
+                title="Undo inside cell"
+                sx={CELL_MUI_STYLES.circularIconButton}
+              >
+                <Undo sx={{ fontSize: 15 }} />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (editorInstanceRef.current) {
+                    editorInstanceRef.current.trigger("toolbar", "redo", null);
+                    editorInstanceRef.current.focus();
+                  } else if (onRedo) {
+                    onRedo();
+                  }
+                }}
+                title="Redo inside cell"
+                sx={CELL_MUI_STYLES.circularIconButton}
+              >
+                <Redo sx={{ fontSize: 15 }} />
+              </IconButton>
               {!isGridCanvasMode && (
                 <>
                   <IconButton
@@ -501,7 +563,7 @@ export default function Cell({
 
           {/* Cell Body & Execution Action */}
           <div className="flex gap-3.5 items-stretch pl-1 grow min-h-0 min-w-0 overflow-hidden">
-            {(cell.type === "code" || cell.type === "jsx") && (
+            {cell.type === "code" && (
               <div className="flex flex-col items-center justify-start select-none w-12 shrink-0 self-stretch py-0.5 gap-1.5">
                 <IconButton
                   onClick={(e) => {
@@ -515,34 +577,9 @@ export default function Cell({
                     ...getPlayButtonStyle(hasRun, cell.timeTaken, cell.error),
                   }}
                 >
-                  {/* YouTube Music Smooth Play/Pause Transition */}
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="overflow-visible"
-                  >
-                    {/* Left Bar / Left half of triangle */}
-                    <path
-                      d={
-                        cell.timeTaken === "..."
-                          ? "M6 5 L10 5 L10 19 L6 19 Z"
-                          : "M8 5 L13 8.5 L13 15.5 L8 19 Z"
-                      }
-                      className="transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] origin-center"
-                    />
-                    {/* Right Bar / Right half of triangle */}
-                    <path
-                      d={
-                        cell.timeTaken === "..."
-                          ? "M14 5 L18 5 L18 19 L14 19 Z"
-                          : "M13 8.5 L19 12 L19 12 L13 15.5 Z"
-                      }
-                      className="transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] origin-center"
-                    />
-                  </svg>
+                  <PlayPauseIcon isPlaying={cell.timeTaken === "..."} size={24} />
                 </IconButton>
+
                 {cell.timeTaken && cell.timeTaken !== "..." && (
                   <span
                     className={`text-[9px] font-mono font-medium tracking-tight text-center truncate max-w-full select-none ${cell.error ? "text-rose-400/80" : "text-zinc-500 hover:text-zinc-300"
@@ -562,16 +599,19 @@ export default function Cell({
                   style={{
                     height:
                       customEditorHeight !== null
-                        ? `${customEditorHeight}px`
+                        ? isGridCanvasMode
+                          ? `min(${customEditorHeight}px, calc(100% - 36px))`
+                          : `${customEditorHeight}px`
                         : isGridCanvasMode && currentLayout
                           ? cell.output || cell.logs?.length || cell.error
                             ? "45%"
                             : "100%"
                           : `${Math.max(75, Math.min(500, cell.code.split("\n").length * 19 + 24))}px`,
                     minHeight: isGridCanvasMode ? "60px" : "75px",
-                    maxHeight: isGridCanvasMode ? "100%" : undefined,
+                    maxHeight: isGridCanvasMode ? "calc(100% - 36px)" : undefined,
                   }}
-                  className="relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border transition-all duration-200 bg-[var(--nb-bg-code)] border-white/[0.04] focus-within:bg-[#0c0c0e] focus-within:border-white/[0.18] focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
+                  className={`relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border bg-[var(--nb-bg-code)] border-white/[0.04] focus-within:bg-[#0c0c0e] focus-within:border-white/[0.18] focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.5)] ${isEditorResizing ? "transition-none" : "transition-all duration-200"
+                    }`}
                 >
                   {/* Monaco Code Scroll Area */}
                   <div className="w-full grow min-h-0 min-w-0 pt-2.5">
@@ -581,6 +621,10 @@ export default function Cell({
                       theme="dfnb-dark"
                       beforeMount={defineMonacoTheme}
                       onMount={(editor, monaco) => {
+                        editorInstanceRef.current = editor;
+                        if (cellRef.current) {
+                          (cellRef.current as any).__monacoEditor = editor;
+                        }
                         editor.onDidFocusEditorText(() => {
                           onSelectCell?.(cellIdRef.current);
                         });
@@ -598,6 +642,8 @@ export default function Cell({
                           getTotalCells: () => totalCellsRef.current,
                           onRun: (id) => onRunRef.current(id),
                           onAddCell: (idx, type) => onAddCellRef.current(idx, type),
+                          onAdvanceCell: (idx) => onAdvanceCellRef.current?.(idx),
+                          onSplitCell: (idx, b, a) => onSplitCellRef.current?.(idx, b, a),
                           cellContainerRef: cellRef,
                         });
                       }}
@@ -616,6 +662,7 @@ export default function Cell({
                           vertical: "auto",
                           horizontal: "auto",
                           handleMouseWheel: true,
+                          alwaysConsumeMouseWheel: false,
                         },
                         renderLineHighlight: "line",
                         overviewRulerBorder: false,
@@ -663,8 +710,22 @@ export default function Cell({
                       </span>
                     </div>
 
-                    {/* Right: Execution duration + Status LED + Language Badge */}
+                    {/* Right: Execution timestamp + duration + Status LED + Language Badge */}
                     <div className="flex items-center gap-2">
+                      {cell.lastRunTime && cell.timeTaken !== "..." && (
+                        <>
+                          <span
+                            className="text-[9px] font-mono text-zinc-500/80 transition-colors"
+                            title={`Last executed at ${cell.lastRunTime}`}
+                          >
+                            {cell.lastRunTime}
+                          </span>
+                          {cell.timeTaken && (
+                            <span className="text-[9px] text-zinc-700 select-none"> • </span>
+                          )}
+                        </>
+                      )}
+
                       {cell.timeTaken && cell.timeTaken !== "..." && (
                         <span
                           className={`text-[9px] font-mono transition-colors ${cell.error ? "text-rose-400/90 font-medium" : "text-emerald-400/80"
@@ -677,37 +738,18 @@ export default function Cell({
                       <span className="inline-flex items-center gap-1.5 text-[9px] font-sans font-medium tracking-widest uppercase transition-all duration-200 text-[var(--cell-text-tag)] group-has-[:focus-within]/editor:text-white/80">
                         <span
                           className={`w-1.5 h-1.5 rounded-full transition-all duration-200 opacity-40 group-has-[:focus-within]/editor:opacity-100 group-has-[:focus-within]/editor:animate-pulse ${cell.timeTaken === "..."
-                              ? "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse opacity-100"
-                              : cell.error
-                                ? "bg-[var(--cell-accent-rose)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-rose)]"
-                                : hasRun
-                                  ? "bg-[var(--cell-accent-green)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-green)]"
-                                  : "bg-[var(--panel-nav-accent)] group-has-[:focus-within]/editor:shadow-[0_0_6px_rgba(var(--rgb-blue),0.9)]"
+                            ? "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse opacity-100"
+                            : cell.error
+                              ? "bg-[var(--cell-accent-rose)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-rose)]"
+                              : hasRun
+                                ? "bg-[var(--cell-accent-green)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-green)]"
+                                : "bg-[var(--panel-nav-accent)] group-has-[:focus-within]/editor:shadow-[0_0_6px_rgba(var(--rgb-blue),0.9)]"
                             }`}
                         />
-                        {cell.type === "markdown" ? "Markdown" : cell.type === "jsx" ? "Visual JSX" : "JavaScript"}
+                        {cell.type === "markdown" ? "Markdown" : "JavaScript"}
                       </span>
                     </div>
                   </div>
-
-                  {/* Reusable DraggableDivider anchored to bottom of code editor */}
-                  <DraggableDivider
-                    containerRef={editorBoxRef}
-                    orientation="vertical"
-                    anchor="bottom"
-                    dragDirection="down"
-                    thicknessPx={6}
-                    clampMin={65}
-                    clampMax={800}
-                    onPointerDown={() => onInteractionChange?.(true)}
-                    onPointerMove={({ payload }) => {
-                      setCustomEditorHeight(payload.px);
-                    }}
-                    onPointerUp={() => {
-                      onInteractionChange?.(false);
-                    }}
-                    className="hover:shadow-[0_0_8px_rgba(var(--rgb-blue),0.9)] transition-colors duration-150"
-                  />
                 </div>
               ) : (
                 <div
@@ -739,6 +781,29 @@ export default function Cell({
                 </div>
               )}
 
+              {/* Dedicated Gap with Centered DraggableDivider */}
+              {!cell.isCodeCollapsed && (
+                <div className="relative h-2 my-0.5 shrink-0 flex items-center justify-center">
+                  <DraggableDivider
+                    containerRef={editorBoxRef}
+                    orientation="vertical"
+                    anchor="bottom"
+                    dragDirection="down"
+                    thicknessPx={4}
+                    clampMin={65}
+                    clampMax={800}
+                    onPointerDown={() => setIsEditorResizing(true)}
+                    onPointerMove={({ payload }) => {
+                      setCustomEditorHeight(payload.px);
+                    }}
+                    onPointerUp={() => {
+                      setIsEditorResizing(false);
+                    }}
+                    className="hover:shadow-[0_0_8px_rgba(var(--rgb-blue),0.9)] transition-colors duration-150"
+                  />
+                </div>
+              )}
+
 
               <div className="min-h-0 grow overflow-y-auto">
                 <CellOutput
@@ -751,20 +816,28 @@ export default function Cell({
             </div>
           </div>
 
-          {/* Cell Container Footer (Aligned with Resize Arrow) */}
-          {(cell.type === "code" || cell.type === "jsx") && (
-            <div className="absolute bottom-1.5 left-4 right-8 z-20 flex items-center gap-2.5 text-[9.5px] font-mono text-zinc-500 opacity-40 hover:opacity-90 transition-opacity select-none pointer-events-auto">
-              <span className="flex items-center gap-1 text-zinc-400">
+          {/* Cell Container Footer (Aligned with Resize Arrow, 3 Core Execution Shortcuts) */}
+          {cell.type === "code" && (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenCommands?.();
+              }}
+              title="Click to view all notebook & Monaco commands"
+              style={{ maxWidth: "calc(100% - 64px)" }}
+              className="absolute bottom-1.5 left-4 z-20 flex items-center gap-2 text-[9.5px] font-mono text-zinc-500 opacity-40 hover:opacity-95 transition-all select-none pointer-events-auto cursor-pointer overflow-hidden whitespace-nowrap"
+            >
+              <span className="flex items-center gap-1 text-zinc-400 shrink-0">
                 <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-zinc-300 font-semibold text-[9px]">Ctrl+Enter</kbd>
                 <span>run</span>
               </span>
-              <span className="text-zinc-600">•</span>
-              <span className="flex items-center gap-1 text-zinc-400">
+              <span className="text-zinc-600 shrink-0">•</span>
+              <span className="flex items-center gap-1 text-zinc-400 shrink-0">
                 <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-zinc-300 font-semibold text-[9px]">Shift+Enter</kbd>
                 <span>run & next</span>
               </span>
-              <span className="text-zinc-600">•</span>
-              <span className="flex items-center gap-1 text-zinc-400">
+              <span className="text-zinc-600 shrink-0">•</span>
+              <span className="flex items-center gap-1 text-zinc-400 shrink-0">
                 <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-zinc-300 font-semibold text-[9px]">Alt+Enter</kbd>
                 <span>run & insert</span>
               </span>

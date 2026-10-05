@@ -9,7 +9,6 @@ export const DEFAULT_GRID_CONFIG = {
 
 export const CELL_TYPES = [
   { type: "code" as const, label: "Code" },
-  { type: "jsx" as const, label: "JSX" },
   { type: "markdown" as const, label: "Markdown" },
 ];
 
@@ -37,7 +36,7 @@ Welcome to your interactive notebook workspace!
     type: "code",
     code: `// 1. Let's create our initial dataset using $df.data()
 console.log("Initializing dataset 'sales'...");
-const sales = $df.data({
+sales = $df.data({
   userId: ["usr-1", "usr-2", "usr-1", "usr-3", "usr-2"],
   price: [120, 450, 80, 200, 310],
   amount: [2, 1, 5, 2, 3],
@@ -59,7 +58,7 @@ sales`,
     id: "cell-2",
     type: "code",
     code: `// 2. We can perform column expression math to calculate order value
-const salesWithTotal = sales.withColumns(
+salesWithTotal = sales.withColumns(
   ($df.col("price").mul($df.col("amount"))).alias("total")
 );
 
@@ -77,7 +76,7 @@ salesWithTotal`,
     id: "cell-3",
     type: "code",
     code: `// 3. Next, aggregate total sales and average price by category
-const summary = salesWithTotal
+summary = salesWithTotal
   .groupBy("category")
   .agg([
     $df.col("total").sum().alias("categoryTotal"),
