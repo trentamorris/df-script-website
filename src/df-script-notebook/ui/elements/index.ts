@@ -1,9 +1,32 @@
 // Single centralized barrel export for all UI elements in df-script-notebook
 
 // Cell
-export { default as Cell } from "./cell/Cell";
+export { default as Cell, CellContainer } from "./cell/Cell";
 export * from "./cell/types";
 export * from "./cell/utils";
+export * from "./cell/context/CellContext";
+export * from "./cell/hooks/useCellContext";
+export * from "./cell/hooks/useCellGridDrag";
+export { CellToolbar } from "./cell/components/cell-toolbar/CellToolbar";
+export * from "./cell/components/cell-toolbar/CellToolbar";
+export * from "./cell/components/cell-toolbar/modules/CellDragHandle";
+export * from "./cell/components/cell-toolbar/modules/CellIndexBadge";
+export * from "./cell/components/cell-toolbar/modules/CellTypeChip";
+export * from "./cell/components/cell-toolbar/modules/CellLayoutChips";
+export * from "./cell/components/cell-toolbar/modules/CellMarkdownRenderButton";
+export * from "./cell/components/cell-toolbar/modules/CellVisibilityButton";
+export * from "./cell/components/cell-toolbar/modules/CellHistoryButtons";
+export * from "./cell/components/cell-toolbar/modules/CellReorderButtons";
+export * from "./cell/components/cell-toolbar/modules/CellResetButton";
+export * from "./cell/components/cell-toolbar/modules/CellDeleteButton";
+export { default as CodeCell, CodeCell as CodeCellNamed } from "./cell/components/code-cell/CodeCell";
+export * from "./cell/components/code-cell/CodeCell";
+export { default as CodeCellEditor, CodeCellEditor as CodeCellEditorNamed } from "./cell/components/code-cell/components/code-cell-editor/CodeCellEditor";
+export * from "./cell/components/code-cell/components/code-cell-editor/CodeCellEditor";
+export { default as CodeCellOutput, CodeCellOutput as CodeCellOutputNamed } from "./cell/components/code-cell/components/code-cell-output/CodeCellOutput";
+export * from "./cell/components/code-cell/components/code-cell-output/CodeCellOutput";
+export { default as MarkdownCell, MarkdownCell as MarkdownCellNamed } from "./cell/components/markdown-cell/MarkdownCell";
+export * from "./cell/components/markdown-cell/MarkdownCell";
 
 // GridCanvas
 export { default as GridCanvas } from "./grid-canvas/GridCanvas";

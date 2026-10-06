@@ -23,6 +23,7 @@ export interface CellState {
   layout?: CellLayout;
   logs?: string[];
   metadata?: Record<string, any>;
+  outputNode?: any;
   isCodeCollapsed?: boolean;
   isOutputCollapsed?: boolean;
 }

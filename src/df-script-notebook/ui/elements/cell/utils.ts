@@ -46,8 +46,8 @@ export const CELL_MUI_STYLES = {
     width: 28,
     height: 28,
     borderRadius: "9999px",
-    backgroundColor: "var(--nb-bg-raised)",
-    color: "var(--nb-text-secondary)",
+    backgroundColor: "var(--nb-bg-hover)",
+    color: "var(--nb-text-heading)",
     transition: "all 0.15s ease",
     "&:hover": {
       backgroundColor: "var(--cell-bg-chip-hover)",
@@ -168,6 +168,10 @@ export function defineMonacoTheme(monaco: any): void {
       "editor.background": "#050505",
       "editor.lineHighlightBackground": "#111111",
       "editorGutter.background": "#050505",
+      "scrollbar.shadow": "#00000000",
+      "scrollbarSlider.background": "#ffffff14",
+      "scrollbarSlider.hoverBackground": "#ffffff26",
+      "scrollbarSlider.activeBackground": "#ffffff38",
     },
   });
 }

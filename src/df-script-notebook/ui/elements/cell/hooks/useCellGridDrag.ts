@@ -1,13 +1,13 @@
 import React from "react";
-import { CellLayout, PageGridConfig } from "../../../types";
-import { calculateEdgeScrollVelocity } from "../../../utils/dragUtils";
-import { getScrollableAncestor } from "../../../utils/layoutUtils";
-import { usePointerDrag } from "../../../hooks/usePointerDrag";
+import { CellLayout, PageGridConfig } from "../../../../types";
+import { calculateEdgeScrollVelocity } from "../../../../utils/dragUtils";
+import { getScrollableAncestor } from "../../../../utils/layoutUtils";
+import { usePointerDrag } from "../../../../hooks/usePointerDrag";
 import {
   calculateGridSteps,
   calculateCellMoveCoordinates,
   calculateCellResizeDimensions,
-} from "./utils";
+} from "../utils";
 
 interface UseCellGridDragOptions {
   cellId: string;
@@ -224,4 +224,3 @@ export function useCellGridDrag({
     handleResizePointerDown,
   };
 }
-

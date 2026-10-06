@@ -548,6 +548,24 @@ export default function DFScriptNotebook() {
     );
   };
 
+  const clearCellOutput = (id: string) => {
+    setCells((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              output: null,
+              error: null,
+              timeTaken: null,
+              lastRunTime: null,
+              execIndex: null,
+              logs: [],
+            }
+          : c
+      )
+    );
+  };
+
   const resetNotebook = () => {
     if (window.confirm("Are you sure you want to reset the notebook? This will clear all cells and reset code context.")) {
       sharedStateRef.current = {};
@@ -974,6 +992,7 @@ export default function DFScriptNotebook() {
         onAddCell={addCellAtIndex}
         onSplitCell={splitCellAtIndex}
         onAdvanceCell={advanceCell}
+        onClearOutput={clearCellOutput}
         onUndo={undoCellAction}
         onRedo={redoCellAction}
         canUndo={historyLength > 0}

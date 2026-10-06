@@ -135,3 +135,28 @@
   /* Default Font */
   font-family: var(--cell-font-sans);
 }
+
+/* ================================================================= */
+/*  4. Monaco Editor Scrollbar & Track Refinements                   */
+/* ================================================================= */
+.monaco-editor .monaco-scrollable-element > .scrollbar {
+  background: transparent !important;
+}
+
+.monaco-editor .monaco-scrollable-element > .scrollbar > .slider {
+  border-radius: 9999px !important;
+  background: rgba(var(--rgb-white), 0.12) !important;
+  transition: background 0.15s ease;
+}
+
+.monaco-editor .monaco-scrollable-element > .scrollbar > .slider:hover {
+  background: rgba(var(--rgb-white), 0.25) !important;
+}
+
+.monaco-editor .monaco-scrollable-element > .scrollbar > .slider.active {
+  background: rgba(var(--rgb-white), 0.4) !important;
+}
+
+.monaco-editor .shadow {
+  display: none !important;
+}
