@@ -1,9 +1,10 @@
 // Single centralized barrel export for all UI elements in df-script-notebook
 
 // Cell
-export { default as Cell, CellContainer } from "./cell/Cell";
+export { default as Cell } from "./cell/Cell";
 export * from "./cell/types";
-export * from "./cell/utils";
+export * from "./cell/utils/generalUtils";
+export * from "./cell/utils/codeExecutionUtils";
 export * from "./cell/context/CellContext";
 export * from "./cell/hooks/useCellContext";
 export * from "./cell/hooks/useCellGridDrag";

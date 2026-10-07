@@ -48,3 +48,46 @@ A prioritized roadmap of upcoming features, improvements, and keyboard shortcuts
 - [ ] **`%time` / `%%time`**: Measure and display cell/expression execution benchmark.
 - [ ] **`%reset`**: Reset notebook execution context and session variables.
 - [ ] **`%who` / `%whos`**: Inspect active in-memory variables, DataFrames, and types.
+
+---
+
+## 📊 Code Cell Output: Virtualized Interactive Table
+- [ ] **Virtualized Table Rendering**:
+  - [ ] Implement high-performance windowed row/column virtualization for large in-browser DataFrames (100k+ rows without DOM lag or memory spikes).
+  - [ ] Sticky column headers with column data types (`string`, `number`, `boolean`, `date`).
+- [ ] **Interactive In-Table Manipulation**:
+  - [ ] Inline column header sorting (ascending / descending / clear).
+  - [ ] Column filtering and search popover per column.
+  - [ ] Column reordering and draggable column width resizing.
+  - [ ] Cell selection, row selection, and copy to clipboard (`CSV`, `TSV`, `JSON`).
+- [ ] **Multi-Format Output Support**:
+  - [ ] Seamless output handling for DataFrames, raw JavaScript objects, arrays, primitives, DOM/SVG nodes, and console logs.
+  - [ ] Formatted error inspector with line number stack traces.
+- [ ] **Table Actions Bar**:
+  - [ ] Quick export: `Download CSV`, `Download JSON`, `Copy DataFrame snippet`.
+  - [ ] Pagination / row-count switcher (e.g. `Showing 1–50 of 12,450 rows`).
+
+---
+
+## 💾 Export & Sharing System (100% Zero-Backend)
+- [ ] **`.dfnb` File Format Support**:
+  - [ ] Standardize `.dfnb` format specification (`cells`, `pages`, `metadata`, `version`).
+  - [ ] Drag-and-drop import of `.dfnb` files anywhere onto the canvas.
+- [ ] **URL Hash State Sharing**:
+  - [ ] Gzip / LZ compression of notebook state into the URL hash (`#gzip=...`).
+  - [ ] Shareable link copying for instant, 100% client-side notebook restoration.
+- [ ] **Pipeline Code Export**:
+  - [ ] 1-click export of notebook data transformation steps as clean, reproducible TypeScript / JavaScript scripts for frontend projects (`npm install df-script`).
+
+---
+
+## 🧪 Testing & Reliability Roadmap
+- [ ] **Output & Table Tests**:
+  - [ ] Unit tests for virtualized table scrolling and windowing math.
+  - [ ] Unit tests for DataFrame sorting and filtering handlers.
+- [ ] **File & URL Sharing Tests**:
+  - [ ] Test roundtrip encoding/decoding of `.dfnb` files.
+  - [ ] Test URL hash compression, decompression, and boundary edge cases (empty notebook, special characters, large layouts).
+- [ ] **Cell Ecosystem Tests**:
+  - [ ] Component tests for `CellToolbar` chip actions (`toggleType`, `collapse`, `reorder`, `delete`).
+  - [ ] Layout grid math and boundary clamping tests.

@@ -1,5 +1,6 @@
 import React from "react";
-import { CellLayout, PageGridConfig } from "../../../../types";
+import { CellLayout } from "../../../../types";
+import { UseCellGridDragOptions, UseCellGridDragReturn } from "../types";
 import { calculateEdgeScrollVelocity } from "../../../../utils/dragUtils";
 import { getScrollableAncestor } from "../../../../utils/layoutUtils";
 import { usePointerDrag } from "../../../../hooks/usePointerDrag";
@@ -7,25 +8,7 @@ import {
   calculateGridSteps,
   calculateCellMoveCoordinates,
   calculateCellResizeDimensions,
-} from "../utils";
-
-interface UseCellGridDragOptions {
-  cellId: string;
-  layout?: CellLayout;
-  isGridCanvasMode?: boolean;
-  gridConfig?: PageGridConfig;
-  cellElementRef: React.RefObject<HTMLElement | null>;
-  onUpdateLayout?: (id: string, layout: Partial<CellLayout>) => void;
-  onInteractionChange?: (isInteracting: boolean) => void;
-}
-
-interface UseCellGridDragReturn {
-  isMoving: boolean;
-  isResizing: boolean;
-  liveLayout: CellLayout | null;
-  handleMovePointerDown: (e: React.PointerEvent) => void;
-  handleResizePointerDown: (e: React.PointerEvent) => void;
-}
+} from "../utils/generalUtils";
 
 interface DragSession {
   initialLayout: CellLayout;

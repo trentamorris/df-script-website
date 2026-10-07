@@ -3,7 +3,7 @@ import { CellLayout, CellState, CellType, NotebookPage, PageGridConfig } from ".
 import { DEFAULT_GRID_CONFIG, WELCOME_NOTEBOOK } from "./constants";
 import { $df } from "df-script";
 import { downloadNotebookFile, parseNotebookJson, reorderArray } from "./utils";
-import { executeJs } from "./utils/codeExecutionUtils";
+import { runCellCode } from "./ui/elements";
 import { registerNotebookKeyboardShortcuts } from "./keyboardShortcutsUtils";
 import NotebookHeader from "./ui/sections/notebook-header/NotebookHeader";
 import NotebookBody from "./ui/sections/notebook-body/NotebookBody";
@@ -107,96 +107,32 @@ export default function DFScriptNotebook() {
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const t0 = performance.now();
-    const cellLogs: string[] = [];
-    const originalLog = console.log;
-    const originalWarn = console.warn;
-    const originalError = console.error;
-    const originalInfo = console.info;
+    const scope = { $df, ...sharedStateRef.current };
+    const result = await runCellCode(code, scope);
 
-    const collectLog = (...args: any[]) => {
-      originalLog(...args);
-      const msg = args
-        .map((arg) => {
-          if (arg === null) return "null";
-          if (arg === undefined) return "undefined";
-          if (typeof arg === "object") {
-            try {
-              return JSON.stringify(arg);
-            } catch {
-              return String(arg);
-            }
-          }
-          return String(arg);
-        })
-        .join(" ");
-      cellLogs.push(msg);
+    // Persist newly assigned scope variables into shared state
+    sharedStateRef.current = {
+      ...sharedStateRef.current,
+      ...result.newScopeVariables,
     };
 
-    console.log = collectLog;
-    console.warn = collectLog;
-    console.error = collectLog;
-    console.info = collectLog;
+    const runNum = nextExecIndexRef.current++;
 
-    try {
-      const scope = { $df, ...sharedStateRef.current };
-      const returnValue = await executeJs(code, scope);
-
-      // Persist newly assigned scope variables into shared state (excluding $df)
-      const { $df: _unused, ...newVariables } = scope;
-      sharedStateRef.current = newVariables;
-
-      const elapsed = performance.now() - t0;
-      const runNum = nextExecIndexRef.current++;
-      const runTimestamp = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-
-      setCells((prev) =>
-        prev.map((c) =>
-          c.id === cellId
-            ? {
+    setCells((prev) =>
+      prev.map((c) =>
+        c.id === cellId
+          ? {
               ...c,
-              output: returnValue,
-              error: null,
-              timeTaken: `${elapsed.toFixed(2)}ms`,
-              lastRunTime: runTimestamp,
+              output: result.output,
+              error: result.error,
+              timeTaken: result.timeTaken,
+              lastRunTime: result.runTimestamp,
               execIndex: runNum,
-              logs: cellLogs,
+              logs: result.logs,
             }
-            : c
-        )
-      );
-    } catch (err: any) {
-      const elapsed = performance.now() - t0;
-      const runTimestamp = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      setCells((prev) =>
-        prev.map((c) =>
-          c.id === cellId
-            ? {
-              ...c,
-              output: null,
-              error: err?.message || String(err),
-              timeTaken: `${elapsed.toFixed(2)}ms`,
-              lastRunTime: runTimestamp,
-              execIndex: nextExecIndexRef.current++,
-              logs: cellLogs,
-            }
-            : c
-        )
-      );
-    } finally {
-      console.log = originalLog;
-      console.warn = originalWarn;
-      console.error = originalError;
-      console.info = originalInfo;
-    }
+          : c
+      )
+    );
   };
 
   const runAllCells = () => {
@@ -524,6 +460,21 @@ export default function DFScriptNotebook() {
     }, 50);
   };
 
+  const changeCellType = (id: string, type: CellType) => {
+    pushHistory();
+    setCells((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              type,
+              ...(type === "code" ? { isCodeCollapsed: false } : {}),
+            }
+          : c
+      )
+    );
+  };
+
   const togglePageLayoutMode = () => {
     setPages((prev) =>
       prev.map((p) => {
@@ -829,17 +780,11 @@ export default function DFScriptNotebook() {
       },
       onChangeCellToCode: () => {
         const targetId = activeCellIdRef.current;
-        if (targetId) {
-          pushHistory();
-          setCells((prev) => prev.map((c) => (c.id === targetId ? { ...c, type: "code", isCodeCollapsed: false } : c)));
-        }
+        if (targetId) changeCellType(targetId, "code");
       },
       onChangeCellToMarkdown: () => {
         const targetId = activeCellIdRef.current;
-        if (targetId) {
-          pushHistory();
-          setCells((prev) => prev.map((c) => (c.id === targetId ? { ...c, type: "markdown" } : c)));
-        }
+        if (targetId) changeCellType(targetId, "markdown");
       },
       onMoveCellUp: () => {
         const targetId = activeCellIdRef.current;
@@ -986,6 +931,7 @@ export default function DFScriptNotebook() {
             prev.map((c) => (c.id === id ? { ...c, isOutputCollapsed: !c.isOutputCollapsed } : c))
           )
         }
+        onChangeCellType={changeCellType}
         onUpdateCode={(id, code) =>
           setCells((prev) => prev.map((c) => (c.id === id ? { ...c, code } : c)))
         }
@@ -1007,6 +953,7 @@ export default function DFScriptNotebook() {
         onDrop={handleDrop}
         onInteractionChange={setIsInteracting}
         onOpenCommands={() => setIsCommandsOpen(true)}
+        keybindings={customKeybindings}
       />
     </div>
   );

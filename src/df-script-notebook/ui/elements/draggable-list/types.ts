@@ -1,4 +1,5 @@
 import React from "react";
+import { StateSetter } from "../../../types";
 
 export type DragConfig = {
   draggedIndex: number | null;
@@ -10,7 +11,7 @@ export type DragConfig = {
 };
 
 export type DraggableListContextValue = DragConfig & {
-  setDragConfig: React.Dispatch<React.SetStateAction<DragConfig>>;
+  setDragConfig: StateSetter<DragConfig>;
   handlePointerStart: (event: React.PointerEvent<HTMLElement>, index: number) => void;
   /** Keyboard reorder: moves the item at `index` by `delta` rows (clamped to the list). */
   moveItemBy: (index: number, delta: number) => void;

@@ -214,6 +214,21 @@ export const CELL_COMMANDS: NotebookCommand[] = [
   },
 ];
 
+/** Canonical Cell Command IDs */
+export type CellCommandId = (typeof CELL_COMMANDS)[number]["id"];
+
+/** Map of cell command IDs to keybinding strings */
+export type CellKeybindings = Partial<Record<CellCommandId, string>>;
+
+/** Resolved dictionary of default keybindings for all cell commands */
+export const DEFAULT_CELL_KEYBINDINGS: Record<CellCommandId, string> = CELL_COMMANDS.reduce(
+  (acc, cmd) => {
+    acc[cmd.id as CellCommandId] = cmd.defaultKeybinding;
+    return acc;
+  },
+  {} as Record<CellCommandId, string>
+);
+
 /** Monaco Editor commands (built-in editor shortcuts) */
 export const EDITOR_COMMANDS: NotebookCommand[] = [
   // Editing & History

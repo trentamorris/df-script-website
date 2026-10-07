@@ -1,5 +1,6 @@
 import React from "react";
-import { CellLayout, CellState, CellType, PageGridConfig } from "../../../types";
+import { CellLayout, CellState, CellType, PageGridConfig, StateSetter } from "../../../types";
+import { CellCommandId, CellKeybindings } from "../../../commands";
 
 export interface CellSlots {
   toolbar?: React.ComponentType<any> | React.ReactNode;
@@ -15,6 +16,9 @@ export interface CellSlotProps {
   footer?: Record<string, any>;
 }
 
+export type CellActionById = (id: string) => void;
+export type CellActionByIndex = (index: number) => void;
+
 export interface CellProps {
   cell: CellState;
   index: number;
@@ -22,20 +26,21 @@ export interface CellProps {
   totalCells: number;
   copiedCellId: string | null;
   copiedCellCodeId: string | null;
-  onRun: (id: string) => void;
-  onDelete: (id: string) => void;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
-  onToggleCodeCollapse: (id: string) => void;
-  onToggleOutputCollapse: (id: string) => void;
+  onRun: CellActionById;
+  onDelete: CellActionById;
+  onMoveUp: CellActionByIndex;
+  onMoveDown: CellActionByIndex;
+  onToggleCodeCollapse: CellActionById;
+  onToggleOutputCollapse: CellActionById;
+  onChangeCellType?: (id: string, type: CellType) => void;
   onUpdateCode: (id: string, code: string) => void;
   onAddCell: (index: number, type: CellType) => void;
   onSplitCell?: (index: number, beforeCode: string, afterCode: string) => void;
-  onCopyCell: (id: string) => void;
-  onCopyCellCode: (id: string) => void;
-  onSelectCell?: (id: string) => void;
-  onAdvanceCell?: (index: number) => void;
-  onClearOutput?: (id: string) => void;
+  onCopyCell: CellActionById;
+  onCopyCellCode: CellActionById;
+  onSelectCell?: CellActionById;
+  onAdvanceCell?: CellActionByIndex;
+  onClearOutput?: CellActionById;
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -49,7 +54,7 @@ export interface CellProps {
   gridConfig?: PageGridConfig;
   onInteractionChange?: (isInteracting: boolean) => void;
   onOpenCommands?: () => void;
-  // Slots & Direct overrides
+  keybindings?: CellKeybindings;
   toolbar?: React.ReactNode;
   footer?: React.ReactNode;
   children?: React.ReactNode;
@@ -57,49 +62,58 @@ export interface CellProps {
   slotProps?: CellSlotProps;
 }
 
-export interface CellContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  cell: CellState;
-  isSelected?: boolean;
-  isMoving?: boolean;
-  isGridCanvasMode?: boolean;
-  toolbar?: React.ReactNode;
-  children?: React.ReactNode;
-  footer?: React.ReactNode;
-  resizeHandle?: React.ReactNode;
-  insertZone?: React.ReactNode;
-  onSelect?: () => void;
-  onDragStart?: (e: React.DragEvent) => void;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDragEnd?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent) => void;
-  containerRef?: React.RefObject<HTMLDivElement>;
-  gridStyle?: React.CSSProperties;
-}
+export type CellLayoutTab = "position" | "size";
 
-export interface CellContextValue {
-  cell: CellState;
-  index: number;
-  totalCells: number;
-  isActive: boolean;
-  isMoving: boolean;
-  isResizing: boolean;
+export interface UseCellGridDragOptions {
+  cellId: string;
+  layout?: CellLayout;
   isGridCanvasMode?: boolean;
   gridConfig?: PageGridConfig;
+  cellElementRef: React.RefObject<HTMLElement | null>;
+  onUpdateLayout?: (id: string, layout: Partial<CellLayout>) => void;
+  onInteractionChange?: (isInteracting: boolean) => void;
+}
+
+export interface UseCellGridDragReturn {
+  isMoving: boolean;
+  isResizing: boolean;
+  liveLayout: CellLayout | null;
+  handleMovePointerDown: (e: React.PointerEvent) => void;
+  handleResizePointerDown: (e: React.PointerEvent) => void;
+}
+
+export interface CellProviderProps {
+  value: CellContextValue;
+  children: React.ReactNode;
+}
+
+export interface CellContextValue
+  extends Pick<
+      CellProps,
+      | "cell"
+      | "index"
+      | "totalCells"
+      | "isActive"
+      | "isGridCanvasMode"
+      | "gridConfig"
+      | "onRun"
+      | "onDelete"
+      | "onMoveUp"
+      | "onMoveDown"
+      | "onToggleCodeCollapse"
+      | "onChangeCellType"
+      | "onClearOutput"
+      | "onUndo"
+      | "onRedo"
+      | "onUpdateLayout"
+    >,
+    Pick<UseCellGridDragReturn, "isMoving" | "isResizing" | "handleMovePointerDown"> {
   currentLayout?: CellLayout;
   editorInstanceRef: React.MutableRefObject<any>;
   cellRef: React.RefObject<HTMLDivElement>;
-  activePanelTab: "position" | "size" | null;
-  setActivePanelTab: React.Dispatch<React.SetStateAction<"position" | "size" | null>>;
+  activePanelTab: CellLayoutTab | null;
+  setActivePanelTab: StateSetter<CellLayoutTab | null>;
   positionTabRef: React.RefObject<HTMLButtonElement>;
   dimensionsTabRef: React.RefObject<HTMLButtonElement>;
-  onRun: (id: string) => void;
-  onDelete: (id: string) => void;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
-  onToggleCodeCollapse: (id: string) => void;
-  onClearOutput?: (id: string) => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
-  onUpdateLayout?: (id: string, layout: Partial<CellLayout>) => void;
-  handleMovePointerDown: (e: React.PointerEvent) => void;
+  keybindings: Record<CellCommandId, string>;
 }

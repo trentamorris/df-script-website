@@ -1,30 +1,10 @@
 import React from "react";
 import Editor from "@monaco-editor/react";
 import { Button } from "@mui/material";
-import { CellState, CellType } from "../../../../../../../types";
-import { CELL_MUI_STYLES, defineMonacoTheme } from "../../../../utils";
+import { CellType } from "../../../../../../../types";
+import { CELL_MUI_STYLES, defineMonacoTheme } from "../../../../utils/generalUtils";
 import { registerCellKeyboardShortcuts } from "../../../../../../../keyboardShortcutsUtils";
-
-export interface CodeCellEditorProps {
-  cell: CellState;
-  index: number;
-  totalCells: number;
-  copiedCellCodeId: string | null;
-  editorBoxRef: React.RefObject<HTMLDivElement>;
-  editorInstanceRef: React.MutableRefObject<any>;
-  cellRef: React.RefObject<HTMLDivElement>;
-  isEditorResizing: boolean;
-  customEditorHeight: number | null;
-  isGridCanvasMode?: boolean;
-  currentLayout?: any;
-  onUpdateCode: (id: string, code: string) => void;
-  onCopyCellCode: (id: string) => void;
-  onSelectCell?: (id: string) => void;
-  onRun: (id: string) => void;
-  onAddCell: (index: number, type: CellType) => void;
-  onAdvanceCell?: (index: number) => void;
-  onSplitCell?: (index: number, beforeCode: string, afterCode: string) => void;
-}
+import { CodeCellEditorProps } from "./types";
 
 export function CodeCellEditor({
   cell,
@@ -91,9 +71,8 @@ export function CodeCellEditor({
         minHeight: isGridCanvasMode ? "60px" : "75px",
         maxHeight: isGridCanvasMode ? "calc(100% - 16px)" : undefined,
       }}
-      className={`relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border bg-[var(--nb-bg-code)] border-white/[0.04] focus-within:bg-[#0c0c0e] focus-within:border-white/[0.18] focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.5)] ${
-        isEditorResizing ? "transition-none" : "transition-all duration-200"
-      }`}
+      className={`relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border bg-[var(--nb-bg-code)] border-white/[0.04] focus-within:bg-[#0c0c0e] focus-within:border-white/[0.18] focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.5)] ${isEditorResizing ? "transition-none" : "transition-all duration-200"
+        }`}
     >
       {/* Monaco Code Scroll Area */}
       <div className="w-full grow min-h-0 min-w-0 pt-2.5">
@@ -216,9 +195,8 @@ export function CodeCellEditor({
 
           {cell.timeTaken && cell.timeTaken !== "..." && (
             <span
-              className={`text-[9px] font-mono transition-colors ${
-                cell.error ? "text-rose-400/90 font-medium" : "text-emerald-400/80"
-              }`}
+              className={`text-[9px] font-mono transition-colors ${cell.error ? "text-rose-400/90 font-medium" : "text-emerald-400/80"
+                }`}
             >
               {cell.timeTaken}
             </span>
@@ -226,15 +204,14 @@ export function CodeCellEditor({
 
           <span className="inline-flex items-center gap-1.5 text-[9px] font-sans font-medium tracking-widest uppercase transition-all duration-200 text-[var(--cell-text-tag)] group-has-[:focus-within]/editor:text-white/80">
             <span
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 opacity-40 group-has-[:focus-within]/editor:opacity-100 group-has-[:focus-within]/editor:animate-pulse ${
-                cell.timeTaken === "..."
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 opacity-40 group-has-[:focus-within]/editor:opacity-100 group-has-[:focus-within]/editor:animate-pulse ${cell.timeTaken === "..."
                   ? "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse opacity-100"
                   : cell.error
                     ? "bg-[var(--cell-accent-rose)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-rose)]"
                     : hasRun
                       ? "bg-[var(--cell-accent-green)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-green)]"
                       : "bg-[var(--panel-nav-accent)] group-has-[:focus-within]/editor:shadow-[0_0_6px_rgba(var(--rgb-blue),0.9)]"
-              }`}
+                }`}
             />
             JavaScript
           </span>

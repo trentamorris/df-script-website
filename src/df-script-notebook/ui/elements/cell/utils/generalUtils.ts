@@ -1,6 +1,5 @@
 import React from "react";
-import { CellLayout, PageGridConfig } from "../../../types";
-import { CellProps } from "./types";
+import { CellLayout } from "../../../../types";
 
 export const CELL_MUI_STYLES = {
   // Category Pill Buttons (Insert zone, expand code, etc.)

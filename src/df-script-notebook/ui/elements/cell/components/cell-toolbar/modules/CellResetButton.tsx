@@ -4,9 +4,11 @@ import { Chip } from "../../../../chip/Chip";
 import { useCellContext } from "../../../hooks/useCellContext";
 
 export function CellResetButton() {
-  const { cell, onClearOutput } = useCellContext();
+  const { cell, onClearOutput, keybindings } = useCellContext();
 
   const isEnabled = Boolean(cell.output || cell.logs?.length || cell.error || cell.timeTaken);
+  const clearShortcut = keybindings?.["notebook.cell.clearOutput"];
+  const title = clearShortcut ? `Clear Cell Output (${clearShortcut})` : "Clear Cell Output";
 
   return (
     <Chip
@@ -15,7 +17,7 @@ export function CellResetButton() {
         onClearOutput?.(cell.id);
       }}
       disabled={!isEnabled}
-      title="Clear Cell Output"
+      title={title}
       className={`!h-7 !w-7 !p-0 !rounded-md !flex !items-center !justify-center ${
         !isEnabled ? "opacity-30 pointer-events-none" : ""
       }`}

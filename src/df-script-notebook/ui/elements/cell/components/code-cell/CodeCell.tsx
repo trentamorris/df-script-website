@@ -1,38 +1,11 @@
 import React from "react";
 import { IconButton, Button } from "@mui/material";
-import { CellState } from "../../../../../types";
-import { CELL_MUI_STYLES, getPlayButtonStyle } from "../../utils";
+import { CodeCellProps } from "./types";
+import { CELL_MUI_STYLES, getPlayButtonStyle } from "../../utils/generalUtils";
 import { PlayPauseIcon } from "../../../../../svgs";
 import DraggableDivider from "../../../draggable-divider/DraggableDivider";
 import CodeCellEditor from "./components/code-cell-editor/CodeCellEditor";
 import CodeCellOutput from "./components/code-cell-output/CodeCellOutput";
-
-export interface CodeCellProps {
-  cell: CellState;
-  index: number;
-  totalCells: number;
-  copiedCellId: string | null;
-  copiedCellCodeId: string | null;
-  editorBoxRef: React.RefObject<HTMLDivElement>;
-  editorInstanceRef: React.MutableRefObject<any>;
-  cellRef: React.RefObject<HTMLDivElement>;
-  customEditorHeight: number | null;
-  setCustomEditorHeight: React.Dispatch<React.SetStateAction<number | null>>;
-  isEditorResizing: boolean;
-  setIsEditorResizing: React.Dispatch<React.SetStateAction<boolean>>;
-  isGridCanvasMode?: boolean;
-  currentLayout?: any;
-  onRun: (id: string) => void;
-  onUpdateCode: (id: string, code: string) => void;
-  onCopyCell: (id: string) => void;
-  onCopyCellCode: (id: string) => void;
-  onSelectCell?: (id: string) => void;
-  onAddCell: (index: number, type: any) => void;
-  onAdvanceCell?: (index: number) => void;
-  onSplitCell?: (index: number, beforeCode: string, afterCode: string) => void;
-  onToggleCodeCollapse: (id: string) => void;
-  onToggleOutputCollapse: (id: string) => void;
-}
 
 export function CodeCell({
   cell,

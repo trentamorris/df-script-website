@@ -1,3 +1,5 @@
+import React from "react";
+
 export type CellWidth = "full" | "half";
 export type CellType = "code" | "markdown";
 export type LayoutMode = "document" | "canvas";
@@ -59,3 +61,7 @@ export interface NotebookCommand {
   defaultKeybinding: string;
   mode: CommandMode;
 }
+
+/** State Types */
+export type StateSetter<T> = React.Dispatch<React.SetStateAction<T>>;
+export type StateTuple<T> = [T, StateSetter<T>];

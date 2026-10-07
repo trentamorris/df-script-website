@@ -4,9 +4,12 @@ import { Chip } from "../../../../chip/Chip";
 import { useCellContext } from "../../../hooks/useCellContext";
 
 export function CellMoveUpButton() {
-  const { index, isGridCanvasMode, onMoveUp } = useCellContext();
+  const { index, isGridCanvasMode, onMoveUp, keybindings } = useCellContext();
 
   if (isGridCanvasMode) return null;
+
+  const moveUpShortcut = keybindings?.["notebook.cell.moveUp"];
+  const title = moveUpShortcut ? `Move Up (${moveUpShortcut})` : "Move Up";
 
   return (
     <Chip
@@ -15,7 +18,7 @@ export function CellMoveUpButton() {
         onMoveUp(index);
       }}
       disabled={index === 0}
-      title="Move Up"
+      title={title}
       className={`!h-7 !w-7 !p-0 !rounded-md !flex !items-center !justify-center ${
         index === 0 ? "opacity-30 pointer-events-none" : ""
       }`}
@@ -26,9 +29,12 @@ export function CellMoveUpButton() {
 }
 
 export function CellMoveDownButton() {
-  const { index, totalCells, isGridCanvasMode, onMoveDown } = useCellContext();
+  const { index, totalCells, isGridCanvasMode, onMoveDown, keybindings } = useCellContext();
 
   if (isGridCanvasMode) return null;
+
+  const moveDownShortcut = keybindings?.["notebook.cell.moveDown"];
+  const title = moveDownShortcut ? `Move Down (${moveDownShortcut})` : "Move Down";
 
   return (
     <Chip
@@ -37,7 +43,7 @@ export function CellMoveDownButton() {
         onMoveDown(index);
       }}
       disabled={index === totalCells - 1}
-      title="Move Down"
+      title={title}
       className={`!h-7 !w-7 !p-0 !rounded-md !flex !items-center !justify-center ${
         index === totalCells - 1 ? "opacity-30 pointer-events-none" : ""
       }`}

@@ -3,8 +3,9 @@ import { DataFrame } from "df-script";
 import { Button, IconButton, CircularProgress } from "@mui/material";
 import { ExpandMore, ChevronRight } from "@mui/icons-material";
 import { CellState } from "../../../../../../../types";
-import { CELL_MUI_STYLES } from "../../../../utils";
+import { CELL_MUI_STYLES } from "../../../../utils/generalUtils";
 import DataFrameGrid from "../../../../../dataframe-grid/DataFrameGrid";
+import { CodeCellOutputProps } from "./types";
 
 interface DOMNodeRendererProps {
   node: HTMLElement | SVGElement;
@@ -21,12 +22,7 @@ const DOMNodeRenderer = ({ node }: DOMNodeRendererProps) => {
   return <div ref={ref} className="w-full h-full overflow-auto" />;
 };
 
-export interface CodeCellOutputProps {
-  cell: CellState;
-  onToggleOutputCollapse: (id: string) => void;
-  copiedCellId: string | null;
-  onCopyCell: (id: string) => void;
-}
+
 
 export function CodeCellOutput({
   cell,
@@ -73,13 +69,12 @@ export function CodeCellOutput({
       <div className="flex items-center justify-between px-1">
         <span className="text-[10px] font-mono text-[var(--cell-text-muted)] select-none flex items-center gap-1.5 uppercase tracking-wider font-semibold">
           <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              cell.timeTaken === "..."
+            className={`w-1.5 h-1.5 rounded-full ${cell.timeTaken === "..."
                 ? "bg-[var(--cell-accent-blue)] animate-pulse"
                 : cell.error
                   ? "bg-[var(--cell-accent-rose)]"
                   : "bg-[var(--cell-indicator-success)]"
-            }`}
+              }`}
           />
           {cell.timeTaken === "..." ? "Running..." : "Output"}
         </span>
@@ -151,10 +146,10 @@ export function CodeCellOutput({
                 <pre className="m-0 leading-relaxed font-inherit">
                   {typeof cell.output === "object"
                     ? JSON.stringify(
-                        cell.output,
-                        (_, v) => (typeof v === "bigint" ? v.toString() + "n" : v),
-                        2
-                      )
+                      cell.output,
+                      (_, v) => (typeof v === "bigint" ? v.toString() + "n" : v),
+                      2
+                    )
                     : String(cell.output)}
                 </pre>
               </div>
