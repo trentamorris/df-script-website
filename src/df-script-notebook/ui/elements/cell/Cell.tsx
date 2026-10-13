@@ -22,6 +22,7 @@ export default function Cell({
   onMoveDown,
   onToggleCodeCollapse,
   onToggleOutputCollapse,
+  onToggleSplitOrientation,
   onChangeCellType,
   onUpdateCode,
   onAddCell,
@@ -54,6 +55,7 @@ export default function Cell({
   const dimensionsTabRef = React.useRef<HTMLButtonElement>(null);
   const [activePanelTab, setActivePanelTab] = React.useState<CellLayoutTab | null>(null);
   const [customEditorHeight, setCustomEditorHeight] = React.useState<number | null>(null);
+  const [customEditorWidth, setCustomEditorWidth] = React.useState<number | null>(null);
   const editorInstanceRef = React.useRef<any>(null);
   const [isEditorResizing, setIsEditorResizing] = React.useState(false);
   const editorBoxRef = React.useRef<HTMLDivElement>(null);
@@ -110,6 +112,7 @@ export default function Cell({
     onMoveUp,
     onMoveDown,
     onToggleCodeCollapse,
+    onToggleSplitOrientation,
     onChangeCellType,
     onClearOutput,
     onUndo,
@@ -202,6 +205,8 @@ export default function Cell({
         cellRef={cellRef}
         customEditorHeight={customEditorHeight}
         setCustomEditorHeight={setCustomEditorHeight}
+        customEditorWidth={customEditorWidth}
+        setCustomEditorWidth={setCustomEditorWidth}
         isEditorResizing={isEditorResizing}
         setIsEditorResizing={setIsEditorResizing}
         isGridCanvasMode={isGridCanvasMode}

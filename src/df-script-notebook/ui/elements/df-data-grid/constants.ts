@@ -1,0 +1,10 @@
+export const DEFAULT_ROW_HEIGHT = 36;
+export const DEFAULT_HEADER_HEIGHT = 40;
+export const DEFAULT_COLUMN_WIDTH = 150;
+export const DEFAULT_MIN_COLUMN_WIDTH = 60;
+export const DEFAULT_ROW_INDEX_COLUMN_WIDTH = 40;
+export const DEFAULT_OVERSCAN = 5;
+
+export const Z_INDEX_STICKY_CELL = 2;
+export const Z_INDEX_STICKY_HEADER = 10;
+export const Z_INDEX_STICKY_HEADER_CORNER = 12;

@@ -53,23 +53,27 @@ export function CodeCellEditor({
   totalCellsRef.current = totalCells;
 
   const hasRun = cell.execIndex !== null || cell.timeTaken !== null;
+  const lineCount = cell.code.split("\n").length;
 
   return (
     <div
       ref={editorBoxRef}
       style={{
         height:
-          customEditorHeight !== null
-            ? isGridCanvasMode
-              ? `min(${customEditorHeight}px, calc(100% - 16px))`
-              : `${customEditorHeight}px`
-            : isGridCanvasMode && currentLayout
-              ? cell.output || cell.logs?.length || cell.error
-                ? "45%"
-                : "100%"
-              : `${Math.max(75, Math.min(500, cell.code.split("\n").length * 19 + 24))}px`,
-        minHeight: isGridCanvasMode ? "60px" : "75px",
-        maxHeight: isGridCanvasMode ? "calc(100% - 16px)" : undefined,
+          cell.splitOrientation === "horizontal"
+            ? "100%"
+            : customEditorHeight !== null
+              ? `${customEditorHeight}px`
+              : isGridCanvasMode && currentLayout
+                ? cell.output || cell.logs?.length || cell.error
+                  ? "45%"
+                  : "100%"
+                : `${Math.max(75, Math.min(500, cell.code.split("\n").length * 19 + 24))}px`,
+        minHeight: 0,
+        ...(cell.splitOrientation !== "horizontal" && customEditorHeight !== null && customEditorHeight < 4
+          ? { borderWidth: 0, boxShadow: "none" }
+          : null),
+        maxHeight: isGridCanvasMode ? "100%" : undefined,
       }}
       className={`relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border bg-[var(--nb-bg-code)] border-white/[0.04] focus-within:bg-[#0c0c0e] focus-within:border-white/[0.18] focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.5)] ${isEditorResizing ? "transition-none" : "transition-all duration-200"
         }`}
@@ -173,7 +177,7 @@ export function CodeCellEditor({
           </span>
           <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-700">•</span>
           <span>
-            {cell.code.split("\n").length} {cell.code.split("\n").length === 1 ? "line" : "lines"}
+            {lineCount} {lineCount === 1 ? "line" : "lines"}
           </span>
         </div>
 

@@ -4,8 +4,10 @@ import { Button, IconButton, CircularProgress } from "@mui/material";
 import { ExpandMore, ChevronRight } from "@mui/icons-material";
 import { CellState } from "../../../../../../../types";
 import { CELL_MUI_STYLES } from "../../../../utils/generalUtils";
-import DataFrameGrid from "../../../../../dataframe-grid/DataFrameGrid";
+// import { DynamicDataGrid } from "../../../../../dynamic-data-grid";
+import { DFDataGrid } from "../../../../../df-data-grid";
 import { CodeCellOutputProps } from "./types";
+import { hasCellOutput } from "../../utils";
 
 interface DOMNodeRendererProps {
   node: HTMLElement | SVGElement;
@@ -30,7 +32,7 @@ export function CodeCellOutput({
   copiedCellId,
   onCopyCell,
 }: CodeCellOutputProps) {
-  if (cell.type === "markdown") return null;
+  if (cell.type === "markdown" || !hasCellOutput(cell)) return null;
 
   if (cell.isOutputCollapsed) {
     return (
@@ -55,25 +57,16 @@ export function CodeCellOutput({
     );
   }
 
-  const hasOutput =
-    cell.output !== null ||
-    cell.outputNode !== null ||
-    (cell.logs && cell.logs.length > 0) ||
-    cell.error !== null ||
-    cell.timeTaken === "...";
-
-  if (!hasOutput) return null;
-
   return (
     <div className="mt-1 flex flex-col gap-2 relative group/output">
       <div className="flex items-center justify-between px-1">
         <span className="text-[10px] font-mono text-[var(--cell-text-muted)] select-none flex items-center gap-1.5 uppercase tracking-wider font-semibold">
           <span
             className={`w-1.5 h-1.5 rounded-full ${cell.timeTaken === "..."
-                ? "bg-[var(--cell-accent-blue)] animate-pulse"
-                : cell.error
-                  ? "bg-[var(--cell-accent-rose)]"
-                  : "bg-[var(--cell-indicator-success)]"
+              ? "bg-[var(--cell-accent-blue)] animate-pulse"
+              : cell.error
+                ? "bg-[var(--cell-accent-rose)]"
+                : "bg-[var(--cell-indicator-success)]"
               }`}
           />
           {cell.timeTaken === "..." ? "Running..." : "Output"}
@@ -138,9 +131,18 @@ export function CodeCellOutput({
         )}
 
         {cell.output !== null && (
-          <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[var(--cell-bg-card)]">
+          <div
+            className={`overflow-hidden ${
+              cell.output instanceof DataFrame
+                ? "bg-transparent border-0 rounded-none"
+                : "rounded-xl border border-[var(--cell-border-subtle)] bg-[var(--cell-bg-card)]"
+            }`}
+          >
             {cell.output instanceof DataFrame ? (
-              <DataFrameGrid df={cell.output} />
+              <DFDataGrid
+                data={cell.output.toDicts() as Record<string, unknown>[]}
+                columns={cell.output.columns.map((c) => ({ field: c, headerName: c }))}
+              />
             ) : (
               <div className="p-3.5 font-mono text-[11px] text-[var(--cell-text-output)] overflow-x-auto max-h-60 overflow-y-auto">
                 <pre className="m-0 leading-relaxed font-inherit">

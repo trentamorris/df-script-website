@@ -32,6 +32,7 @@ export interface CellProps {
   onMoveDown: CellActionByIndex;
   onToggleCodeCollapse: CellActionById;
   onToggleOutputCollapse: CellActionById;
+  onToggleSplitOrientation?: CellActionById;
   onChangeCellType?: (id: string, type: CellType) => void;
   onUpdateCode: (id: string, code: string) => void;
   onAddCell: (index: number, type: CellType) => void;
@@ -101,6 +102,7 @@ export interface CellContextValue
       | "onMoveUp"
       | "onMoveDown"
       | "onToggleCodeCollapse"
+      | "onToggleSplitOrientation"
       | "onChangeCellType"
       | "onClearOutput"
       | "onUndo"

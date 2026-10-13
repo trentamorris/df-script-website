@@ -931,6 +931,18 @@ export default function DFScriptNotebook() {
             prev.map((c) => (c.id === id ? { ...c, isOutputCollapsed: !c.isOutputCollapsed } : c))
           )
         }
+        onToggleSplitOrientation={(id) =>
+          setCells((prev) =>
+            prev.map((c) =>
+              c.id === id
+                ? {
+                    ...c,
+                    splitOrientation: c.splitOrientation === "horizontal" ? "vertical" : "horizontal",
+                  }
+                : c
+            )
+          )
+        }
         onChangeCellType={changeCellType}
         onUpdateCode={(id, code) =>
           setCells((prev) => prev.map((c) => (c.id === id ? { ...c, code } : c)))

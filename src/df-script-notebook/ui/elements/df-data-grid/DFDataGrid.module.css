@@ -1,0 +1,128 @@
+.dfDataGrid {
+  --scroller-color: rgba(var(--rgb-white), 0.2);
+  --DataGrid-rowBorderColor: var(--cell-border-subtle, rgba(255, 255, 255, 0.05));
+  width: 100% !important;
+  max-height: 420px;
+}
+
+.dfDataGrid :global(.MuiDataGrid-root) {
+  border: none !important;
+  width: 100% !important;
+  max-height: 420px !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  font-family: var(--cell-font-mono) !important;
+  font-size: 12px !important;
+  color: var(--nb-text-secondary) !important;
+}
+
+.dfDataGrid :global(.MuiDataGrid-cell),
+.dfDataGrid :global(.MuiDataGrid-columnHeader),
+.dfDataGrid :global(.MuiDataGrid-columnHeaders),
+.dfDataGrid :global(.MuiDataGrid-columnHeaderTitle) {
+  font-family: var(--cell-font-mono) !important;
+}
+
+/* Seamless Transparent Headers, Fillers & Virtual Scroller */
+.dfDataGrid :global(.MuiDataGrid-main),
+.dfDataGrid :global(.MuiDataGrid-virtualScroller),
+.dfDataGrid :global(.MuiDataGrid-virtualScrollerContent),
+.dfDataGrid :global(.MuiDataGrid-virtualScrollerRenderZone),
+.dfDataGrid :global(.MuiDataGrid-topContainer),
+.dfDataGrid :global(.MuiDataGrid-topContainer > div),
+.dfDataGrid :global(.MuiDataGrid-topContainer > div > div),
+.dfDataGrid :global(.MuiDataGrid-columnHeaders),
+.dfDataGrid :global(.MuiDataGrid-columnHeader),
+.dfDataGrid :global(.MuiDataGrid-columnHeaderTitleContainer),
+.dfDataGrid :global(.MuiDataGrid-filler),
+.dfDataGrid :global(.MuiDataGrid-filler--pinnedRight),
+.dfDataGrid :global(.MuiDataGrid-filler--pinnedLeft),
+.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedRight),
+.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedLeft),
+.dfDataGrid :global(.MuiDataGrid-columnHeader--emptyGroup),
+.dfDataGrid :global(.MuiDataGrid-cell),
+.dfDataGrid :global(.MuiDataGrid-cell--pinnedLeft),
+.dfDataGrid :global(.MuiDataGrid-cell--pinnedRight) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Header Text Aesthetics */
+.dfDataGrid :global(.MuiDataGrid-columnHeaders),
+.dfDataGrid :global(.MuiDataGrid-columnHeader),
+.dfDataGrid :global(.MuiDataGrid-filler) {
+  color: var(--nb-text-muted) !important;
+  font-weight: 600 !important;
+}
+
+.dfDataGrid :global(.MuiDataGrid-iconButtonContainer),
+.dfDataGrid :global(.MuiDataGrid-iconButtonContainer .MuiIconButton-root),
+.dfDataGrid :global(.MuiDataGrid-iconButtonContainer svg),
+.dfDataGrid :global(.MuiDataGrid-menuIcon svg),
+.dfDataGrid :global(.MuiDataGrid-sortIcon) {
+  color: var(--nb-text-muted) !important;
+  fill: var(--nb-text-muted) !important;
+}
+
+/* borders */
+.dfDataGrid :global(.MuiDataGrid-cell),
+.dfDataGrid :global(.MuiDataGrid-columnHeader),
+.dfDataGrid :global(.MuiDataGrid-columnHeaders),
+.dfDataGrid :global(.MuiDataGrid-filler--pinnedLeft),
+.dfDataGrid :global(.MuiDataGrid-filler--pinnedRight),
+.dfDataGrid :global(.MuiDataGrid-footerContainer),
+.dfDataGrid :global(.MuiDataGrid-filler),
+.dfDataGrid :global(.MuiDataGrid-filler > div),
+.dfDataGrid :global(.MuiDataGrid-filler::before),
+.dfDataGrid :global(.MuiDataGrid-filler::after),
+.dfDataGrid :global(.MuiDataGrid-virtualScroller),
+.dfDataGrid :global(.MuiDataGrid-virtualScrollerContent),
+.dfDataGrid :global(.MuiDataGrid-virtualScrollerRenderZone) {
+  border: none !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  outline: none !important;
+}
+
+/* Separator Color */
+.dfDataGrid :global(.MuiDataGrid-columnSeparator) {
+  color: var(--cell-border-subtle) !important;
+}
+
+/* Hide separator on the non-resizable row index header */
+.dfDataGrid :global(.MuiDataGrid-columnHeader[data-field="__index__"] .MuiDataGrid-columnSeparator) {
+  display: none !important;
+}
+
+/* Row Hover State */
+.dfDataGrid :global(.MuiDataGrid-row:hover) {
+  background-color: var(--nb-bg-hover) !important;
+}
+
+/* Footer Container */
+.dfDataGrid :global(.MuiDataGrid-footerContainer) {
+  border-top: 1px solid var(--DataGrid-rowBorderColor) !important;
+  background-color: transparent !important;
+  color: var(--nb-text-muted) !important;
+}
+
+/* Slim Scrollbar matching DynamicDataGrid style */
+.dfDataGrid :global(.MuiDataGrid-scrollbar) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroller-color) transparent;
+  background-color: transparent;
+}
+
+/* Row Index Column Styling */
+.rowIndexCell {
+  opacity: 0.7 !important;
+  color: var(--nb-text-muted) !important;
+  font-family: var(--cell-font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none;
+}

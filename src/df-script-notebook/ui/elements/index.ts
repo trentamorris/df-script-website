@@ -43,10 +43,8 @@ export * from "./grid-canvas/slots/grid-canvas-toolbar/types";
 export * from "./grid-canvas/context";
 export * from "./grid-canvas/hooks/useGridCanvas";
 
-// DataFrameGrid
-export { default as DataFrameGrid } from "./dataframe-grid/DataFrameGrid";
-export * from "./dataframe-grid/types";
-export * from "./dataframe-grid/utils";
+// DynamicDataGrid
+// export * from "./dynamic-data-grid";
 
 // MarkdownRenderer
 export { default as MarkdownRenderer } from "./markdown-renderer/MarkdownRenderer";

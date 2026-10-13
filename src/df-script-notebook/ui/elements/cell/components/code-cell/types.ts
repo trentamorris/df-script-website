@@ -27,6 +27,8 @@ export interface CodeCellProps
   cellRef: React.RefObject<HTMLDivElement>;
   customEditorHeight: number | null;
   setCustomEditorHeight: StateSetter<number | null>;
+  customEditorWidth?: number | null;
+  setCustomEditorWidth?: StateSetter<number | null>;
   isEditorResizing: boolean;
   setIsEditorResizing: StateSetter<boolean>;
   currentLayout?: CellLayout;

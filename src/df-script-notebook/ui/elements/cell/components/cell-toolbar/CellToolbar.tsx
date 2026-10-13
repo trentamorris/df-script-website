@@ -12,6 +12,7 @@ import { CellMarkdownRenderButton } from "./modules/CellMarkdownRenderButton";
 import { CellVisibilityButton } from "./modules/CellVisibilityButton";
 import { CellUndoButton, CellRedoButton } from "./modules/CellHistoryButtons";
 import { CellResetButton } from "./modules/CellResetButton";
+import { CellSplitOrientationButton } from "./modules/CellSplitOrientationButton";
 import { CellMoveUpButton, CellMoveDownButton } from "./modules/CellReorderButtons";
 import { CellDeleteButton } from "./modules/CellDeleteButton";
 
@@ -57,6 +58,7 @@ export const CellToolbar = React.forwardRef<HTMLDivElement, CellToolbarProps>(
               ) : (
                 <>
                   <CellLayoutSettingsPanel />
+                  <CellSplitOrientationButton />
                   <CellVisibilityButton />
                   <CellUndoButton />
                   <CellRedoButton />

@@ -28,6 +28,7 @@ export interface CellState {
   outputNode?: any;
   isCodeCollapsed?: boolean;
   isOutputCollapsed?: boolean;
+  splitOrientation?: "vertical" | "horizontal";
 }
 
 export interface PageGridConfig {
