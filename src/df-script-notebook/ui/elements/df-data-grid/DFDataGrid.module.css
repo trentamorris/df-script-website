@@ -37,21 +37,15 @@
 }
 
 .dfDataGrid :global(.MuiDataGrid-topContainer),
-.dfDataGrid :global(.MuiDataGrid-topContainer [role="row"]),
-.dfDataGrid :global(.MuiDataGrid-columnHeaders) {
+.dfDataGrid :global(.MuiDataGrid-topContainer [role="row"]) {
   min-width: 100% !important;
   width: max-content !important;
   position: sticky !important;
   top: 0 !important;
-  background-color: var(--cell-current-surface, #111111) !important;
-  background: var(--cell-current-surface, #111111) !important;
+  background-color: var(--cell-current-surface) !important;
   box-shadow: none;
   transition: box-shadow 0.15s ease;
   z-index: 20 !important;
-}
-
-.dfDataGrid :global(.MuiDataGrid-columnHeader) {
-  background-color: transparent !important;
 }
 
 .dfDataGrid[data-scrolled-top="true"] :global(.MuiDataGrid-topContainer) {
