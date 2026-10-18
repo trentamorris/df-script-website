@@ -114,6 +114,50 @@ export function useGithubDocs(activeVersion: DocsVersion) {
 }
 
 /**
+ * Dynamically fetches the DONATIONS.md file from the repository main branch on GitHub.
+ */
+export function useGithubDonations() {
+  const [markdown, setMarkdown] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let isCancelled = false;
+    setIsLoading(true);
+    setError(null);
+
+    fetch(`${GITHUB_RAW_BASE_URL}/main/DONATIONS.md?t=${Date.now()}`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: Failed to fetch DONATIONS.md from GitHub`);
+        }
+        return res.text();
+      })
+      .then((text) => {
+        if (isCancelled) return;
+        setMarkdown(text);
+        setError(null);
+      })
+      .catch((err) => {
+        if (isCancelled) return;
+        setMarkdown(null);
+        setError(err instanceof Error ? err.message : "Error fetching DONATIONS.md from GitHub");
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  return { markdown, isLoading, error };
+}
+
+/**
  * Dynamically fetches and extracts a specific section from the repository README on GitHub.
  * No hardcoded fallback text is stored or returned.
  */
