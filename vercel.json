@@ -1,5 +1,4 @@
 {
-  "alias": ["df-script.vercel.app"],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
