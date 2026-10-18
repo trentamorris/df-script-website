@@ -1,13 +1,7 @@
 import React from 'react';
 import { DataGrid, GridColDef, GridRowModel, useGridApiRef } from '@mui/x-data-grid';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme } from '@mui/material';
 import { $df } from 'df-script';
-
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
 import type { DFDataGridProps, DFDataGridPinnedColumns } from './types';
 import styles from './DFDataGrid.module.css';
 import {
@@ -18,6 +12,12 @@ import {
   ROW_INDEX_FIELD,
 } from './constants';
 import { useDFDataGridScroll } from './hooks/useDFDataGridScroll';
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
 
 export const DFDataGrid: React.FC<DFDataGridProps> = React.memo(({
   data = [],
