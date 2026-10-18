@@ -213,14 +213,18 @@ export function CodeCell({
               }`}
             >
               <div
-                className={`rounded-full bg-white/[0.12] group-hover/divider:bg-[rgba(var(--rgb-blue),0.8)] group-active/divider:bg-[rgba(var(--rgb-blue),0.8)] group-hover/divider:shadow-[0_0_8px_rgba(var(--rgb-blue),0.9)] transition-colors duration-150 ${
+                className={`rounded-full transition-all duration-150 ${
                   isHorizontal ? "w-[3px] h-full" : "h-[3px] w-full"
+                } ${
+                  isEditorResizing
+                    ? "bg-[rgba(var(--rgb-blue),0.9)] shadow-[0_0_8px_rgba(var(--rgb-blue),0.9)]"
+                    : "bg-[var(--nb-border-strong)] group-hover/divider:bg-[rgba(var(--rgb-blue),0.85)] group-hover/divider:shadow-[0_0_8px_rgba(var(--rgb-blue),0.7)]"
                 }`}
               />
             </div>
 
             {/* Output Container */}
-            <div className="grow flex flex-col min-w-0 min-h-0 overflow-y-auto">
+            <div className="grow flex flex-col min-w-0 min-h-0 overflow-hidden">
               <CodeCellOutput
                 cell={cell}
                 onToggleOutputCollapse={onToggleOutputCollapse}

@@ -167,10 +167,14 @@ export function defineMonacoTheme(monaco: any): void {
       "editor.background": "#050505",
       "editor.lineHighlightBackground": "#111111",
       "editorGutter.background": "#050505",
-      "scrollbar.shadow": "#00000000",
+      "scrollbar.shadow": "#00000066",
       "scrollbarSlider.background": "#ffffff14",
       "scrollbarSlider.hoverBackground": "#ffffff26",
       "scrollbarSlider.activeBackground": "#ffffff38",
+      "minimap.background": "#050505",
+      "minimapSlider.background": "#ffffff14",
+      "minimapSlider.hoverBackground": "#ffffff26",
+      "minimapSlider.activeBackground": "#ffffff38",
     },
   });
 }

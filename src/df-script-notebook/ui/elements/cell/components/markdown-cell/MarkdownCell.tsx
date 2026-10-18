@@ -5,6 +5,7 @@ import { MarkdownCellProps } from "./types";
 import { defineMonacoTheme } from "../../utils/generalUtils";
 import MarkdownRenderer from "../../../markdown-renderer/MarkdownRenderer";
 import { registerCellKeyboardShortcuts } from "../../../../../keyboardShortcutsUtils";
+import { ResponsiveCluster, ResponsiveClusterItem } from "../../../responsive-cluster";
 
 export function MarkdownCell({
   cell,
@@ -47,12 +48,42 @@ export function MarkdownCell({
     col: 1,
   });
 
+  const lineCount = cell.code.split("\n").length;
+
+  const footerItems: ResponsiveClusterItem[] = React.useMemo(() => [
+    {
+      id: "line-telemetry",
+      align: "start",
+      priority: 10,
+      element: (
+        <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-500/70 transition-colors group-has-[:focus-within]/editor:text-zinc-400 whitespace-nowrap">
+          <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-300 font-medium whitespace-nowrap">
+            Ln {cursorPosition.line}, Col {cursorPosition.col}
+          </span>
+          <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-700">•</span>
+          <span className="whitespace-nowrap">
+            {lineCount} {lineCount === 1 ? "line" : "lines"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: "language-badge",
+      align: "end",
+      showAsAction: "always",
+      element: (
+        <span className="text-[9px] font-sans font-medium tracking-widest uppercase transition-all duration-200 text-[var(--cell-text-tag)] group-has-[:focus-within]/editor:text-white/80 whitespace-nowrap">
+          Markdown
+        </span>
+      ),
+    },
+  ], [cursorPosition.line, cursorPosition.col, lineCount]);
+
   const content = cell.isCodeCollapsed ? (
     <div
       onDoubleClick={() => onToggleCodeCollapse(cell.id)}
-      className={`bg-[var(--nb-bg-code)] hover:bg-[var(--cell-bg-code-hover)] p-3.5 rounded-xl border border-white/[0.04] select-text min-h-10 cursor-pointer transition-colors duration-150 shrink-0 h-auto ${
-        isGridCanvasMode ? "overflow-y-auto max-h-full" : ""
-      }`}
+      className={`bg-[var(--nb-bg-code)] hover:bg-[var(--cell-bg-code-hover)] p-3.5 rounded-xl border border-white/[0.04] select-text min-h-10 cursor-pointer transition-colors duration-150 shrink-0 h-auto ${isGridCanvasMode ? "overflow-y-auto max-h-full" : ""
+        }`}
       title="Double click to edit markdown cell"
     >
       <MarkdownRenderer text={cell.code} />
@@ -130,24 +161,13 @@ export function MarkdownCell({
         />
       </div>
 
-      <div className="h-6 shrink-0 flex items-center justify-between px-3 border-t border-white/[0.03] select-none pointer-events-none transition-colors duration-200 group-has-[:focus-within]/editor:border-white/[0.06]">
-        {/* Left: Dynamic Cursor & Line Telemetry */}
-        <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-500/70 transition-colors group-has-[:focus-within]/editor:text-zinc-400">
-          <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-300 font-medium">
-            Ln {cursorPosition.line}, Col {cursorPosition.col}
-          </span>
-          <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-700">•</span>
-          <span>
-            {cell.code.split("\n").length} {cell.code.split("\n").length === 1 ? "line" : "lines"}
-          </span>
-        </div>
-
-        {/* Right: MARKDOWN Language Badge */}
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-sans font-medium tracking-widest uppercase transition-all duration-200 text-[var(--cell-text-tag)] group-has-[:focus-within]/editor:text-white/80">
-            Markdown
-          </span>
-        </div>
+      <div className="h-6 shrink-0 flex items-center px-3 border-t border-white/[0.03] select-none pointer-events-none transition-colors duration-200 group-has-[:focus-within]/editor:border-white/[0.06] overflow-hidden whitespace-nowrap">
+        <ResponsiveCluster
+          items={footerItems}
+          showOverflowMenu={false}
+          gap={8}
+          className="w-full text-[9px] font-mono text-zinc-500/70"
+        />
       </div>
     </div>
   );

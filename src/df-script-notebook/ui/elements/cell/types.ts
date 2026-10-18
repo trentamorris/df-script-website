@@ -53,6 +53,8 @@ export interface CellProps {
   onDrop?: (e: React.DragEvent, index: number) => void;
   isGridCanvasMode?: boolean;
   gridConfig?: PageGridConfig;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: (id: string) => void;
   onInteractionChange?: (isInteracting: boolean) => void;
   onOpenCommands?: () => void;
   keybindings?: CellKeybindings;
@@ -90,27 +92,29 @@ export interface CellProviderProps {
 
 export interface CellContextValue
   extends Pick<
-      CellProps,
-      | "cell"
-      | "index"
-      | "totalCells"
-      | "isActive"
-      | "isGridCanvasMode"
-      | "gridConfig"
-      | "onRun"
-      | "onDelete"
-      | "onMoveUp"
-      | "onMoveDown"
-      | "onToggleCodeCollapse"
-      | "onToggleSplitOrientation"
-      | "onChangeCellType"
-      | "onClearOutput"
-      | "onUndo"
-      | "onRedo"
-      | "onUpdateLayout"
-    >,
-    Pick<UseCellGridDragReturn, "isMoving" | "isResizing" | "handleMovePointerDown"> {
+    CellProps,
+    | "cell"
+    | "index"
+    | "totalCells"
+    | "isActive"
+    | "isGridCanvasMode"
+    | "gridConfig"
+    | "onRun"
+    | "onDelete"
+    | "onMoveUp"
+    | "onMoveDown"
+    | "onToggleCodeCollapse"
+    | "onToggleSplitOrientation"
+    | "onChangeCellType"
+    | "onClearOutput"
+    | "onUndo"
+    | "onRedo"
+    | "onUpdateLayout"
+  >,
+  Pick<UseCellGridDragReturn, "isMoving" | "isResizing" | "handleMovePointerDown"> {
   currentLayout?: CellLayout;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
   editorInstanceRef: React.MutableRefObject<any>;
   cellRef: React.RefObject<HTMLDivElement>;
   activePanelTab: CellLayoutTab | null;

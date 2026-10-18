@@ -120,3 +120,105 @@ export function mergeRefs<T>(
   };
 }
 
+/**
+ * Type guard to check if a target is a Window element across realms.
+ */
+export function isWindowElement(value: unknown): value is Window {
+  return (
+    typeof window !== "undefined" &&
+    (value === window ||
+      (value != null &&
+        typeof value === "object" &&
+        "window" in value &&
+        (value as { window: unknown }).window === value))
+  );
+}
+
+/**
+ * Type guard to check if a target is a Document element across realms.
+ */
+export function isDocumentElement(value: unknown): value is Document {
+  return (
+    value != null &&
+    typeof value === "object" &&
+    (value as Node).nodeType === 9
+  );
+}
+
+export interface ScrollOffset {
+  top: number;
+  left: number;
+  maxTop: number;
+  maxLeft: number;
+  progressTop: number; // 0 to 100 percentage
+  progressLeft: number; // 0 to 100 percentage
+  isScrolledTop: boolean;
+  isScrolledBottom: boolean;
+  isScrolledLeft: boolean;
+  isScrolledRight: boolean;
+}
+
+export interface GetScrollOffsetOptions {
+  element: HTMLElement | Window | Document | null;
+  threshold?: number;
+  tolerance?: number;
+}
+
+/**
+ * Resolves comprehensive scroll metrics, percentages (0-100), and directional threshold states.
+ */
+export function getScrollOffset(options: GetScrollOffsetOptions): ScrollOffset {
+  const { element, threshold = 0, tolerance = 1 } = options;
+
+  if (!element) {
+    return {
+      top: 0,
+      left: 0,
+      maxTop: 0,
+      maxLeft: 0,
+      progressTop: 0,
+      progressLeft: 0,
+      isScrolledTop: false,
+      isScrolledBottom: false,
+      isScrolledLeft: false,
+      isScrolledRight: false,
+    };
+  }
+
+  const targetIsWindow = isWindowElement(element);
+  const targetEl = targetIsWindow
+    ? document.documentElement
+    : isDocumentElement(element)
+      ? element.documentElement
+      : element;
+
+  const rawTop = targetIsWindow ? window.scrollY : targetEl.scrollTop;
+  const rawLeft = targetIsWindow ? window.scrollX : targetEl.scrollLeft;
+
+  const top = Math.max(0, rawTop);
+  const left = Math.max(0, Math.abs(rawLeft));
+
+  const scrollWidth = targetEl.scrollWidth;
+  const scrollHeight = targetEl.scrollHeight;
+  const clientWidth = targetIsWindow ? window.innerWidth : targetEl.clientWidth;
+  const clientHeight = targetIsWindow ? window.innerHeight : targetEl.clientHeight;
+
+  const maxTop = Math.max(0, scrollHeight - clientHeight);
+  const maxLeft = Math.max(0, scrollWidth - clientWidth);
+
+  const progressTop = maxTop > 0 ? Math.min(100, Math.max(0, (top / maxTop) * 100)) : 0;
+  const progressLeft = maxLeft > 0 ? Math.min(100, Math.max(0, (left / maxLeft) * 100)) : 0;
+
+  return {
+    top,
+    left,
+    maxTop,
+    maxLeft,
+    progressTop,
+    progressLeft,
+    isScrolledTop: top > threshold,
+    isScrolledBottom: maxTop > 0 && top >= maxTop - tolerance,
+    isScrolledLeft: left > threshold,
+    isScrolledRight: maxLeft > 0 && left >= maxLeft - tolerance,
+  };
+}

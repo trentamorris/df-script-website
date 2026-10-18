@@ -29,6 +29,7 @@ export interface CellState {
   isCodeCollapsed?: boolean;
   isOutputCollapsed?: boolean;
   splitOrientation?: "vertical" | "horizontal";
+  variables?: Record<string, any>;
 }
 
 export interface PageGridConfig {
@@ -44,6 +45,28 @@ export interface NotebookPage {
   cellIds: string[];
   layoutMode?: LayoutMode;
   gridConfig?: PageGridConfig;
+}
+
+export interface MoveCellToCanvasOptions {
+  cellId: string;
+  targetPageId?: string;
+  isCopy?: boolean;
+  createNewCanvas?: boolean;
+}
+
+export interface CanvasPageManagementProps {
+  pages: NotebookPage[];
+  activePageId: string;
+  editingPageId: string | null;
+  showGridConfigModal: boolean;
+  onSelectPage: (id: string) => void;
+  onAddPage: () => void;
+  onDeletePage: (id: string) => void;
+  onRenamePage: (id: string, newTitle: string) => void;
+  onSetEditingPageId: (id: string | null) => void;
+  onToggleGridModal: () => void;
+  onUpdateGridConfig: (config: Partial<PageGridConfig>) => void;
+  onMoveCellToCanvas?: (options: MoveCellToCanvasOptions) => void;
 }
 
 export interface NotebookFile {

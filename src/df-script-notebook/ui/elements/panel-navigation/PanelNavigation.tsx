@@ -106,7 +106,6 @@ export default function PanelNavigation({
   const [shouldAnimateSlide, setShouldAnimateSlide] = React.useState(false);
   const mainViewRef = React.useRef<HTMLDivElement>(null);
   const subViewRef = React.useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = React.useState<number | undefined>(undefined);
   const [windowMaxHeight, setWindowMaxHeight] = React.useState<number | undefined>(undefined);
 
   const currentSubView = navStack.length > 0 ? navStack[navStack.length - 1] : null;
@@ -153,32 +152,48 @@ export default function PanelNavigation({
     };
   }, [updateAvailableHeight]);
 
-  // Dynamically sync container height with active panel view whenever its content changes or resizes
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Dynamically animate container height and width smoothly using direct DOM styling
+  // Direct DOM updates prevent React re-render cascades that cause "Maximum update depth exceeded"
   React.useLayoutEffect(() => {
     if (!isRendered) return;
 
-    const targetEl = currentSubView ? subViewRef.current : mainViewRef.current;
-    if (!targetEl) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    const measure = () => {
-      const measured = targetEl.scrollHeight || targetEl.offsetHeight;
-      if (measured > 0) {
-        setContentHeight(measured);
-      }
+    let rafId: number | null = null;
+    const updateDimensions = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const targetEl = currentSubView ? subViewRef.current : mainViewRef.current;
+        if (!targetEl || !container) return;
+
+        const targetHeight = targetEl.scrollHeight || targetEl.offsetHeight;
+        if (targetHeight > 0) {
+          container.style.height = `${targetHeight}px`;
+        }
+      });
     };
 
-    measure();
+    updateDimensions();
 
-    const ro = new ResizeObserver(measure);
-    ro.observe(targetEl);
+    const targetEl = currentSubView ? subViewRef.current : mainViewRef.current;
+    const ro = new ResizeObserver(() => {
+      updateDimensions();
+    });
 
-    const childWrapper = targetEl.querySelector<HTMLElement>(".p-3");
-    if (childWrapper) {
-      ro.observe(childWrapper);
+    if (targetEl) {
+      ro.observe(targetEl);
+      const child = targetEl.firstElementChild as HTMLElement;
+      if (child) ro.observe(child);
     }
 
-    return () => ro.disconnect();
-  }, [currentSubView, isRendered, items, children, visibleItems]);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      ro.disconnect();
+    };
+  }, [currentSubView, isRendered, items]);
 
   // Reset or initialize stack only when open state or initialItemId prop changes
   React.useEffect(() => {
@@ -228,10 +243,10 @@ export default function PanelNavigation({
 
   const panelContent = (
     <div
+      ref={containerRef}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
       style={{
-        height: contentHeight ? `${contentHeight}px` : "auto",
         maxHeight: resolvedMaxHeight,
       }}
       className={`relative min-w-[260px] max-w-[320px] flex flex-col rounded-xl overflow-hidden select-none font-sans outline-none
@@ -239,6 +254,8 @@ export default function PanelNavigation({
         shadow-[var(--panel-nav-shadow)] text-[var(--panel-nav-text-primary)]
         transition-[height,width] duration-250 ease-[cubic-bezier(0.2,0.0,0.0,1.0)]
         animate-in fade-in zoom-in-95 ${className}`}
+      onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Two-panel horizontal sliding track */}

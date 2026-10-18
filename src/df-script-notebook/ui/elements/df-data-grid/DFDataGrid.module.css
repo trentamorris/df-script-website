@@ -1,50 +1,100 @@
 .dfDataGrid {
+  /* Scrollbar & Color Tokens */
   --scroller-color: rgba(var(--rgb-white), 0.2);
-  --DataGrid-rowBorderColor: var(--cell-border-subtle, rgba(255, 255, 255, 0.05));
-  width: 100% !important;
-  max-height: 420px;
+  --cell-current-surface: var(--cell-current-bg, var(--cell-bg-base, #111111));
+  --pinned-divider-border: 1px solid var(--cell-border-subtle, rgba(var(--rgb-white), 0.08));
+  --shadow-bottom: 0 4px 6px -3px rgba(var(--rgb-black), 0.6);
+  --shadow-left: 4px 0 6px -3px rgba(var(--rgb-black), 0.6);
+  --shadow-right: -4px 0 6px -3px rgba(var(--rgb-black), 0.6);
+
+  /* MUI DataGrid v8 Native Design Tokens */
+  --DataGrid-rowBorderColor: transparent;
+  --DataGrid-containerBackground: transparent;
+  --DataGrid-pinnedBackground: var(--cell-current-surface);
+  --DataGrid-headerBackground: var(--cell-current-surface);
+
+  /* Typography & Theme */
+  color: var(--nb-text-secondary);
+  font-family: var(--cell-font-sans);
+  font-size: 12px;
+
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .dfDataGrid :global(.MuiDataGrid-root) {
   border: none !important;
-  width: 100% !important;
-  max-height: 420px !important;
   background-color: transparent !important;
-  background: transparent !important;
-  font-family: var(--cell-font-mono) !important;
-  font-size: 12px !important;
-  color: var(--nb-text-secondary) !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  color: inherit !important;
 }
 
-.dfDataGrid :global(.MuiDataGrid-cell),
-.dfDataGrid :global(.MuiDataGrid-columnHeader),
-.dfDataGrid :global(.MuiDataGrid-columnHeaders),
-.dfDataGrid :global(.MuiDataGrid-columnHeaderTitle) {
-  font-family: var(--cell-font-mono) !important;
-}
-
-/* Seamless Transparent Headers, Fillers & Virtual Scroller */
-.dfDataGrid :global(.MuiDataGrid-main),
-.dfDataGrid :global(.MuiDataGrid-virtualScroller),
-.dfDataGrid :global(.MuiDataGrid-virtualScrollerContent),
-.dfDataGrid :global(.MuiDataGrid-virtualScrollerRenderZone),
 .dfDataGrid :global(.MuiDataGrid-topContainer),
-.dfDataGrid :global(.MuiDataGrid-topContainer > div),
-.dfDataGrid :global(.MuiDataGrid-topContainer > div > div),
-.dfDataGrid :global(.MuiDataGrid-columnHeaders),
-.dfDataGrid :global(.MuiDataGrid-columnHeader),
-.dfDataGrid :global(.MuiDataGrid-columnHeaderTitleContainer),
+.dfDataGrid :global(.MuiDataGrid-topContainer [role="row"]) {
+  min-width: 100% !important;
+  width: max-content !important;
+  position: sticky !important;
+  top: 0 !important;
+  background-color: var(--cell-current-surface) !important;
+  box-shadow: none;
+  transition: box-shadow 0.15s ease;
+  z-index: 20 !important;
+}
+
+.dfDataGrid[data-scrolled-top="true"] :global(.MuiDataGrid-topContainer) {
+  box-shadow: var(--shadow-bottom) !important;
+}
+
+
+/* Pinned Styles */
+.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedLeft),
+.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedRight),
+.dfDataGrid :global(.MuiDataGrid-cell--pinnedLeft),
+.dfDataGrid :global(.MuiDataGrid-cell--pinnedRight) {
+  opacity: 1 !important;
+  position: sticky !important;
+  background-color: var(--cell-current-surface) !important;
+  transition: box-shadow 0.15s ease;
+  z-index: 10 !important;
+}
+
+/* Shadow overshoots vertically (spread) and is clipped to the cell's height, so rows join seamlessly */
+.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedLeft),
+.dfDataGrid :global(.MuiDataGrid-cell--pinnedLeft) {
+  clip-path: inset(0 -16px 0 0);
+}
+
+.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedRight),
+.dfDataGrid :global(.MuiDataGrid-cell--pinnedRight) {
+  clip-path: inset(0 0 0 -16px);
+}
+
+.dfDataGrid[data-scrolled-left="true"] :global(.MuiDataGrid-columnHeader--pinnedLeft),
+.dfDataGrid[data-scrolled-left="true"] :global(.MuiDataGrid-cell--pinnedLeft) {
+  box-shadow: -2px 0 6px 3px rgba(var(--rgb-black), 0.6) !important;
+}
+
+.dfDataGrid[data-scrolled-right="false"] :global(.MuiDataGrid-columnHeader--pinnedRight),
+.dfDataGrid[data-scrolled-right="false"] :global(.MuiDataGrid-cell--pinnedRight) {
+  box-shadow: 2px 0 6px 3px rgba(var(--rgb-black), 0.6) !important;
+}
+
+/* Transparent Backgrounds for standard unpinned cells */
+.dfDataGrid :global(.MuiDataGrid-cell:not(.MuiDataGrid-cell--pinnedLeft):not(.MuiDataGrid-cell--pinnedRight)),
 .dfDataGrid :global(.MuiDataGrid-filler),
 .dfDataGrid :global(.MuiDataGrid-filler--pinnedRight),
 .dfDataGrid :global(.MuiDataGrid-filler--pinnedLeft),
-.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedRight),
-.dfDataGrid :global(.MuiDataGrid-columnHeader--pinnedLeft),
-.dfDataGrid :global(.MuiDataGrid-columnHeader--emptyGroup),
-.dfDataGrid :global(.MuiDataGrid-cell),
-.dfDataGrid :global(.MuiDataGrid-cell--pinnedLeft),
-.dfDataGrid :global(.MuiDataGrid-cell--pinnedRight) {
+.dfDataGrid :global(.MuiDataGrid-columnHeader--emptyGroup) {
   background: transparent !important;
   background-color: transparent !important;
+  z-index: 1;
 }
 
 /* Header Text Aesthetics */
@@ -55,6 +105,7 @@
   font-weight: 600 !important;
 }
 
+/* Colors */
 .dfDataGrid :global(.MuiDataGrid-iconButtonContainer),
 .dfDataGrid :global(.MuiDataGrid-iconButtonContainer .MuiIconButton-root),
 .dfDataGrid :global(.MuiDataGrid-iconButtonContainer svg),
@@ -64,7 +115,7 @@
   fill: var(--nb-text-muted) !important;
 }
 
-/* borders */
+/* Borders */
 .dfDataGrid :global(.MuiDataGrid-cell),
 .dfDataGrid :global(.MuiDataGrid-columnHeader),
 .dfDataGrid :global(.MuiDataGrid-columnHeaders),
@@ -73,11 +124,12 @@
 .dfDataGrid :global(.MuiDataGrid-footerContainer),
 .dfDataGrid :global(.MuiDataGrid-filler),
 .dfDataGrid :global(.MuiDataGrid-filler > div),
-.dfDataGrid :global(.MuiDataGrid-filler::before),
-.dfDataGrid :global(.MuiDataGrid-filler::after),
-.dfDataGrid :global(.MuiDataGrid-virtualScroller),
-.dfDataGrid :global(.MuiDataGrid-virtualScrollerContent),
-.dfDataGrid :global(.MuiDataGrid-virtualScrollerRenderZone) {
+.dfDataGrid :global(.MuiDataGrid-filler--borderBottom),
+.dfDataGrid :global(.MuiDataGrid-scrollbarFiller),
+.dfDataGrid :global(.MuiDataGrid-scrollbarFiller--borderTop),
+.dfDataGrid :global(.MuiDataGrid-scrollbarFiller--borderBottom),
+.dfDataGrid :global(.MuiDataGrid-scrollbarFiller--header),
+.dfDataGrid :global(.MuiDataGrid-virtualScroller .MuiDataGrid-filler) {
   border: none !important;
   border-top: none !important;
   border-left: none !important;
@@ -86,43 +138,32 @@
   outline: none !important;
 }
 
-/* Separator Color */
+/* Re-apply header bottom divider across the entire header row when scrolled vertically */
+.dfDataGrid :global(.MuiDataGrid-columnHeaders),
+.dfDataGrid :global(.MuiDataGrid-columnHeader),
+.dfDataGrid :global(.MuiDataGrid-filler),
+.dfDataGrid :global(.MuiDataGrid-scrollbarFiller--header) {
+  border-bottom: 1px solid transparent !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Column Separator */
 .dfDataGrid :global(.MuiDataGrid-columnSeparator) {
   color: var(--cell-border-subtle) !important;
 }
 
-/* Hide separator on the non-resizable row index header */
-.dfDataGrid :global(.MuiDataGrid-columnHeader[data-field="__index__"] .MuiDataGrid-columnSeparator) {
+/* Completely hide MUI's secondary synthetic scrollbars to prevent double scrollbar and disappearance bugs */
+.dfDataGrid :global(.MuiDataGrid-scrollbar) {
   display: none !important;
 }
 
-/* Row Hover State */
-.dfDataGrid :global(.MuiDataGrid-row:hover) {
-  background-color: var(--nb-bg-hover) !important;
-}
-
-/* Footer Container */
-.dfDataGrid :global(.MuiDataGrid-footerContainer) {
-  border-top: 1px solid var(--DataGrid-rowBorderColor) !important;
-  background-color: transparent !important;
-  color: var(--nb-text-muted) !important;
-}
-
-/* Slim Scrollbar matching DynamicDataGrid style */
-.dfDataGrid :global(.MuiDataGrid-scrollbar) {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scroller-color) transparent;
-  background-color: transparent;
+.dfDataGrid :global(.MuiDataGrid-virtualScroller) {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--scroller-color) transparent !important;
 }
 
 /* Row Index Column Styling */
 .rowIndexCell {
-  opacity: 0.7 !important;
   color: var(--nb-text-muted) !important;
-  font-family: var(--cell-font-mono) !important;
-  font-variant-numeric: tabular-nums;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
   user-select: none;
 }

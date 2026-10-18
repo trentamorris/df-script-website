@@ -3,9 +3,9 @@ import { DragIndicator } from "@mui/icons-material";
 import { useCellContext } from "../../../hooks/useCellContext";
 
 export function CellDragHandle() {
-  const { isGridCanvasMode, handleMovePointerDown } = useCellContext();
+  const { isGridCanvasMode, isFullscreen, handleMovePointerDown } = useCellContext();
 
-  if (!isGridCanvasMode) return null;
+  if (!isGridCanvasMode || isFullscreen) return null;
 
   return (
     <span

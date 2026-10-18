@@ -22,6 +22,7 @@ export default function GridCanvas({
   onSetEditingPageId,
   onToggleGridModal,
   onUpdateGridConfig,
+  onMoveCellToCanvas,
   slotProps,
   slots,
 }: GridCanvasProps) {
@@ -44,6 +45,7 @@ export default function GridCanvas({
       onSetEditingPageId,
       onToggleGridModal,
       onUpdateGridConfig,
+      onMoveCellToCanvas,
     }),
     [
       gridConfig,
@@ -59,6 +61,7 @@ export default function GridCanvas({
       onSetEditingPageId,
       onToggleGridModal,
       onUpdateGridConfig,
+      onMoveCellToCanvas,
     ]
   );
 

@@ -73,6 +73,114 @@ export function NumericStepper({ val, min, max, onChange }: NumericStepperProps)
   );
 }
 
+export interface CellLayoutItemsOptions {
+  currentLayout: { x: number; y: number; z?: number; w: number; h: number };
+  gridConfig?: { columns?: number; rows?: number };
+  onUpdateLayout: (cellId: string, layout: Partial<{ x: number; y: number; z: number; w: number; h: number }>) => void;
+  cellId: string;
+}
+
+export function createCellLayoutItems({
+  currentLayout,
+  gridConfig,
+  onUpdateLayout,
+  cellId,
+}: CellLayoutItemsOptions) {
+  return [
+    {
+      id: "position",
+      label: "Grid Position (X, Y, Z)",
+      value: `${currentLayout.x}, ${currentLayout.y}, ${currentLayout.z ?? 1}`,
+      subPanel: (
+        <div className="flex flex-col gap-2.5 p-1 select-none">
+          {[
+            {
+              label: "Column (X)",
+              val: currentLayout.x,
+              min: 0,
+              max: Math.max(0, (gridConfig?.columns ?? 12) - currentLayout.w),
+              onChange: (v: number) => onUpdateLayout(cellId, { x: v }),
+            },
+            {
+              label: "Row (Y)",
+              val: currentLayout.y,
+              min: 0,
+              max: Math.max(0, (gridConfig?.rows ?? 24) - currentLayout.h),
+              onChange: (v: number) => onUpdateLayout(cellId, { y: v }),
+            },
+            {
+              label: "Layer (Z)",
+              val: currentLayout.z ?? 1,
+              min: 0,
+              max: 100,
+              isAccent: true,
+              onChange: (v: number) => onUpdateLayout(cellId, { z: v }),
+            },
+          ].map((field) => (
+            <div
+              key={field.label}
+              className="flex items-center justify-between py-1 px-2 rounded-lg bg-[var(--nb-bg-hover)] border border-[var(--nb-border-default)]"
+            >
+              <span
+                className={`text-[12px] font-medium ${field.isAccent ? "text-amber-400" : "text-[var(--nb-text-secondary)]"
+                  }`}
+              >
+                {field.label}
+              </span>
+              <NumericStepper
+                val={field.val}
+                min={field.min}
+                max={field.max}
+                onChange={field.onChange}
+              />
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    {
+      id: "size",
+      label: "Dimensions (W, H)",
+      value: `${currentLayout.w} × ${currentLayout.h}`,
+      subPanel: (
+        <div className="flex flex-col gap-2.5 p-1 select-none">
+          {[
+            {
+              label: "Width (Cols)",
+              val: currentLayout.w,
+              min: 1,
+              max: Math.max(1, (gridConfig?.columns ?? 12) - currentLayout.x),
+              onChange: (v: number) => onUpdateLayout(cellId, { w: v }),
+            },
+            {
+              label: "Height (Rows)",
+              val: currentLayout.h,
+              min: 1,
+              max: Math.max(1, (gridConfig?.rows ?? 24) - currentLayout.y),
+              onChange: (v: number) => onUpdateLayout(cellId, { h: v }),
+            },
+          ].map((field) => (
+            <div
+              key={field.label}
+              className="flex items-center justify-between py-1 px-2 rounded-lg bg-[var(--nb-bg-hover)] border border-[var(--nb-border-default)]"
+            >
+              <span className="text-[12px] font-medium text-[var(--nb-text-secondary)]">
+                {field.label}
+              </span>
+              <NumericStepper
+                val={field.val}
+                min={field.min}
+                max={field.max}
+                onChange={field.onChange}
+              />
+            </div>
+          ))}
+        </div>
+      ),
+    },
+  ];
+}
+
 export function CellLayoutSettingsPanel() {
   const {
     isGridCanvasMode,
@@ -96,99 +204,12 @@ export function CellLayoutSettingsPanel() {
       placement="bottom-start"
       initialItemId={activePanelTab}
       title="Cell Layout Settings"
-      items={[
-        {
-          id: "position",
-          label: "Grid Position (X, Y, Z)",
-          value: `${currentLayout.x}, ${currentLayout.y}, ${currentLayout.z ?? 1}`,
-          subPanel: (
-            <div className="flex flex-col gap-2.5 p-1 select-none">
-              {[
-                {
-                  label: "Column (X)",
-                  val: currentLayout.x,
-                  min: 0,
-                  max: Math.max(0, (gridConfig?.columns ?? 12) - currentLayout.w),
-                  onChange: (v: number) => onUpdateLayout(cell.id, { x: v }),
-                },
-                {
-                  label: "Row (Y)",
-                  val: currentLayout.y,
-                  min: 0,
-                  max: Math.max(0, (gridConfig?.rows ?? 24) - currentLayout.h),
-                  onChange: (v: number) => onUpdateLayout(cell.id, { y: v }),
-                },
-                {
-                  label: "Layer (Z)",
-                  val: currentLayout.z ?? 1,
-                  min: 0,
-                  max: 100,
-                  isAccent: true,
-                  onChange: (v: number) => onUpdateLayout(cell.id, { z: v }),
-                },
-              ].map((field) => (
-                <div
-                  key={field.label}
-                  className="flex items-center justify-between py-1 px-2 rounded-lg bg-[var(--nb-bg-hover)] border border-[var(--nb-border-default)]"
-                >
-                  <span
-                    className={`text-[12px] font-medium ${field.isAccent ? "text-amber-400" : "text-[var(--nb-text-secondary)]"
-                      }`}
-                  >
-                    {field.label}
-                  </span>
-                  <NumericStepper
-                    val={field.val}
-                    min={field.min}
-                    max={field.max}
-                    onChange={field.onChange}
-                  />
-                </div>
-              ))}
-            </div>
-          ),
-        },
-        {
-          id: "size",
-          label: "Dimensions (W, H)",
-          value: `${currentLayout.w} × ${currentLayout.h}`,
-          subPanel: (
-            <div className="flex flex-col gap-2.5 p-1 select-none">
-              {[
-                {
-                  label: "Width (Cols)",
-                  val: currentLayout.w,
-                  min: 1,
-                  max: Math.max(1, (gridConfig?.columns ?? 12) - currentLayout.x),
-                  onChange: (v: number) => onUpdateLayout(cell.id, { w: v }),
-                },
-                {
-                  label: "Height (Rows)",
-                  val: currentLayout.h,
-                  min: 1,
-                  max: Math.max(1, (gridConfig?.rows ?? 24) - currentLayout.y),
-                  onChange: (v: number) => onUpdateLayout(cell.id, { h: v }),
-                },
-              ].map((field) => (
-                <div
-                  key={field.label}
-                  className="flex items-center justify-between py-1 px-2 rounded-lg bg-[var(--nb-bg-hover)] border border-[var(--nb-border-default)]"
-                >
-                  <span className="text-[12px] font-medium text-[var(--nb-text-secondary)]">
-                    {field.label}
-                  </span>
-                  <NumericStepper
-                    val={field.val}
-                    min={field.min}
-                    max={field.max}
-                    onChange={field.onChange}
-                  />
-                </div>
-              ))}
-            </div>
-          ),
-        },
-      ]}
+      items={createCellLayoutItems({
+        currentLayout,
+        gridConfig,
+        onUpdateLayout,
+        cellId: cell.id,
+      })}
     />
   );
 }

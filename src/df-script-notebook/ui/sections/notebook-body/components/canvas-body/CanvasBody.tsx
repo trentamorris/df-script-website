@@ -19,6 +19,7 @@ export default function CanvasBody({
   onSetEditingPageId,
   onToggleGridModal,
   onUpdateGridConfig,
+  onMoveCellToCanvas,
   ...cellHandlers
 }: CanvasBodyProps) {
   const [isInteracting, setIsInteracting] = React.useState(false);
@@ -43,6 +44,7 @@ export default function CanvasBody({
       onSetEditingPageId={onSetEditingPageId}
       onToggleGridModal={onToggleGridModal}
       onUpdateGridConfig={onUpdateGridConfig}
+      onMoveCellToCanvas={onMoveCellToCanvas}
       slots={{
         toolbar: <GridCanvasToolbar />,
       }}

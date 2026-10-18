@@ -1,9 +1,14 @@
 import React from "react";
 import Editor from "@monaco-editor/react";
-import { Button } from "@mui/material";
+import {
+  MapOutlined,
+  ContentCopy as ContentCopyIcon,
+  Check as CheckIcon,
+} from "@mui/icons-material";
 import { CellType } from "../../../../../../../types";
 import { CELL_MUI_STYLES, defineMonacoTheme } from "../../../../utils/generalUtils";
 import { registerCellKeyboardShortcuts } from "../../../../../../../keyboardShortcutsUtils";
+import { ResponsiveCluster, ResponsiveClusterItem } from "../../../../../responsive-cluster";
 import { CodeCellEditorProps } from "./types";
 
 export function CodeCellEditor({
@@ -26,6 +31,7 @@ export function CodeCellEditor({
   onAdvanceCell,
   onSplitCell,
 }: CodeCellEditorProps) {
+  const [showMinimap, setShowMinimap] = React.useState(false);
   const [cursorPosition, setCursorPosition] = React.useState<{ line: number; col: number }>({
     line: 1,
     col: 1,
@@ -55,6 +61,96 @@ export function CodeCellEditor({
   const hasRun = cell.execIndex !== null || cell.timeTaken !== null;
   const lineCount = cell.code.split("\n").length;
 
+  const footerItems: ResponsiveClusterItem[] = React.useMemo(() => {
+    const list: ResponsiveClusterItem[] = [
+      {
+        id: "line-telemetry",
+        align: "start",
+        priority: 10,
+        element: (
+          <div className="flex items-center gap-2 text-[9px] font-mono text-[var(--nb-text-subtle)] transition-colors group-has-[:focus-within]/editor:text-[var(--nb-text-muted)] whitespace-nowrap">
+            <span className="hidden group-has-[:focus-within]/editor:inline text-[var(--nb-text-secondary)] font-medium whitespace-nowrap">
+              Ln {cursorPosition.line}, Col {cursorPosition.col}
+            </span>
+            <span className="hidden group-has-[:focus-within]/editor:inline text-[var(--cell-text-tag)]">•</span>
+            <span className="whitespace-nowrap">
+              {lineCount} {lineCount === 1 ? "line" : "lines"}
+            </span>
+          </div>
+        ),
+      },
+    ];
+
+    if (cell.lastRunTime && cell.timeTaken !== "...") {
+      list.push({
+        id: "last-run-time",
+        align: "end",
+        priority: 1,
+        element: (
+          <span
+            className="text-[9px] font-mono text-[var(--nb-text-subtle)] transition-colors whitespace-nowrap"
+            title={`Last executed at ${cell.lastRunTime}`}
+          >
+            {cell.lastRunTime}
+          </span>
+        ),
+      });
+    }
+
+    if (cell.timeTaken && cell.timeTaken !== "...") {
+      list.push({
+        id: "time-taken",
+        align: "end",
+        priority: 2,
+        element: (
+          <span
+            className={`text-[9px] font-mono transition-colors whitespace-nowrap ${cell.error ? "text-[var(--cell-accent-rose)] font-medium" : "text-[var(--cell-accent-green)]"
+              }`}
+          >
+            {cell.timeTaken}
+          </span>
+        ),
+      });
+    }
+
+    return list;
+  }, [cursorPosition.line, cursorPosition.col, lineCount, cell.lastRunTime, cell.timeTaken, cell.error]);
+
+  const editorOptions = React.useMemo<any>(
+    () => ({
+      minimap: {
+        enabled: showMinimap,
+        side: "right",
+        showSlider: "mouseover",
+        renderCharacters: true,
+        maxColumn: 120,
+      },
+      folding: true,
+      lineNumbers: "on",
+      guides: { indentation: true },
+      scrollBeyondLastLine: false,
+      fontSize: 11.5,
+      fontFamily: "var(--cell-font-mono)",
+      automaticLayout: true,
+      scrollbar: {
+        vertical: "auto",
+        horizontal: "auto",
+        verticalScrollbarSize: 6,
+        horizontalScrollbarSize: 6,
+        verticalSliderSize: 6,
+        horizontalSliderSize: 6,
+        useShadows: false,
+        handleMouseWheel: true,
+        alwaysConsumeMouseWheel: false,
+      },
+      overviewRulerLanes: 0,
+      renderLineHighlight: "line",
+      overviewRulerBorder: false,
+      hideCursorInOverviewRuler: true,
+    }),
+    [showMinimap]
+  );
+
   return (
     <div
       ref={editorBoxRef}
@@ -65,7 +161,7 @@ export function CodeCellEditor({
             : customEditorHeight !== null
               ? `${customEditorHeight}px`
               : isGridCanvasMode && currentLayout
-                ? cell.output || cell.logs?.length || cell.error
+                ? cell.output || cell.logs?.length || cell.error || (cell.variables && Object.keys(cell.variables).length > 0)
                   ? "45%"
                   : "100%"
                 : `${Math.max(75, Math.min(500, cell.code.split("\n").length * 19 + 24))}px`,
@@ -75,11 +171,69 @@ export function CodeCellEditor({
           : null),
         maxHeight: isGridCanvasMode ? "100%" : undefined,
       }}
-      className={`relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border bg-[var(--nb-bg-code)] border-white/[0.04] focus-within:bg-[#0c0c0e] focus-within:border-white/[0.18] focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.5)] ${isEditorResizing ? "transition-none" : "transition-all duration-200"
+      className={`relative rounded-xl group/editor overflow-hidden shrink-0 flex flex-col border bg-[var(--nb-bg-code)] border-[var(--cell-border-subtle)] focus-within:border-transparent ${isEditorResizing ? "transition-none" : "transition-all duration-200"
         }`}
     >
+      {/* Editor Top Bar - seamless background with VS Code style downward elevation shadow */}
+      <div className="h-7 shrink-0 flex items-center justify-between px-3 bg-[var(--nb-bg-code)] select-none overflow-hidden relative z-10 shadow-[0_4px_12px_-2px_rgba(var(--rgb-black),0.65)]">
+        {/* Left: Prominent Language Badge */}
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-[9.5px] font-sans font-medium tracking-widest uppercase transition-all duration-200 text-[var(--nb-text-muted)] group-has-[:focus-within]/editor:text-[var(--nb-text-heading)]">
+            <span
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${cell.timeTaken === "..."
+                ? "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse"
+                : cell.error
+                  ? "bg-[var(--cell-accent-rose)] shadow-[var(--cell-glow-rose)]"
+                  : hasRun
+                    ? "bg-[var(--cell-accent-green)] shadow-[var(--cell-glow-green)]"
+                    : "bg-[var(--panel-nav-accent)] shadow-[0_0_6px_rgba(var(--rgb-blue),0.9)]"
+                }`}
+            />
+            JavaScript
+          </span>
+        </div>
+
+        {/* Right: Controls (Minimap toggle + Copy button) */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMinimap((prev) => !prev);
+            }}
+            title={showMinimap ? "Hide Minimap" : "Show Minimap"}
+            className={`p-1 rounded flex items-center justify-center transition-all duration-150 hover:bg-[var(--nb-bg-hover)] ${showMinimap
+                ? "opacity-100 text-[var(--nb-text-primary)] bg-[rgba(var(--rgb-white),0.08)]"
+                : "opacity-50 hover:opacity-100 text-[var(--nb-text-muted)] hover:text-[var(--nb-text-primary)]"
+              }`}
+          >
+            <MapOutlined sx={{ fontSize: 13 }} />
+          </button>
+
+          <button
+            type="button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(cell.code);
+              onCopyCellCode(cell.id);
+            }}
+            title={copiedCellCodeId === cell.id ? "Copied!" : "Copy code"}
+            className={`p-1 rounded flex items-center justify-center transition-all duration-150 hover:bg-[var(--nb-bg-hover)] ${copiedCellCodeId === cell.id
+              ? "opacity-100 text-[var(--cell-accent-green)]"
+              : "opacity-50 hover:opacity-100 text-[var(--nb-text-muted)] hover:text-[var(--nb-text-primary)]"
+              }`}
+          >
+            {copiedCellCodeId === cell.id ? (
+              <CheckIcon sx={{ fontSize: 13 }} />
+            ) : (
+              <ContentCopyIcon sx={{ fontSize: 13 }} />
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Monaco Code Scroll Area */}
-      <div className="w-full grow min-h-0 min-w-0 pt-2.5">
+      <div className="w-full grow min-h-0 min-w-0 pt-1">
         <Editor
           height="100%"
           language="javascript"
@@ -114,112 +268,18 @@ export function CodeCellEditor({
           }}
           value={cell.code}
           onChange={(newVal) => onUpdateCode(cell.id, newVal || "")}
-          options={{
-            minimap: { enabled: false },
-            folding: true,
-            lineNumbers: "on",
-            guides: { indentation: true },
-            scrollBeyondLastLine: false,
-            fontSize: 11.5,
-            fontFamily: "var(--cell-font-mono)",
-            automaticLayout: true,
-            scrollbar: {
-              vertical: "auto",
-              horizontal: "auto",
-              verticalScrollbarSize: 6,
-              horizontalScrollbarSize: 6,
-              verticalSliderSize: 6,
-              horizontalSliderSize: 6,
-              useShadows: false,
-              handleMouseWheel: true,
-              alwaysConsumeMouseWheel: false,
-            },
-            overviewRulerLanes: 0,
-            renderLineHighlight: "line",
-            overviewRulerBorder: false,
-            hideCursorInOverviewRuler: true,
-          }}
+          options={editorOptions}
         />
       </div>
 
-      <Button
-        variant="contained"
-        disableElevation
-        size="small"
-        onClick={(e: React.MouseEvent) => {
-          e.stopPropagation();
-          navigator.clipboard.writeText(cell.code);
-          onCopyCellCode(cell.id);
-        }}
-        sx={{
-          ...CELL_MUI_STYLES.miniPillButton,
-          position: "absolute",
-          top: 8,
-          right: 8,
-          zIndex: 20,
-          opacity: 0,
-          transition: "all 0.15s ease",
-          ":hover > &": { opacity: 1 },
-          "&:focus": { opacity: 1 },
-        }}
-        className="opacity-0 group-hover:opacity-100 focus:opacity-100"
-        title="Copy Cell Content"
-      >
-        {copiedCellCodeId === cell.id ? "Copied" : "Copy"}
-      </Button>
-
-      {/* Dedicated Padded Editor Footer Bar */}
-      <div className="h-6 shrink-0 flex items-center justify-between px-3 border-t border-white/[0.03] select-none pointer-events-none transition-colors duration-200 group-has-[:focus-within]/editor:border-white/[0.06]">
-        {/* Left: Dynamic Cursor & Line Telemetry */}
-        <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-500/70 transition-colors group-has-[:focus-within]/editor:text-zinc-400">
-          <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-300 font-medium">
-            Ln {cursorPosition.line}, Col {cursorPosition.col}
-          </span>
-          <span className="hidden group-has-[:focus-within]/editor:inline text-zinc-700">•</span>
-          <span>
-            {lineCount} {lineCount === 1 ? "line" : "lines"}
-          </span>
-        </div>
-
-        {/* Right: Execution timestamp + duration + Status LED + Language Badge */}
-        <div className="flex items-center gap-2">
-          {cell.lastRunTime && cell.timeTaken !== "..." && (
-            <>
-              <span
-                className="text-[9px] font-mono text-zinc-500/80 transition-colors"
-                title={`Last executed at ${cell.lastRunTime}`}
-              >
-                {cell.lastRunTime}
-              </span>
-              {cell.timeTaken && (
-                <span className="text-[9px] text-zinc-700 select-none"> • </span>
-              )}
-            </>
-          )}
-
-          {cell.timeTaken && cell.timeTaken !== "..." && (
-            <span
-              className={`text-[9px] font-mono transition-colors ${cell.error ? "text-rose-400/90 font-medium" : "text-emerald-400/80"
-                }`}
-            >
-              {cell.timeTaken}
-            </span>
-          )}
-
-          <span className="inline-flex items-center gap-1.5 text-[9px] font-sans font-medium tracking-widest uppercase transition-all duration-200 text-[var(--cell-text-tag)] group-has-[:focus-within]/editor:text-white/80">
-            <span
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 opacity-40 group-has-[:focus-within]/editor:opacity-100 group-has-[:focus-within]/editor:animate-pulse ${cell.timeTaken === "..."
-                  ? "bg-[var(--cell-accent-blue)] shadow-[var(--cell-glow-blue)] animate-pulse opacity-100"
-                  : cell.error
-                    ? "bg-[var(--cell-accent-rose)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-rose)]"
-                    : hasRun
-                      ? "bg-[var(--cell-accent-green)] group-has-[:focus-within]/editor:shadow-[var(--cell-glow-green)]"
-                      : "bg-[var(--panel-nav-accent)] group-has-[:focus-within]/editor:shadow-[0_0_6px_rgba(var(--rgb-blue),0.9)]"
-                }`}
-            />
-            JavaScript
-          </span>
-        </div>
+      {/* Dedicated Padded Editor Footer Bar - completely seamless with cell code background, zero dividing borders */}
+      <div className="h-6 shrink-0 flex items-center px-3 bg-transparent select-none pointer-events-none overflow-hidden whitespace-nowrap">
+        <ResponsiveCluster
+          items={footerItems}
+          showOverflowMenu={false}
+          gap={8}
+          className="w-full text-[9px] font-mono text-[var(--nb-text-subtle)]"
+        />
       </div>
     </div>
   );

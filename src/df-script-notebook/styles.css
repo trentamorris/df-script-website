@@ -137,10 +137,12 @@
 }
 
 /* ================================================================= */
-/*  4. Monaco Editor Scrollbar & Track Refinements                   */
 /* ================================================================= */
-.monaco-editor .monaco-scrollable-element > .scrollbar {
-  background: transparent !important;
+/*  4. Monaco Editor Scrollbar & Minimap Separations                 */
+/* ================================================================= */
+.monaco-editor .monaco-scrollable-element > .scrollbar.vertical,
+.monaco-editor .monaco-scrollable-element > .scrollbar.horizontal {
+  background: var(--nb-bg-code) !important;
 }
 
 .monaco-editor .monaco-scrollable-element > .scrollbar > .slider {
@@ -157,6 +159,27 @@
   background: rgba(var(--rgb-white), 0.4) !important;
 }
 
-.monaco-editor .shadow {
-  display: none !important;
+
+/* ================================================================= */
+/*  5. Native Fullscreen Cell Presentation (Edge-to-Edge Full Size)  */
+/* ================================================================= */
+[data-cell-id]:fullscreen {
+  background-color: var(--nb-bg-app) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+[data-cell-id]:fullscreen > div {
+  height: 100% !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 12px 16px 28px 16px !important;
 }

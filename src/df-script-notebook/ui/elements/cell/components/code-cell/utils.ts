@@ -7,6 +7,7 @@ export const hasCellOutput = (cell: CellState): boolean =>
   (cell.outputNode !== null && cell.outputNode !== undefined) ||
   (!!cell.logs && cell.logs.length > 0) ||
   (cell.error !== null && cell.error !== undefined) ||
+  (!!cell.variables && Object.keys(cell.variables).length > 0) ||
   cell.timeTaken === "...";
 
 export interface EditorPaneLayoutOptions {

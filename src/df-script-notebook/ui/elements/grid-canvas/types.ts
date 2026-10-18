@@ -1,7 +1,7 @@
 import React from "react";
-import { NotebookPage, PageGridConfig } from "../../../types";
+import { PageGridConfig, CanvasPageManagementProps } from "../../../types";
 
-export interface GridCanvasProps {
+export interface GridCanvasProps extends Partial<CanvasPageManagementProps> {
   gridConfig: PageGridConfig;
   isInteracting?: boolean;
   onInteractionChange?: (isInteracting: boolean) => void;
@@ -10,18 +10,6 @@ export interface GridCanvasProps {
   children?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  // Canvas State & Handlers
-  pages?: NotebookPage[];
-  activePageId?: string;
-  editingPageId?: string | null;
-  showGridConfigModal?: boolean;
-  onSelectPage?: (id: string) => void;
-  onAddPage?: () => void;
-  onDeletePage?: (id: string) => void;
-  onRenamePage?: (id: string, newTitle: string) => void;
-  onSetEditingPageId?: (id: string | null) => void;
-  onToggleGridModal?: () => void;
-  onUpdateGridConfig?: (config: Partial<PageGridConfig>) => void;
   slotProps?: {
     toolbar?: React.ComponentProps<"div">;
   };
@@ -30,18 +18,7 @@ export interface GridCanvasProps {
   };
 }
 
-export interface GridCanvasContextValue {
+export interface GridCanvasContextValue extends Partial<CanvasPageManagementProps> {
   gridConfig: PageGridConfig;
   isInteracting?: boolean;
-  pages?: NotebookPage[];
-  activePageId?: string;
-  editingPageId?: string | null;
-  showGridConfigModal?: boolean;
-  onSelectPage?: (id: string) => void;
-  onAddPage?: () => void;
-  onDeletePage?: (id: string) => void;
-  onRenamePage?: (id: string, newTitle: string) => void;
-  onSetEditingPageId?: (id: string | null) => void;
-  onToggleGridModal?: () => void;
-  onUpdateGridConfig?: (config: Partial<PageGridConfig>) => void;
 }

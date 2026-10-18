@@ -129,6 +129,7 @@ export default function DFScriptNotebook() {
               lastRunTime: result.runTimestamp,
               execIndex: runNum,
               logs: result.logs,
+              variables: result.newScopeVariables,
             }
           : c
       )
@@ -609,6 +610,110 @@ export default function DFScriptNotebook() {
     if (activePageId === pageId) setActivePageId(remaining[0].id);
   };
 
+  const moveCellToCanvas = ({
+    cellId,
+    targetPageId,
+    isCopy = false,
+    createNewCanvas = false,
+  }: {
+    cellId: string;
+    targetPageId?: string;
+    isCopy?: boolean;
+    createNewCanvas?: boolean;
+  }) => {
+    const sourceCell = cells.find((c) => c.id === cellId);
+    if (!sourceCell) return;
+
+    pushHistory();
+
+    let destPageId = targetPageId;
+    let nextPages = [...pages];
+
+    if (createNewCanvas || !destPageId) {
+      destPageId = `page-${Date.now()}`;
+      const newPageTitle = `Canvas ${nextPages.length + 1}`;
+      nextPages.push({
+        id: destPageId,
+        title: newPageTitle,
+        cellIds: [],
+        gridConfig: activePage?.gridConfig ?? DEFAULT_GRID_CONFIG,
+      });
+    }
+
+    const finalDestPageId = destPageId;
+    const destPage = nextPages.find((p) => p.id === finalDestPageId);
+    if (!destPage) return;
+
+    // Smart placement: check if source cell's (x, y) collides with existing cells on destination canvas
+    const destExistingCells = destPage.cellIds
+      .map((id) => cells.find((c) => c.id === id))
+      .filter((c): c is CellState => !!c && c.id !== cellId);
+
+    const sourceLayout = sourceCell.layout ?? { x: 0, y: 0, w: 6, h: 8, z: 1 };
+    const hasCollision = destExistingCells.some((c) => {
+      const l = c.layout ?? { x: 0, y: 0, w: 6, h: 8, z: 1 };
+      return (
+        sourceLayout.x < l.x + l.w &&
+        sourceLayout.x + sourceLayout.w > l.x &&
+        sourceLayout.y < l.y + l.h &&
+        sourceLayout.y + sourceLayout.h > l.y
+      );
+    });
+
+    let targetLayout: CellLayout = { ...sourceLayout };
+    if (hasCollision && destExistingCells.length > 0) {
+      const maxY = Math.max(
+        ...destExistingCells.map((c) => (c.layout ? c.layout.y + c.layout.h : 0))
+      );
+      targetLayout = {
+        ...sourceLayout,
+        x: 0,
+        y: maxY,
+      };
+    }
+
+    if (isCopy) {
+      // Create cloned cell
+      const newCellId = `cell-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      const clonedCell: CellState = {
+        ...sourceCell,
+        id: newCellId,
+        layout: targetLayout,
+      };
+
+      setCells((prev) => [...prev, clonedCell]);
+      setPages(
+        nextPages.map((p) => {
+          if (p.id === finalDestPageId) {
+            return { ...p, cellIds: [...p.cellIds, newCellId] };
+          }
+          return p;
+        })
+      );
+      setActivePageId(finalDestPageId);
+      setActiveCellId(newCellId);
+    } else {
+      // Move cell: update its layout, remove from old page, add to new page
+      setCells((prev) =>
+        prev.map((c) => (c.id === cellId ? { ...c, layout: targetLayout } : c))
+      );
+      setPages(
+        nextPages.map((p) => {
+          if (p.id === activePageId && p.id !== finalDestPageId) {
+            return { ...p, cellIds: p.cellIds.filter((id) => id !== cellId) };
+          }
+          if (p.id === finalDestPageId) {
+            const currentIds = p.cellIds.filter((id) => id !== cellId);
+            return { ...p, cellIds: [...currentIds, cellId] };
+          }
+          return p;
+        })
+      );
+      setActivePageId(finalDestPageId);
+      setActiveCellId(cellId);
+    }
+  };
+
   const renamePage = (pageId: string, newTitle: string) => {
     setPages((prev) => prev.map((p) => (p.id === pageId ? { ...p, title: newTitle || p.title } : p)));
     setEditingPageId(null);
@@ -917,6 +1022,7 @@ export default function DFScriptNotebook() {
         onSetEditingPageId={setEditingPageId}
         onToggleGridModal={() => setShowGridConfigModal(!showGridConfigModal)}
         onUpdateGridConfig={updatePageGridConfig}
+        onMoveCellToCanvas={moveCellToCanvas}
         onRun={runCell}
         onDelete={deleteCell}
         onMoveUp={moveCellUp}

@@ -52,6 +52,7 @@ export default function NotebookBody({
         onSetEditingPageId={onSetEditingPageId}
         onToggleGridModal={onToggleGridModal}
         onUpdateGridConfig={onUpdateGridConfig}
+        onMoveCellToCanvas={cellHandlers.onMoveCellToCanvas}
         {...cellHandlers}
       />
     );

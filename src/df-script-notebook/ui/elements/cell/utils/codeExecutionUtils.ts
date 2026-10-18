@@ -21,23 +21,52 @@ export interface CellExecutionResult {
  */
 export async function executeJs(
   code: string,
-  scope: Record<string, any> = {}
+  scope: Record<string, any> = {},
+  capturedVariables?: Record<string, any>
 ): Promise<any> {
   const trimmed = code.trim();
   if (!trimmed) return undefined;
 
+  const captured = capturedVariables || {};
+  const proxy = new Proxy(scope, {
+    has(t, p) {
+      if (p === Symbol.unscopables) return false;
+      return true;
+    },
+    get(t, p) {
+      if (typeof p === "string" && p in captured) return captured[p];
+      if (typeof p === "string" && p in t) return t[p];
+      if (typeof p === "string" && p in globalThis) return (globalThis as any)[p];
+      return undefined;
+    },
+    set(t, p, v) {
+      if (typeof p === "string") {
+        if (p !== "$df") {
+          captured[p] = v;
+        }
+        t[p] = v;
+      }
+      return true;
+    },
+  });
+
+  const prepared = trimmed.replace(
+    /(?:^|\n)\s*(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=/g,
+    (match) => match.replace(/(?:const|let|var)\s+/, "")
+  );
+
   const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 
-  if (/\breturn\b/.test(trimmed)) {
-    const fn = new AsyncFunction("scope", `with (scope) {\n${trimmed}\n}`);
-    return await fn(scope);
+  if (/\breturn\b/.test(prepared)) {
+    const fn = new AsyncFunction("scope", `with (scope) {\n${prepared}\n}`);
+    return await fn(proxy);
   }
 
   const evalFn = new AsyncFunction(
     "scope",
-    `with (scope) {\nreturn eval(${JSON.stringify(trimmed)});\n}`
+    `with (scope) {\nreturn eval(${JSON.stringify(prepared)});\n}`
   );
-  return await evalFn(scope);
+  return await evalFn(proxy);
 }
 
 /**
@@ -82,17 +111,16 @@ export async function runCellCode(
   console.error = collectLog;
   console.info = collectLog;
 
+  const capturedVars: Record<string, any> = {};
+
   try {
-    const returnValue = await executeJs(code, scope);
+    const returnValue = await executeJs(code, scope, capturedVars);
     const elapsed = performance.now() - t0;
     const runTimestamp = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
     });
-
-    // Extract newly assigned scope variables (excluding $df)
-    const { $df: _unused, ...newScopeVariables } = scope;
 
     return {
       output: returnValue,
@@ -101,7 +129,7 @@ export async function runCellCode(
       elapsedMs: elapsed,
       timeTaken: `${elapsed.toFixed(2)}ms`,
       runTimestamp,
-      newScopeVariables,
+      newScopeVariables: capturedVars,
     };
   } catch (err: any) {
     const elapsed = performance.now() - t0;
