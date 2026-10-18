@@ -1,6 +1,13 @@
 import React from 'react';
 import { DataGrid, GridColDef, GridRowModel, useGridApiRef } from '@mui/x-data-grid';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { $df } from 'df-script';
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
 import type { DFDataGridProps, DFDataGridPinnedColumns } from './types';
 import styles from './DFDataGrid.module.css';
 import {
@@ -129,20 +136,22 @@ export const DFDataGrid: React.FC<DFDataGridProps> = React.memo(({
       ref={rootRef}
       className={`df-data-grid ${styles.dfDataGrid} w-full h-full min-h-0 min-w-0 flex-1 flex flex-col ${className}`}
     >
-      <DataGrid
-        apiRef={apiRef}
-        rows={rows}
-        columns={columns}
-        getRowId={(row) => row[ROW_INDEX_FIELD] ?? row.id}
-        rowHeight={rowHeight}
-        columnHeaderHeight={columnHeaderHeight}
-        density="compact"
-        disableRowSelectionOnClick
-        hideFooter={hideFooter}
-        slots={gridSlots}
-        slotProps={gridSlotProps}
-        {...props}
-      />
+      <ThemeProvider theme={darkTheme}>
+        <DataGrid
+          apiRef={apiRef}
+          rows={rows}
+          columns={columns}
+          getRowId={(row) => row[ROW_INDEX_FIELD] ?? row.id}
+          rowHeight={rowHeight}
+          columnHeaderHeight={columnHeaderHeight}
+          density="compact"
+          disableRowSelectionOnClick
+          hideFooter={hideFooter}
+          slots={gridSlots}
+          slotProps={gridSlotProps}
+          {...props}
+        />
+      </ThemeProvider>
     </div>
   );
 });
