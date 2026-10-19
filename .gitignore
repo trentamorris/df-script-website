@@ -2,6 +2,7 @@ node_modules
 dist
 .vercel
 .env
+.env*
 .DS_Store
 .agents/
 vite.config.ts.timestamp-*
