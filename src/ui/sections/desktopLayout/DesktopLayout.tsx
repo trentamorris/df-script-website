@@ -38,7 +38,7 @@ export function DesktopLayout({
       />
 
       <div className="flex-grow min-h-0 w-full flex overflow-hidden relative z-10">
-        <aside className={`border-border-dark bg-bg-darker/85 backdrop-blur-sm p-0 flex flex-col h-full overflow-hidden shrink-0 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-0 border-r-0 opacity-0" : "w-80 border-r opacity-100"}`}>
+        <aside className={`border-border-dark bg-bg-darker/85 backdrop-blur-sm p-0 flex flex-col h-full overflow-hidden shrink-0 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-0 opacity-0" : "w-80 opacity-100"}`}>
           <Sidebar
             activeVersion={activeVersion}
             setActiveVersion={setVersion}

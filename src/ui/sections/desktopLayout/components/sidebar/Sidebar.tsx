@@ -120,7 +120,7 @@ export function Sidebar({
   const content = (
     <div className="flex-grow flex flex-col min-h-0 select-none bg-[#0c0c0c] h-full overflow-hidden">
       {/* Explorer Header with Interactive Version Selector (Sticky at the top) */}
-      <div className="flex flex-col shrink-0 border-b border-border-dark/30 bg-[#0c0c0c] z-20">
+      <div className="flex flex-col shrink-0 bg-[#0c0c0c] z-20">
         <div className="flex items-center justify-between px-6 md:px-8 pt-2.5 pb-3">
           <span className="text-[9px] font-outfit text-text-dim uppercase tracking-widest select-none font-semibold">API EXPLORER</span>
           <div ref={sidebarDropdownRef} className="relative flex items-center select-none shrink-0">
@@ -190,7 +190,7 @@ export function Sidebar({
         <div className="absolute top-0 left-0 right-[16px] h-10 bg-gradient-to-b from-bg-darker via-[#0c0c0c]/80 to-transparent pointer-events-none z-10" />
 
         {/* Scrollable Explorer List */}
-        <div className="flex-grow overflow-y-auto select-none pt-2 pb-12 min-h-0 text-[11px] font-mono flex flex-col gap-4">
+        <div className="flex-grow overflow-y-auto select-none pt-2 pb-12 min-h-0 text-[11px] flex flex-col gap-4">
           <div className="flex flex-col gap-0 px-6 md:px-8">
             {categoriesList.map((cat) => {
               const ops = getFilteredOps(cat);
@@ -230,7 +230,7 @@ export function Sidebar({
                                 window.dispatchEvent(new Event("popstate"));
                                 setIsMenuOpen?.(false);
                               }}
-                              className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer font-mono text-[11px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
+                              className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer text-[12px] py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
                             >
                               <span>{renderHighlightedName(op.name)}</span>
                             </button>
