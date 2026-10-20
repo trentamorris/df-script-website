@@ -5,7 +5,7 @@ import { $df } from "df-script";
 
 import { getQualifiedPath } from "../../../../../utils/routing";
 import type { SidebarProps } from "./types";
-import { SidebarSearchInput } from "./components/sidebar-search-input";
+import { SearchInput } from "@elements";
 
 export function Sidebar({
   activeVersion,
@@ -160,7 +160,7 @@ export function Sidebar({
 
         {/* Search/Filter Bar */}
         <div className="px-6 md:px-8 pb-3 pt-1">
-          <SidebarSearchInput
+          <SearchInput
             value={explorerSearchQuery}
             onChange={setExplorerSearchQuery}
             placeholder="Search..."
