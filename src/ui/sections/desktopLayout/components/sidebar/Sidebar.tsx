@@ -5,6 +5,7 @@ import { $df } from "df-script";
 
 import { getQualifiedPath } from "../../../../../utils/routing";
 import type { SidebarProps } from "./types";
+import { SidebarSearchInput } from "./components/sidebar-search-input";
 
 export function Sidebar({
   activeVersion,
@@ -158,29 +159,12 @@ export function Sidebar({
         </div>
 
         {/* Search/Filter Bar */}
-        <div className="px-6 md:px-8 pb-2 pt-1 relative">
-          <div className="relative flex items-center">
-            <span className="absolute left-4 text-white pointer-events-none z-10">
-              <svg className="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.0}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </span>
-            <input
-              type="text"
-              value={explorerSearchQuery}
-              onChange={(e) => setExplorerSearchQuery(e.target.value)}
-              placeholder="Search..."
-              className="w-full bg-[#161616] border border-[#2c2c2c]/40 rounded-full px-4 py-2.5 pl-12 pr-10 text-[15px] font-sans font-semibold text-white placeholder-text-muted focus:outline-none transition-all"
-            />
-            {explorerSearchQuery && (
-              <button
-                onClick={() => setExplorerSearchQuery("")}
-                className="absolute right-4 text-white text-[13px] font-sans hover:opacity-80 cursor-pointer select-none z-10"
-              >
-                ✕
-              </button>
-            )}
-          </div>
+        <div className="px-6 md:px-8 pb-3 pt-1">
+          <SidebarSearchInput
+            value={explorerSearchQuery}
+            onChange={setExplorerSearchQuery}
+            placeholder="Search..."
+          />
         </div>
       </div>
 
