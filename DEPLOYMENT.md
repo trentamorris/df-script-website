@@ -1,24 +1,24 @@
 # Website Deployment Guide (Vercel CLI)
 
-This website is configured to deploy to **Vercel**. Because the website references the parent library package (`../../src`), the Vercel deployment must be initiated from the repository root directory.
+This website is built with Vite and React, configured to deploy seamlessly to **Vercel**.
 
 ---
 
 ### Step 1: Log in to Vercel (First time only)
-In your terminal, go to the repository root directory and log in:
+In your terminal, log in to Vercel:
 ```bash
-npx --prefix website vercel login
+npx vercel login
 ```
-*(Select **Email** to receive a quick verification link).*
+*(Select **Email** or **GitHub** to authenticate).*
 
 ---
 
 ### Step 2: Deploy to Production
 To compile and publish the website live:
 ```bash
-npx --prefix website vercel --prod --yes
+npm run deploy
 ```
-*(The `--yes` flag will skip all interactive prompts and automatically deploy using the pre-configured settings in `vercel.json`).*
+*(Or use `npx vercel --prod --yes`)*
 
 ---
 
@@ -27,10 +27,9 @@ To bind custom domains to your Vercel project:
 
 1. Open your project on the Vercel Dashboard.
 2. Go to **Settings > Domains**.
-3. Add your custom domains.
-4. Update the DNS records at your domain registrar so they point to Vercel's edge network:
-   - **A Record**: Name: `@`, Value: `76.76.21.21` (for each domain)
-   - **CNAME Record**: Name: `www`, Value: `cname.vercel-dns.com` (for each domain)
+3. Add your custom domain (e.g. `df-script.js.org`).
+4. Update the DNS records at your domain registrar or provider:
+   - For subdomains (like `df-script.js.org`): CNAME to `cname.vercel-dns.com` (or `cname.vercel-dns-01.com`).
 
 ---
 
