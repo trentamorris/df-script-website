@@ -247,11 +247,34 @@ export function GalaxyLogo({
       }
     };
 
-    initScene();
+    // Ensure fonts are loaded and container is ready before sampling pixel data
+    let isDisposed = false;
+    let retryTimer: number | null = null;
+
+    const runInit = () => {
+      if (isDisposed) return;
+      initScene();
+
+      // If initial sampling yielded 0 stars (e.g., container not yet laid out or font pending), retry
+      if (stars.length === 0 && !isDisposed) {
+        retryTimer = window.setTimeout(runInit, 80);
+      }
+    };
+
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.ready.then(() => {
+        if (!isDisposed) runInit();
+      });
+    } else {
+      runInit();
+    }
 
     // ResizeObserver tracks container movement from sidebar expand/collapse in real time
     const resizeObserver = new ResizeObserver(() => {
       setupCanvasResolution();
+      if (stars.length === 0 && !isDisposed) {
+        runInit();
+      }
     });
     resizeObserver.observe(container);
     window.addEventListener("resize", setupCanvasResolution);
@@ -718,6 +741,9 @@ export function GalaxyLogo({
     animationFrameId = requestAnimationFrame(render);
 
     return () => {
+      isDisposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      if (clickTimeoutId) clearTimeout(clickTimeoutId);
       resizeObserver.disconnect();
       window.removeEventListener("resize", setupCanvasResolution);
       cancelAnimationFrame(animationFrameId);

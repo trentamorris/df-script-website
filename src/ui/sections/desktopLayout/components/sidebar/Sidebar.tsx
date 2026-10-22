@@ -87,7 +87,7 @@ export function Sidebar({
 
     if (q) {
       filtered = filtered.filter(
-        $df.col("name").str.contains(new RegExp(q, "i"))
+        $df.col("name").str.toLowerCase().str.contains(q)
       );
     }
 
@@ -159,7 +159,7 @@ export function Sidebar({
         </div>
 
         {/* Search/Filter Bar */}
-        <div className="px-6 md:px-8 pb-3 pt-1">
+        <div className="px-6 md:px-8 pb-0 pt-1">
           <SearchInput
             value={explorerSearchQuery}
             onChange={setExplorerSearchQuery}

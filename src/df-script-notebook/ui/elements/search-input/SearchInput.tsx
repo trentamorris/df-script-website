@@ -1,4 +1,5 @@
 import React from "react";
+import { Search, Close } from "@mui/icons-material";
 import type { SearchInputProps } from "./types";
 
 export function SearchInput({
@@ -13,25 +14,12 @@ export function SearchInput({
   return (
     <div className={`relative flex flex-col group ${className}`}>
       <div className="relative flex items-center">
-        {/* Minimal Search Icon with focus-driven luminescence */}
+        {/* Search Icon with focus-driven luminescence */}
         <span
-          className={`absolute left-0 pointer-events-none transition-colors duration-200 ${
-            isFocused ? "text-white" : "text-text-dim group-hover:text-text-muted"
-          }`}
+          className={`absolute left-0 bottom-3 flex items-center justify-center pointer-events-none transition-colors duration-200 ${isFocused ? "text-white" : "text-[#c2c2c2] group-hover:text-white"
+            }`}
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <Search sx={{ fontSize: 18 }} />
         </span>
 
         {/* Clean input */}
@@ -43,7 +31,7 @@ export function SearchInput({
           onBlur={() => setIsFocused(false)}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full bg-transparent pl-6 pr-6 pb-2 text-[13px] font-sans text-white placeholder:text-text-dim placeholder:text-[13px] placeholder:font-normal outline-none border-none tracking-wide"
+          className="w-full bg-transparent pl-7 pr-7 pt-1 pb-3 text-[14px] font-medium leading-none font-sans text-white placeholder:text-neutral-400 placeholder:text-[14px] placeholder:font-medium outline-none border-none tracking-normal"
         />
 
         {/* Clear Button */}
@@ -54,20 +42,22 @@ export function SearchInput({
               onChange("");
               inputRef.current?.focus();
             }}
-            className="absolute right-0 pb-2 text-text-dim hover:text-white transition-colors cursor-pointer text-[12px] flex items-center justify-center"
+            className={`absolute right-0 bottom-2.5 w-5 h-5 flex items-center justify-center rounded-full transition-all duration-150 cursor-pointer ${isFocused
+                ? "text-white hover:bg-white/15"
+                : "text-[#c2c2c2] hover:text-white hover:bg-white/10"
+              }`}
             title="Clear search"
           >
-            ✕
+            <Close sx={{ fontSize: 13 }} />
           </button>
         )}
       </div>
 
-      {/* Subtle border matching the rest of the project */}
-      <div className="relative w-full h-[1px] bg-border-dark/40 overflow-hidden">
+      {/* Focus indicator: subtle center-expanding underline */}
+      <div className="relative w-full h-[1px] overflow-hidden">
         <div
-          className={`absolute inset-0 bg-border-light transition-opacity duration-300 ease-out ${
-            isFocused ? "opacity-100" : "opacity-0"
-          }`}
+          className={`h-full w-full bg-white/40 transition-transform duration-250 ease-out origin-center ${isFocused ? "scale-x-100" : "scale-x-0"
+            }`}
         />
       </div>
     </div>

@@ -28,7 +28,7 @@ export default function DFScriptNotebook() {
   const [cells, setCells] = React.useState<CellState[]>(() =>
     WELCOME_NOTEBOOK.map((c, idx) => ({
       ...c,
-      layout: {
+      layout: c.layout ?? {
         x: (idx % 2) * 6,
         y: Math.floor(idx / 2) * 8,
         w: 6,
