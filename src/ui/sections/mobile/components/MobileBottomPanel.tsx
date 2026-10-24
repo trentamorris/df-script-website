@@ -91,7 +91,7 @@ export function MobileBottomPanel({
         }}
         style={{
           height: `${panelHeight}px`,
-          bottom: `${panelBottomPx}px`,
+          bottom: `calc((3.5rem + env(safe-area-inset-bottom, 0px)) * ${1 - progress})`,
         }}
         className={`absolute left-0 right-0 pointer-events-auto flex flex-col shadow-2xl overflow-hidden ${
           isCondensed && !isDragging ? "bg-[#1D1D1D]" : "bg-[#060606]"
