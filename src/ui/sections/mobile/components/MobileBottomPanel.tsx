@@ -28,20 +28,16 @@ export function MobileBottomPanel({
   selectedItemKey,
   children,
 }: MobileBottomPanelProps) {
-  const containerRef = React.useRef<HTMLDivElement | null>(null);
-  // Panel height in pixels. Initially full height (e.g. window.innerHeight - 56)
-  const [panelHeight, setPanelHeight] = React.useState<number>(0);
-  const [isCondensed, setIsCondensed] = React.useState(false);
+  // progress: 0 (condensed mini-bar above nav) -> 1 (fully expanded full-screen)
+  const [progress, setProgress] = React.useState<number>(1);
   const [isDragging, setIsDragging] = React.useState(false);
+  const startYRef = React.useRef(0);
+  const startProgressRef = React.useRef(1);
 
-  const miniBarHeight = 56;
-
-  // Initialize to full screen (minus bottom nav) whenever opened or a new item is selected
+  // When a new item is selected or opened, expand to full screen
   React.useEffect(() => {
     if (isOpen) {
-      const fullHeight = (containerRef.current?.clientHeight || window.innerHeight);
-      setPanelHeight(Math.max(300, fullHeight));
-      setIsCondensed(false);
+      setProgress(1);
       setIsDragging(false);
       onProgress?.(1);
     } else {
@@ -51,152 +47,142 @@ export function MobileBottomPanel({
 
   if (!isOpen) return null;
 
-  const fullScreenHeight = (containerRef.current?.clientHeight || window.innerHeight);
-  const travelRange = Math.max(1, fullScreenHeight - miniBarHeight);
-  // progress: 0 when panelHeight is miniBarHeight (condensed), 1 when fullScreenHeight (expanded)
-  const progress = Math.min(1, Math.max(0, (panelHeight - miniBarHeight) / travelRange));
+  // Pointer drag gestures for dragging the sheet up and down smoothly
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    startYRef.current = e.clientY;
+    startProgressRef.current = progress;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
 
-  // When panel is condensed (progress 0), it rests on top of the bottom nav (bottom: 56px).
-  // As it expands (progress -> 1), the bottom nav translates out by 100%, so the panel bottom smoothly shifts down to 0px!
-  const panelBottomPx = (1 - progress) * miniBarHeight;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const deltaY = e.clientY - startYRef.current;
+    const screenH = window.innerHeight;
+    // Dragging down reduces progress; dragging up increases progress
+    const deltaProgress = -deltaY / (screenH - 112);
+    const newProgress = Math.max(0, Math.min(1, startProgressRef.current + deltaProgress));
+    setProgress(newProgress);
+    onProgress?.(newProgress);
+  };
+
+  const handlePointerUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    // Snap to condensed or expanded based on 0.5 threshold
+    const finalProgress = progress > 0.4 ? 1 : 0;
+    setProgress(finalProgress);
+    onProgress?.(finalProgress);
+  };
+
+  const isCondensed = progress <= 0.05;
 
   return (
     <div
-      ref={containerRef}
-      className="fixed inset-0 pointer-events-none z-40 select-none overflow-hidden"
+      style={{
+        // translateY(0%) when progress = 1 (full screen)
+        // translateY(calc(100% - 3.5rem - env(safe-area-inset-bottom, 0px) - 3.5rem)) when progress = 0 (peeking above nav)
+        transform: `translateY(calc((100% - 7rem - env(safe-area-inset-bottom, 0px)) * ${1 - progress}))`,
+      }}
+      className={`fixed inset-0 z-40 flex flex-col bg-bg-pitch select-none will-change-transform ${
+        isDragging ? "transition-none" : "transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+      }`}
     >
-      <DraggableSection
-        containerRef={containerRef}
-        orientation="vertical"
-        anchor="bottom"
-        clampMin={miniBarHeight}
-        clampMax={fullScreenHeight}
-        snapPoints={[miniBarHeight, fullScreenHeight]}
-        onPointerDown={() => {
-          setIsDragging(true);
+      {/* HEADER / DRAG HANDLE: crossfades between condensed mini-bar and expanded header */}
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClick={() => {
+          if (isCondensed) {
+            setProgress(1);
+            onProgress?.(1);
+          }
         }}
-        onPointerMove={(data: Parameters<DraggableSectionOnPointerMove>[0]) => {
-          setPanelHeight(data.px);
-          const currentProgress = Math.min(1, Math.max(0, (data.px - miniBarHeight) / travelRange));
-          onProgress?.(currentProgress);
-          setIsCondensed(data.px <= miniBarHeight + 20);
-        }}
-        onPointerUp={(data: Parameters<DraggableSectionOnPointerUp>[0]) => {
-          setIsDragging(false);
-          const targetHeight = data.snap?.px ?? data.px;
-          setPanelHeight(targetHeight);
-          const finalProgress = Math.min(1, Math.max(0, (targetHeight - miniBarHeight) / travelRange));
-          onProgress?.(finalProgress);
-          setIsCondensed(targetHeight <= miniBarHeight + 20);
-        }}
-        style={{
-          height: `${panelHeight}px`,
-          bottom: `calc((3.5rem + env(safe-area-inset-bottom, 0px)) * ${1 - progress})`,
-        }}
-        className={`absolute left-0 right-0 pointer-events-auto flex flex-col shadow-2xl overflow-hidden ${
-          isCondensed && !isDragging ? "bg-[#1D1D1D]" : "bg-[#060606]"
-        } ${
-          isDragging ? "transition-none" : "transition-[height,bottom,background-color] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+        className={`shrink-0 w-full relative h-14 overflow-hidden border-b border-white/[0.06] touch-none cursor-grab active:cursor-grabbing ${
+          isCondensed ? "bg-[#1D1D1D] cursor-pointer" : "bg-bg-pitch"
         }`}
       >
-        {/* TOP BAR / HEADER (Cross-fades between condensed summary and expanded controls) */}
+        {/* Condensed Mini-Bar (visible when resting on bottom nav: progress near 0) */}
         <div
-          onClick={() => {
-            if (isCondensed) {
-              setPanelHeight(fullScreenHeight);
-              setIsCondensed(false);
-              onProgress?.(1);
-            }
+          style={{
+            opacity: progress <= 0.2 ? (0.2 - progress) / 0.2 : 0,
+            pointerEvents: isCondensed ? "auto" : "none",
           }}
-          className={`shrink-0 w-full relative h-14 transition-colors cursor-grab active:cursor-grabbing overflow-hidden ${
-            isCondensed && !isDragging ? "bg-[#1D1D1D] cursor-pointer" : "bg-[#060606]"
-          }`}
+          className="absolute inset-0 flex items-center justify-between px-4 transition-opacity duration-150"
         >
-          {/* Condensed Mini-Bar Header View (only fades in near the very bottom: progress 0.2 -> 0) */}
-          <div
-            style={{
-              opacity: progress <= 0.2 ? (0.2 - progress) / 0.2 : 0,
-              pointerEvents: progress <= 0.1 ? "auto" : "none",
-            }}
-            className="absolute inset-0 flex items-center justify-between px-4 transition-opacity duration-75"
-          >
-            <div className="flex items-center min-w-0 flex-1">
-              {collapsedSummary}
-            </div>
-            <div className="flex items-center gap-1 shrink-0 text-text-muted">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPanelHeight(fullScreenHeight);
-                  setIsCondensed(false);
-                  onProgress?.(1);
-                }}
-                className="p-2 hover:text-white transition-colors cursor-pointer"
-                title="Expand"
-                aria-label="Expand Panel"
-              >
-                <OpenInFull style={{ fontSize: "16px" }} />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClose();
-                }}
-                className="p-2 hover:text-white transition-colors cursor-pointer"
-                title="Close"
-                aria-label="Close Panel"
-              >
-                <Close style={{ fontSize: "18px" }} />
-              </button>
-            </div>
+          <div className="flex items-center min-w-0 flex-1">
+            {collapsedSummary}
           </div>
-
-          {/* Expanded Header View: Down Arrow and Centered Drag Pill (fades out rapidly as user pulls down from 1.0 to 0.7) */}
-          <div
-            style={{
-              opacity: progress >= 0.7 ? (progress - 0.7) / 0.3 : 0,
-              pointerEvents: progress >= 0.7 ? "auto" : "none",
-            }}
-            className="absolute inset-0 flex items-center justify-between px-4 transition-opacity duration-75"
-          >
+          <div className="flex items-center gap-1 shrink-0 text-text-muted">
             <button
               type="button"
-              onClick={() => {
-                setPanelHeight(miniBarHeight);
-                setIsCondensed(true);
-                onProgress?.(0);
+              onClick={(e) => {
+                e.stopPropagation();
+                setProgress(1);
+                onProgress?.(1);
               }}
-              className="p-1 -ml-1 text-text-muted hover:text-white transition-colors cursor-pointer flex items-center justify-center"
-              title="Minimize"
-              aria-label="Minimize Panel"
+              className="p-2 hover:text-white transition-colors cursor-pointer"
+              title="Expand"
+              aria-label="Expand Panel"
             >
-              <KeyboardArrowDown style={{ fontSize: "28px" }} />
+              <OpenInFull style={{ fontSize: "16px" }} />
             </button>
-
-            <div className="w-10 h-1 rounded-full bg-white/20 my-auto cursor-grab active:cursor-grabbing" />
-
-            <div className="w-8 shrink-0" />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-2 hover:text-white transition-colors cursor-pointer"
+              title="Close"
+              aria-label="Close Panel"
+            >
+              <Close style={{ fontSize: "18px" }} />
+            </button>
           </div>
         </div>
 
-        {/* AGNOSTIC EXPANDED CONTENT AREA:
-            Fades to 0 rapidly as user starts pulling down (progress 1.0 -> 0.7).
-            Below 0.7, opacity is 0 (clean blank section during intermediate drag). */}
+        {/* Expanded Header: Down Arrow & Pill Handle (visible when progress near 1) */}
         <div
-          onPointerDown={(e) => e.stopPropagation()}
           style={{
             opacity: progress >= 0.7 ? (progress - 0.7) / 0.3 : 0,
-            pointerEvents: progress >= 0.9 ? "auto" : "none",
+            pointerEvents: progress >= 0.8 ? "auto" : "none",
           }}
-          className={`flex-1 min-h-0 overflow-y-auto bg-bg-pitch overscroll-contain touch-pan-y pb-[env(safe-area-inset-bottom,0px)] ${
-            isDragging ? "transition-none" : "transition-opacity duration-150"
-          }`}
+          className="absolute inset-0 flex items-center justify-between px-4 transition-opacity duration-150"
         >
-          {children}
+          <button
+            type="button"
+            onClick={() => {
+              setProgress(0);
+              onProgress?.(0);
+            }}
+            className="p-1 -ml-1 text-text-muted hover:text-white transition-colors cursor-pointer flex items-center justify-center"
+            title="Minimize"
+            aria-label="Minimize Panel"
+          >
+            <KeyboardArrowDown style={{ fontSize: "28px" }} />
+          </button>
+
+          <div className="w-10 h-1 rounded-full bg-white/20 my-auto" />
+
+          <div className="w-8 shrink-0" />
         </div>
-      </DraggableSection>
+      </div>
+
+      {/* EXPANDED CONTENT: fills screen down into the safe area */}
+      <div
+        style={{
+          opacity: progress >= 0.6 ? (progress - 0.6) / 0.4 : 0,
+          pointerEvents: progress >= 0.8 ? "auto" : "none",
+        }}
+        className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y pb-[calc(2rem+env(safe-area-inset-bottom,0px))] px-2 ${
+          isDragging ? "transition-none" : "transition-opacity duration-150"
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 }
