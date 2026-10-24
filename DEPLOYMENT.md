@@ -14,11 +14,11 @@ npx vercel login
 ---
 
 ### Step 2: Deploy to Production
-To compile and publish the website live:
+To compile and publish the website directly to **df-script.js.org**:
 ```bash
 npm run deploy
 ```
-*(Or use `npx vercel --prod --yes`)*
+This runs a prebuilt local compile, deploys it to production, and automatically updates the `df-script.js.org` alias.
 
 ---
 
