@@ -17,10 +17,10 @@ export function Home() {
   return (
     <>
       {/* <MagneticParticles /> */}
-      <main className="flex-grow overflow-hidden md:overflow-y-auto h-full flex flex-col justify-between min-w-0 relative z-10">
+      <main className="flex-grow overflow-hidden h-full flex flex-col justify-between min-w-0 min-h-0 relative z-10">
 
         {/* Centered Hero Contents with subtle ambient cosmic glow */}
-        <div className="relative flex flex-col items-center justify-center text-center gap-6 max-w-2xl mx-auto flex-grow px-6 py-8 md:py-20">
+        <div className="relative flex flex-col items-center justify-center text-center gap-6 max-w-2xl mx-auto flex-grow px-6 py-4 md:py-20 overflow-hidden w-full h-full">
           {/* Soft cosmic nebula depth aura */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[280px] bg-gradient-to-tr from-sky-500/10 via-blue-600/5 to-purple-500/5 blur-3xl pointer-events-none rounded-full -z-10" />
 
