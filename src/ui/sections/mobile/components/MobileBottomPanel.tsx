@@ -190,7 +190,7 @@ export function MobileBottomPanel({
             opacity: progress >= 0.7 ? (progress - 0.7) / 0.3 : 0,
             pointerEvents: progress >= 0.9 ? "auto" : "none",
           }}
-          className={`flex-1 min-h-0 overflow-y-auto bg-bg-pitch overscroll-contain touch-pan-y ${
+          className={`flex-1 min-h-0 overflow-y-auto bg-bg-pitch overscroll-contain touch-pan-y pb-[env(safe-area-inset-bottom,0px)] ${
             isDragging ? "transition-none" : "transition-opacity duration-150"
           }`}
         >

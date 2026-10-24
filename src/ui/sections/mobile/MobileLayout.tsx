@@ -75,8 +75,8 @@ export function MobileLayout({
       {/* Top Mobile Header (hidden on Home landing screen and dedicated Search screen) */}
       {!isHomePage && !isSearchPage && <MobileHeader activeVersion={activeVersion} />}
 
-      {/* Main Content Area: padded 56px (pb-14) at bottom so fixed bottom nav never overlaps content */}
-      <div className={`flex-1 min-h-0 w-full relative z-10 box-border pb-14 ${
+      {/* Main Content Area: padded 56px + safe area at bottom so fixed bottom nav never overlaps content */}
+      <div className={`flex-1 min-h-0 w-full relative z-10 box-border pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] ${
         isHomePage || isSearchPage ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto"
       }`}>
         {(() => {
