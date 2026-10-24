@@ -154,13 +154,19 @@ body {
 
 /* Reusable subtle shake animation for limits, collisions, and invalid inputs */
 @keyframes subtleShake {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
-  20%, 60% {
+
+  20%,
+  60% {
     transform: translateX(-3px);
   }
-  40%, 80% {
+
+  40%,
+  80% {
     transform: translateX(3px);
   }
 }
@@ -171,10 +177,13 @@ body {
 
 /* Audio waveform dynamic bar animation */
 @keyframes waveformPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scaleY(0.3);
     opacity: 0.45;
   }
+
   50% {
     transform: scaleY(1);
     opacity: 1;
@@ -186,9 +195,11 @@ body {
   0% {
     transform: scale(1);
   }
+
   20% {
     transform: scale(0.94);
   }
+
   to {
     transform: scale(1);
   }

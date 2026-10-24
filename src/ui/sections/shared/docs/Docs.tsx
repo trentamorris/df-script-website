@@ -1,8 +1,8 @@
 import React from "react";
 import { Footer } from "../footer/Footer";
-import type { OperationItem, OperationParam } from "../../../../../types";
-import { GITHUB_REPO_URL } from "../../../../../constants";
-import { CodeBlock } from "../../../../elements";
+import type { OperationItem, OperationParam } from "../../../../types";
+import { GITHUB_REPO_URL } from "../../../../constants";
+import { CodeBlock } from "../../../elements";
 import type { DocsProps } from "./types";
 
 const getTypeBadgeClass = (typeStr: string): string => {

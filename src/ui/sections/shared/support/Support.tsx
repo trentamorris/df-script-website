@@ -1,7 +1,7 @@
 import React from "react";
 import { marked } from "marked";
 import { Footer } from "../footer/Footer";
-import { useGithubDonations } from "../../../../../hooks/useGithubHooks";
+import { useGithubDonations } from "../../../../hooks/useGithubHooks";
 
 export function Support() {
   const { markdown, isLoading, error } = useGithubDonations();

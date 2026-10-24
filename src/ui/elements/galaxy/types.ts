@@ -68,6 +68,7 @@ export interface GalaxyLogoProps {
   enableTransform?: boolean;
   minScale?: number;
   maxScale?: number;
+  skipIntro?: boolean;
 }
 
 export interface ShootingStar {

@@ -1,3 +1,4 @@
-export { DesktopLayout } from "./desktopLayout/DesktopLayout";
-export type { DesktopLayoutProps } from "./desktopLayout/types";
+export { DesktopLayout } from "./desktop/DesktopLayout";
+export type { DesktopLayoutProps } from "./desktop/types";
 export { MobileLayout } from "./mobile/MobileLayout";
+export type { MobileLayoutProps } from "./mobile/types";

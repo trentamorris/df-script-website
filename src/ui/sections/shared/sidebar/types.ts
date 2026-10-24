@@ -1,4 +1,4 @@
-import type { OperationItem, DocsVersion } from "../../../../../types";
+import type { OperationItem, DocsVersion } from "../../../../types";
 
 export interface SidebarProps {
   activeVersion: DocsVersion;
@@ -9,4 +9,7 @@ export interface SidebarProps {
   isDrawer?: boolean;
   isMenuOpen?: boolean;
   versionOptions?: DocsVersion[];
+  backgroundColor?: string;
+  showHeader?: boolean;
+  onSelectOp?: (op: OperationItem) => void;
 }

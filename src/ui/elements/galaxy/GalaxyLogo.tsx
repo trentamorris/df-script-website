@@ -18,6 +18,7 @@ export function GalaxyLogo({
   enableTransform = true,
   minScale = 0.4,
   maxScale = 2.4,
+  skipIntro = false,
 }: GalaxyLogoProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -150,20 +151,23 @@ export function GalaxyLogo({
 
             const isBrightStar = Math.random() < 0.15;
 
+            const targetX = centerTargetX + localOffsetX;
+            const targetY = centerTargetY + localOffsetY;
+
             stars.push({
-              originX: centerTargetX + localOffsetX,
-              originY: centerTargetY + localOffsetY,
+              originX: targetX,
+              originY: targetY,
               originZ,
               localOffsetX,
               localOffsetY,
               startX,
               startY,
               startZ,
-              buildDelay,
-              buildDuration,
-              x: startX,
-              y: startY,
-              z: startZ,
+              buildDelay: skipIntro ? 0 : buildDelay,
+              buildDuration: skipIntro ? 0 : buildDuration,
+              x: skipIntro ? targetX : startX,
+              y: skipIntro ? targetY : startY,
+              z: skipIntro ? originZ : startZ,
               vx: 0,
               vy: 0,
               size: isBrightStar ? 1.6 + Math.random() * 1.3 : 0.8 + Math.random() * 0.9,
@@ -196,20 +200,23 @@ export function GalaxyLogo({
         const startY = centerTargetY + Math.sin(spiralAngle) * disperseRadius * 0.75;
         const startZ = (Math.random() - 0.5) * 380;
 
+        const targetX = centerTargetX + localOffsetX;
+        const targetY = centerTargetY + localOffsetY;
+
         stars.push({
-          originX: centerTargetX + localOffsetX,
-          originY: centerTargetY + localOffsetY,
+          originX: targetX,
+          originY: targetY,
           originZ,
           localOffsetX,
           localOffsetY,
           startX,
           startY,
           startZ,
-          buildDelay: Math.random() * 500,
-          buildDuration: 1100 + Math.random() * 450,
-          x: startX,
-          y: startY,
-          z: startZ,
+          buildDelay: skipIntro ? 0 : Math.random() * 500,
+          buildDuration: skipIntro ? 0 : 1100 + Math.random() * 450,
+          x: skipIntro ? targetX : startX,
+          y: skipIntro ? targetY : startY,
+          z: skipIntro ? originZ : startZ,
           vx: 0,
           vy: 0,
           size: 0.5 + Math.random() * 0.7,
@@ -250,30 +257,59 @@ export function GalaxyLogo({
     // Ensure fonts are loaded and container is ready before sampling pixel data
     let isDisposed = false;
     let retryTimer: number | null = null;
+    let resizeTimer: number | null = null;
+    let lastRenderedWidth = 0;
+    let lastRenderedHeight = 0;
+    let settledFrames = 0;
 
     const runInit = () => {
       if (isDisposed) return;
+      const rect = container.getBoundingClientRect();
+      // If container has not been laid out yet, defer
+      if (rect.width === 0 && rect.height === 0) {
+        if (retryTimer) clearTimeout(retryTimer);
+        retryTimer = window.setTimeout(runInit, 50);
+        return;
+      }
+      lastRenderedWidth = rect.width;
+      lastRenderedHeight = rect.height;
+      settledFrames = 0;
       initScene();
 
-      // If initial sampling yielded 0 stars (e.g., container not yet laid out or font pending), retry
+      // If initial sampling yielded 0 stars, retry shortly
       if (stars.length === 0 && !isDisposed) {
+        if (retryTimer) clearTimeout(retryTimer);
         retryTimer = window.setTimeout(runInit, 80);
       }
     };
 
     if (typeof document !== "undefined" && document.fonts) {
-      document.fonts.ready.then(() => {
-        if (!isDisposed) runInit();
-      });
+      document.fonts.ready
+        .then(() => {
+          if (!isDisposed) runInit();
+        })
+        .catch(() => {
+          if (!isDisposed) runInit();
+        });
+      // Safety fallback in case fonts.ready promise hangs
+      retryTimer = window.setTimeout(runInit, 150);
     } else {
       runInit();
     }
 
-    // ResizeObserver tracks container movement from sidebar expand/collapse in real time
-    const resizeObserver = new ResizeObserver(() => {
+    // ResizeObserver tracks container movement and layout changes in real time
+    const resizeObserver = new ResizeObserver((entries) => {
       setupCanvasResolution();
-      if (stars.length === 0 && !isDisposed) {
+      const entry = entries[0];
+      const entryW = entry?.contentRect?.width ?? 0;
+      const entryH = entry?.contentRect?.height ?? 0;
+
+      // Re-sample stars only if not yet initialized or if container size changed noticeably after layout settles
+      if (!isDisposed && stars.length === 0) {
         runInit();
+      } else if (!isDisposed && (Math.abs(entryW - lastRenderedWidth) > 24 || Math.abs(entryH - lastRenderedHeight) > 24)) {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(runInit, 100);
       }
     });
     resizeObserver.observe(container);
@@ -356,6 +392,7 @@ export function GalaxyLogo({
 
       time += 0.025;
       ticksSinceLastGlisten++;
+      if (settledFrames < 60) settledFrames++;
 
       // Trigger 1 to 2 concurrent smooth glistening stars
       if (stars.length > 0 && ticksSinceLastGlisten > nextGlistenInterval) {
@@ -512,11 +549,13 @@ export function GalaxyLogo({
         // Intro build animation progression
         const starAge = elapsedMs - p.buildDelay;
         let assembleProgress = 1;
-        if (starAge < 0) {
-          assembleProgress = 0;
-        } else if (starAge < p.buildDuration) {
-          const t = starAge / p.buildDuration;
-          assembleProgress = 1 - Math.pow(1 - t, 3);
+        if (!skipIntro) {
+          if (starAge < 0) {
+            assembleProgress = 0;
+          } else if (starAge < p.buildDuration) {
+            const t = starAge / p.buildDuration;
+            assembleProgress = 1 - Math.pow(1 - t, 3);
+          }
         }
 
         const spiralRotation = (1 - assembleProgress) * 1.6;
@@ -540,7 +579,15 @@ export function GalaxyLogo({
           ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.35)
           : { fx: 0, fy: 0 };
 
-        applySpringPhysics(p, driftX, driftY, force.fx, force.fy, 0.06, 0.86);
+        if (skipIntro && settledFrames < 15 && !gesture.isInteracting && !force.fx && !force.fy) {
+          // Instantly snap to live layout position during early render frames so any micro layout shifts don't cause a spring bounce
+          p.x = driftX;
+          p.y = driftY;
+          p.vx = 0;
+          p.vy = 0;
+        } else {
+          applySpringPhysics(p, driftX, driftY, force.fx, force.fy, 0.06, 0.86);
+        }
 
         // Center relative coords for 3D rotation & scaling
         const relX = (p.x - currentCenterX) * activeScale;
@@ -743,12 +790,13 @@ export function GalaxyLogo({
     return () => {
       isDisposed = true;
       if (retryTimer) clearTimeout(retryTimer);
+      if (resizeTimer) clearTimeout(resizeTimer);
       if (clickTimeoutId) clearTimeout(clickTimeoutId);
       resizeObserver.disconnect();
       window.removeEventListener("resize", setupCanvasResolution);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [text, repelRadius, repelStrength, mouseStateRef, enableFilaments]);
+  }, [text, repelRadius, repelStrength, mouseStateRef, enableFilaments, skipIntro]);
 
   React.useEffect(() => {
     if (triggerPulse !== undefined && triggerPulse !== lastTriggerRef.current) {

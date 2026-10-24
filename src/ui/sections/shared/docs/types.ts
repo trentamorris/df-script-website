@@ -1,4 +1,4 @@
-import type { OperationItem } from "../../../../../types";
+import type { OperationItem } from "../../../../types";
 
 export interface DocsProps {
   op: OperationItem | undefined;

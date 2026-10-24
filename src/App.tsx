@@ -30,7 +30,15 @@ function AppContent() {
           operationsIndex={operationsIndex}
         />
       ) : (
-        <MobileLayout />
+        <MobileLayout
+          path={routerProps.path}
+          activeVersion={routerProps.activeVersion}
+          setVersion={routerProps.setVersion}
+          isDocs={routerProps.isDocs}
+          activeOpName={routerProps.activeOpName}
+          versionOptions={versionOptions}
+          operationsIndex={operationsIndex}
+        />
       )}
     </>
   );

@@ -53,7 +53,7 @@ export function Header({
           onClick={() => {
             setIsSidebarCollapsed(!isSidebarCollapsed);
           }}
-          className="flex items-center gap-2 text-[11px] font-outfit tracking-widest text-text-muted hover:text-white transition-colors cursor-pointer uppercase font-medium select-none text-left mr-2"
+          className={`flex items-center gap-2 text-[11px] font-outfit tracking-widest ${!isSidebarCollapsed ? "text-white font-medium" : "hover:text-white"} transition-colors cursor-pointer uppercase select-none text-left mr-2`}
         >
           <Menu style={{ fontSize: "14px" }} />
           <span>MENU</span>

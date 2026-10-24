@@ -1,7 +1,7 @@
 import React from "react";
 import { marked } from "marked";
 import { Footer } from "../footer/Footer";
-import { useGithubReadme } from "../../../../../hooks/useGithubHooks";
+import { useGithubReadme } from "../../../../hooks/useGithubHooks";
 
 export function About() {
   const { markdown, isLoading, error } = useGithubReadme();

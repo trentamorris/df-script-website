@@ -1,10 +1,6 @@
 import React from "react";
 import { Header } from "./components/header/Header";
-import { Sidebar } from "./components/sidebar/Sidebar";
-import { About } from "./components/about/About";
-import { Support } from "./components/support/Support";
-import { Docs } from "./components/docs/Docs";
-import { Home } from "./components/home/Home";
+import { About, Support, Docs, Home, Sidebar } from "../shared";
 import { DFScriptNotebook } from "../../../df-script-notebook";
 import { getQualifiedPath } from "../../../utils/routing";
 import { GalaxyBackground } from "../../elements";
@@ -45,6 +41,7 @@ export function DesktopLayout({
             currentOpName={activeOpName}
             operationsIndex={operationsIndex}
             versionOptions={versionOptions}
+            backgroundColor="#0c0c0c"
           />
         </aside>
 

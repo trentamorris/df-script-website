@@ -1,5 +1,5 @@
 import React from "react";
-import { GITHUB_REPO_URL, NPM_PACKAGE_URL } from "../../../../../constants";
+import { GITHUB_REPO_URL, NPM_PACKAGE_URL } from "../../../../constants";
 import type { FooterProps } from "./types";
 
 export function Footer({ className = "" }: FooterProps) {
