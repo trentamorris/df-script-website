@@ -69,15 +69,15 @@ export function MobileLayout({
   }, []);
 
   return (
-    <div className="h-screen w-screen flex flex-col relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased touch-pan-y">
+    <div className="h-[100dvh] w-screen flex flex-col relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased touch-pan-y overscroll-none">
       {isHomePage && <GalaxyBackground />}
 
       {/* Top Mobile Header (hidden on Home landing screen and dedicated Search screen) */}
       {!isHomePage && !isSearchPage && <MobileHeader activeVersion={activeVersion} />}
 
       {/* Main Content Area: padded 56px (pb-14) at bottom so fixed bottom nav never overlaps content */}
-      <div className={`flex-1 min-h-0 w-full relative z-10 pb-14 ${
-        isHomePage || isSearchPage ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+      <div className={`flex-1 min-h-0 w-full relative z-10 box-border pb-14 ${
+        isHomePage || isSearchPage ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto"
       }`}>
         {(() => {
           if (isSearchPage) {
