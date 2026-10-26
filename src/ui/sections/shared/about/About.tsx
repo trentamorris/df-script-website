@@ -16,12 +16,14 @@ function _parseSections(markdown: string): { html: string; sections: AboutNavSec
   const sections: AboutNavSection[] = [];
   const renderer = new marked.Renderer();
 
+  let currentH2 = "";
+
   renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
-    // Only index major top-level sections (H2) for the sticky sidebar navigation
+    const cleanTitle = text.replace(/<[^>]*>/g, "").trim();
+    const id = _slugify(cleanTitle);
+
     if (depth === 2) {
-      // Strip any raw HTML tags or emojis from the display title if needed
-      const cleanTitle = text.replace(/<[^>]*>/g, "").trim();
-      const id = _slugify(cleanTitle);
+      currentH2 = cleanTitle;
       if (id && cleanTitle) {
         sections.push({
           id,
@@ -30,15 +32,36 @@ function _parseSections(markdown: string): { html: string; sections: AboutNavSec
         });
         return `<h${depth} id="${id}">${text}</h${depth}>`;
       }
-    } else if (depth <= 3) {
-      // Keep IDs on H3s so anchor links still function if scrolled to
-      const cleanTitle = text.replace(/<[^>]*>/g, "").trim();
-      const id = _slugify(cleanTitle);
+    } else if (depth === 3) {
+      // Index H3 subsections under Column Expressions in the navigation sidebar
+      if (currentH2.toLowerCase().includes("column expression") && id && cleanTitle) {
+        sections.push({
+          id,
+          title: cleanTitle,
+          level: depth,
+        });
+        return `<h${depth} id="${id}">${text}</h${depth}>`;
+      }
       if (id) {
         return `<h${depth} id="${id}">${text}</h${depth}>`;
       }
     }
     return `<h${depth}>${text}</h${depth}>`;
+  };
+
+  renderer.hr = () => "";
+
+  renderer.link = ({ href, text }: { href: string; text: string }) => {
+    // If it's a relative link to LICENSE (or contains LICENSE), render as plain text without an anchor tag
+    if (href && href.replace(/^\.?\//, "").toUpperCase() === "LICENSE") {
+      return text;
+    }
+    // For standard external links, open safely in new tab
+    if (href && (href.startsWith("http://") || href.startsWith("https://"))) {
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    }
+    // For other relative repo files like DONATIONS.md, point to GitHub or render text
+    return `<a href="${href}">${text}</a>`;
   };
 
   const html = marked.parse(markdown, { renderer, gfm: true, breaks: true }) as string;
@@ -63,6 +86,14 @@ export function About() {
     if (!container || sections.length === 0) return;
 
     const handleScroll = () => {
+      // If user has scrolled all the way to the bottom, activate the final section
+      const isAtBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight <= 30;
+      if (isAtBottom && sections.length > 0) {
+        setActiveSectionId(sections[sections.length - 1].id);
+        return;
+      }
+
       const containerRect = container.getBoundingClientRect();
       const offsetTop = containerRect.top;
 
@@ -105,65 +136,44 @@ export function About() {
 
   return (
     <main className="flex-grow flex flex-col h-full bg-[#060606] min-w-0 select-text overflow-hidden">
-      {/* Pinned Header: Title & Contributor Credit */}
-      <div className="w-full bg-[#060606]/95 backdrop-blur-md z-20 shrink-0 px-6 md:px-12 pt-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between border-b border-border-dark relative">
-          <div className="relative pb-3">
-            <span className="text-xs font-semibold tracking-widest uppercase font-outfit text-white">
-              README
-            </span>
-            {/* Underline Indicator */}
-            <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-full" />
-          </div>
-
-          <p className="pb-3 text-[9px] font-mono text-text-dim uppercase tracking-wider select-none hidden sm:block">
-            Written by the df-script core contributors
-          </p>
-        </div>
-      </div>
-
       {/* Main Content Area */}
       <div
         ref={contentContainerRef}
-        className="flex-grow overflow-y-auto py-8 px-6 md:px-12 scroll-smooth"
+        className="flex-grow overflow-y-auto py-8 scroll-smooth relative"
       >
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 items-start relative pb-20">
-          {/* Sticky Left Sidebar (ChatGPT / OpenAI style table of contents) */}
-          {sections.length > 0 && !isLoading && (
-            <aside className="hidden lg:block w-64 shrink-0 sticky top-0 self-start pt-1">
-              <nav aria-label="Table of contents" className="flex flex-col gap-1 select-none pr-4">
-                <span className="text-[10px] font-mono text-text-dim uppercase tracking-wider mb-2">
-                  On this page
-                </span>
-                <ul className="flex flex-col gap-1 border-l border-white/10 pl-3">
-                  {sections.map((section) => {
-                    const isActive = activeSectionId === section.id;
-                    return (
-                      <li key={section.id}>
-                        <button
-                          type="button"
-                          onClick={() => scrollToSection(section.id)}
-                          className={`text-left text-xs transition-colors duration-150 block w-full truncate py-1 cursor-pointer font-sans ${
-                            section.level === 3 ? "pl-3 text-[11px]" : ""
-                          } ${
-                            isActive
-                              ? "text-white font-medium"
-                              : "text-text-muted hover:text-white"
-                          }`}
-                          title={section.title}
-                        >
-                          {section.title}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-            </aside>
-          )}
+        {/* Floating Left Sidebar (Fixed from page left, hides on screens < 1280px) */}
+        {sections.length > 0 && !isLoading && (
+          <aside className="hidden xl:block fixed top-24 left-8 2xl:left-14 w-52 z-10 select-none">
+            <nav aria-label="Table of contents" className="flex flex-col gap-1">
+              <ul className="flex flex-col gap-1">
+                {sections.map((section) => {
+                  const isActive = activeSectionId === section.id;
+                  return (
+                    <li key={section.id}>
+                      <button
+                        type="button"
+                        onClick={() => scrollToSection(section.id)}
+                        className={`text-left text-xs transition-colors duration-150 block w-full truncate py-1 cursor-pointer font-sans ${
+                          section.level === 3 ? "pl-3 text-[11px]" : ""
+                        } ${
+                          isActive
+                            ? "text-white font-medium"
+                            : "text-text-muted hover:text-white"
+                        }`}
+                        title={section.title}
+                      >
+                        {section.title}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </aside>
+        )}
 
-          {/* Main Article Body */}
-          <div className="flex-1 min-w-0 flex flex-col gap-8 max-w-3xl">
+        {/* Centered Main Article Body */}
+        <div className="w-full max-w-4xl mx-auto px-6 md:px-12 flex flex-col gap-8 pb-20">
             <section className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="text-[10px] font-mono text-text-dim uppercase tracking-wider">
@@ -207,7 +217,7 @@ export function About() {
 
               {html && !isLoading && (
                 <div
-                  className="flex flex-col gap-4 text-text-muted leading-relaxed [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:text-white [&_h1]:font-outfit [&_h1]:mt-4 [&_h1]:scroll-mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_h2]:font-outfit [&_h2]:mt-8 [&_h2]:border-b [&_h2]:border-border-dark [&_h2]:pb-2 [&_h2]:scroll-mt-6 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-white [&_h3]:font-outfit [&_h3]:mt-6 [&_h3]:scroll-mt-6 [&_p]:mb-2 [&_p_strong]:text-white [&_p_code]:font-mono [&_p_code]:text-[11px] [&_p_code]:text-emerald-400 [&_p_code]:bg-[#111111] [&_p_code]:px-1.5 [&_p_code]:py-0.5 [&_p_code]:rounded [&_pre]:bg-[#0c0c0c] [&_pre]:border [&_pre]:border-border-dark [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto [&_code]:font-mono [&_code]:text-[11px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1.5 [&_li]:text-text-muted [&_li_strong]:text-white [&_li_code]:font-mono [&_li_code]:text-[11px] [&_li_code]:text-emerald-400 [&_li_code]:bg-[#111111] [&_li_code]:px-1.5 [&_li_code]:py-0.5 [&_li_code]:rounded [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border-dark [&_th]:p-2 [&_th]:text-left [&_th]:text-white [&_th]:text-xs [&_td]:border [&_td]:border-border-dark [&_td]:p-2 [&_td]:text-xs [&_hr]:border-border-dark [&_hr]:my-6 [&_a]:text-emerald-400 [&_a]:underline"
+                  className="flex flex-col gap-4 text-text-muted leading-relaxed [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:text-white [&_h1]:font-outfit [&_h1]:mt-4 [&_h1]:scroll-mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_h2]:font-outfit [&_h2]:mt-8 [&_h2]:scroll-mt-6 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-white [&_h3]:font-outfit [&_h3]:mt-6 [&_h3]:scroll-mt-6 [&_p]:mb-2 [&_p_strong]:text-white [&_p_code]:font-mono [&_p_code]:text-[12px] [&_p_code]:text-zinc-200 [&_p_code]:bg-[#141414] [&_p_code]:border [&_p_code]:border-white/10 [&_p_code]:px-1.5 [&_p_code]:py-0.5 [&_p_code]:rounded [&_pre]:bg-[#0c0c0c] [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre_code]:font-mono [&_pre_code]:text-[12px] [&_pre_code]:leading-[1.25] [&_pre_code]:tracking-normal [&_pre_code]:whitespace-pre [&_code]:font-mono [&_code]:text-[12px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1.5 [&_li]:text-text-muted [&_li_strong]:text-white [&_li_code]:font-mono [&_li_code]:text-[12px] [&_li_code]:text-zinc-200 [&_li_code]:bg-[#141414] [&_li_code]:border [&_li_code]:border-white/10 [&_li_code]:px-1.5 [&_li_code]:py-0.5 [&_li_code]:rounded [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border-dark [&_th]:p-2.5 [&_th]:text-left [&_th]:text-white [&_th]:text-xs [&_th:first-child]:w-60 [&_td]:border [&_td]:border-border-dark [&_td]:p-2.5 [&_td]:text-xs [&_td:first-child]:whitespace-nowrap [&_td:first-child]:font-mono [&_hr]:hidden [&_a]:text-white [&_a]:underline"
                   dangerouslySetInnerHTML={{ __html: html }}
                 />
               )}
@@ -215,7 +225,6 @@ export function About() {
 
             <Footer className="pt-8" />
           </div>
-        </div>
       </div>
     </main>
   );
