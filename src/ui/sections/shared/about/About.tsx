@@ -175,30 +175,6 @@ export function About() {
         {/* Centered Main Article Body */}
         <div className="w-full max-w-4xl mx-auto px-6 md:px-12 flex flex-col gap-8 pb-20">
             <section className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-mono text-text-dim uppercase tracking-wider">
-                  df-script repository readme
-                </div>
-                <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-dim">
-                  <span
-                    className={`inline-block w-1.5 h-1.5 rounded-full ${
-                      isLoading
-                        ? "bg-amber-400 animate-pulse"
-                        : error
-                        ? "bg-red-400"
-                        : "bg-emerald-400"
-                    }`}
-                  />
-                  <span>
-                    {isLoading
-                      ? "fetching from github..."
-                      : error
-                      ? "failed to load"
-                      : "synced from github"}
-                  </span>
-                </div>
-              </div>
-
               {isLoading && (
                 <div className="flex flex-col gap-3 py-6 animate-pulse">
                   <div className="h-6 bg-[#111111] rounded w-2/3"></div>
