@@ -26,3 +26,10 @@ export interface CodePanelProps {
   result: BenchmarkResult;
   isDf?: boolean;
 }
+
+export interface AboutNavSection {
+  id: string;
+  title: string;
+  level: number;
+}
+

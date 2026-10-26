@@ -5,6 +5,7 @@ import type {
   DraggableSectionOnPointerMove,
   DraggableSectionOnPointerUp,
 } from "../../../../df-script-notebook/ui/elements/draggable-section/types";
+import { MOBILE_MINIBAR_HEIGHT } from "../constants";
 
 export interface MobileBottomPanelProps {
   /** If false or no content, panel is hidden */
@@ -34,7 +35,7 @@ export function MobileBottomPanel({
   const [isCondensed, setIsCondensed] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
 
-  const miniBarHeight = 56;
+  const miniBarHeight = MOBILE_MINIBAR_HEIGHT;
 
   // Initialize to full screen (minus bottom nav) whenever opened or a new item is selected
   React.useEffect(() => {
@@ -93,11 +94,9 @@ export function MobileBottomPanel({
           height: `${panelHeight}px`,
           bottom: `${panelBottomPx}px`,
         }}
-        className={`absolute left-0 right-0 pointer-events-auto flex flex-col shadow-2xl overflow-hidden ${
-          isCondensed && !isDragging ? "bg-[#1D1D1D]" : "bg-[#060606]"
-        } ${
-          isDragging ? "transition-none" : "transition-[height,bottom,background-color] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-        }`}
+        className={`absolute left-0 right-0 pointer-events-auto flex flex-col shadow-2xl overflow-hidden ${isCondensed && !isDragging ? "bg-[#1D1D1D]" : "bg-[#060606]"
+          } ${isDragging ? "transition-none" : "transition-[height,bottom,background-color] duration-300 ease-[var(--mobile-panel-easing)]"
+          }`}
       >
         {/* TOP BAR / HEADER (Cross-fades between condensed summary and expanded controls) */}
         <div
@@ -108,9 +107,8 @@ export function MobileBottomPanel({
               onProgress?.(1);
             }
           }}
-          className={`shrink-0 w-full relative h-14 transition-colors cursor-grab active:cursor-grabbing overflow-hidden ${
-            isCondensed && !isDragging ? "bg-[#1D1D1D] cursor-pointer" : "bg-[#060606]"
-          }`}
+          className={`shrink-0 w-full relative h-14 transition-colors cursor-grab active:cursor-grabbing overflow-hidden ${isCondensed && !isDragging ? "bg-[#1D1D1D] cursor-pointer" : "bg-[#060606]"
+            }`}
         >
           {/* Condensed Mini-Bar Header View (only fades in near the very bottom: progress 0.2 -> 0) */}
           <div
@@ -190,9 +188,8 @@ export function MobileBottomPanel({
             opacity: progress >= 0.7 ? (progress - 0.7) / 0.3 : 0,
             pointerEvents: progress >= 0.9 ? "auto" : "none",
           }}
-          className={`flex-1 min-h-0 overflow-y-auto bg-bg-pitch overscroll-contain touch-pan-y ${
-            isDragging ? "transition-none" : "transition-opacity duration-150"
-          }`}
+          className={`flex-1 min-h-0 overflow-y-auto bg-bg-pitch overscroll-contain touch-pan-y ${isDragging ? "transition-none" : "transition-opacity duration-150"
+            }`}
         >
           {children}
         </div>

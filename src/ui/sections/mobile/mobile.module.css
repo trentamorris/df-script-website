@@ -1,0 +1,7 @@
+:root {
+  --mobile-bottom-nav-height: 56px;
+  --mobile-minibar-height: 56px;
+  --mobile-content-pb-default: var(--mobile-bottom-nav-height);
+  --mobile-content-pb-with-minibar: calc(var(--mobile-bottom-nav-height) + var(--mobile-minibar-height));
+  --mobile-panel-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

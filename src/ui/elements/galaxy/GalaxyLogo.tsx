@@ -571,22 +571,44 @@ export function GalaxyLogo({
         const assembledX = currentOriginX + relToDestX * rotCos - relToDestY * rotSin;
         const assembledY = currentOriginY + relToDestX * rotSin + relToDestY * rotCos;
 
-        const driftX = assembledX + Math.cos(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
-        const driftY = assembledY + Math.sin(time * p.speed + p.phase) * p.driftRadius * assembleProgress;
+        // Stable resting coordinates for logo stars
+        const targetX = assembledX;
+        const targetY = assembledY;
 
-        // Cursor dispersion force on hover
-        const force = isLogoHovered && assembleProgress > 0.8 && !gesture.isInteracting
-          ? calculateRepulsionForce(p.x, p.y, mouseX, mouseY, repelRadius, repelStrength * 12, 0.35)
-          : { fx: 0, fy: 0 };
+        // OpenAI Astra-style dynamic particle dispersion:
+        // Pure radial outward scatter without any swirl; force decays when mouse pauses so particles gracefully return home
+        let fx = 0;
+        let fy = 0;
+        if (isHovered && mouseX > -9000 && assembleProgress > 0.8 && !gesture.isInteracting) {
+          const dx = p.x - mouseX;
+          const dy = p.y - mouseY;
+          const distSq = dx * dx + dy * dy;
+          const radius = repelRadius * 1.05;
 
-        if (skipIntro && settledFrames < 15 && !gesture.isInteracting && !force.fx && !force.fy) {
-          // Instantly snap to live layout position during early render frames so any micro layout shifts don't cause a spring bounce
-          p.x = driftX;
-          p.y = driftY;
+          if (distSq < radius * radius && distSq > 0.001) {
+            const dist = Math.sqrt(distSq);
+            const t = 1 - dist / radius;
+
+            // Decay force over ~750ms if cursor stays stationary, letting stars smoothly return home
+            const idleTime = performance.now() - (mouseStateRef.current.lastMoved || performance.now());
+            const idleFade = Math.max(0, 1 - idleTime / 750);
+
+            // Clean radial push (dx/dist, dy/dist - zero swirl angle) with amplified displacement
+            const push = t * t * (repelStrength * 3.8) * idleFade;
+            fx = (dx / dist) * push;
+            fy = (dy / dist) * push;
+          }
+        }
+
+        if (skipIntro && settledFrames < 15 && !gesture.isInteracting && !fx && !fy) {
+          // Instantly snap to live layout position during early render frames
+          p.x = targetX;
+          p.y = targetY;
           p.vx = 0;
           p.vy = 0;
         } else {
-          applySpringPhysics(p, driftX, driftY, force.fx, force.fy, 0.06, 0.86);
+          // Astra-style responsive spring with smooth non-oscillatory settling
+          applySpringPhysics(p, targetX, targetY, fx, fy, 0.075, 0.82);
         }
 
         // Center relative coords for 3D rotation & scaling
@@ -642,10 +664,10 @@ export function GalaxyLogo({
           const dxM = p.projX - mouseX;
           const dyM = p.projY - mouseY;
           const mouseDist = Math.hypot(dxM, dyM);
-          const filamentHoverRadius = repelRadius * 2.2;
+          const filamentHoverRadius = repelRadius * 1.5;
 
           if (isLogoHovered && mouseDist < filamentHoverRadius) {
-            const proximityFactor = Math.pow(1 - mouseDist / filamentHoverRadius, 1.2);
+            const proximityFactor = Math.pow(1 - mouseDist / filamentHoverRadius, 1.5);
 
             for (let n = 0; n < p.neighbors.length; n++) {
               const nb = p.neighbors[n];
@@ -653,12 +675,12 @@ export function GalaxyLogo({
 
               const lineDist = Math.hypot(p.projX - nb.projX, p.projY - nb.projY);
               // Max distance threshold in projected screen space to avoid stretching when dispersed
-              if (lineDist < 30) {
-                const stretchFactor = 1 - lineDist / 30;
-                const alpha = proximityFactor * stretchFactor * 0.55;
+              if (lineDist < 26) {
+                const stretchFactor = 1 - lineDist / 26;
+                const alpha = proximityFactor * stretchFactor * 0.28;
 
                 if (alpha > 0.02) {
-                  ctx.lineWidth = 1.0;
+                  ctx.lineWidth = 0.75;
                   ctx.strokeStyle = `rgba(186, 230, 253, ${alpha.toFixed(3)})`;
                   ctx.beginPath();
                   ctx.moveTo(p.projX, p.projY);
@@ -690,14 +712,14 @@ export function GalaxyLogo({
 
         const twinkle = 0.88 + 0.12 * Math.sin(time * 1.6 + p.phase);
 
-        // Proximity illumination on hover
+        // Proximity illumination on hover (delicate, subtle brightening)
         let hoverGlow = 0;
         if (isLogoHovered) {
           const dx = p.projX - mouseX;
           const dy = p.projY - mouseY;
           const dist = Math.hypot(dx, dy);
-          if (dist < repelRadius * 1.4) {
-            hoverGlow = (1 - dist / (repelRadius * 1.4)) * 0.35;
+          if (dist < repelRadius * 1.1) {
+            hoverGlow = (1 - dist / (repelRadius * 1.1)) * 0.18;
           }
         }
 
@@ -721,19 +743,19 @@ export function GalaxyLogo({
           ? p.projY - caShiftY * 0.45
           : p.projY;
 
-        // Render point star
+        // Render point star without inflating particle radius on hover
         ctx.beginPath();
-        ctx.arc(posX, posY, renderSize * (1 + hoverGlow * 0.5), 0, Math.PI * 2);
+        ctx.arc(posX, posY, renderSize, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = effectiveAlpha;
         ctx.fill();
 
         // Core glow for prominent or hovered stars
-        if (p.hasGlow || hoverGlow > 0.1) {
+        if (p.hasGlow) {
           ctx.beginPath();
-          ctx.arc(posX, posY, renderSize * (2.2 + hoverGlow * 1.2), 0, Math.PI * 2);
+          ctx.arc(posX, posY, renderSize * 2.2, 0, Math.PI * 2);
           ctx.fillStyle = p.color;
-          ctx.globalAlpha = effectiveAlpha * (0.28 + hoverGlow * 0.3);
+          ctx.globalAlpha = effectiveAlpha * 0.28;
           ctx.fill();
         }
 

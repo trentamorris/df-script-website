@@ -1,12 +1,14 @@
 import React from "react";
 import { ContentCopy } from "@mui/icons-material";
-import { GalaxyBackground, GalaxyLogo } from "../../../elements";
+import { GalaxyLogo, WaveLogo } from "../../../elements";
 import { useCopyToClipboard } from "../../../../hooks/useCopyToClipboard";
 import { useLayout } from "../../../../hooks/useLayout";
+import { useBackgroundTheme } from "../../../../hooks/useBackgroundTheme";
 
 export function Home() {
   const { copy, isCopied } = useCopyToClipboard();
   const { isMobile } = useLayout();
+  const { backgroundTheme } = useBackgroundTheme();
   const [copyPulse, setCopyPulse] = React.useState(0);
 
   const handleCopy = () => {
@@ -24,15 +26,30 @@ export function Home() {
           {/* Soft cosmic nebula depth aura */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[280px] bg-gradient-to-tr from-sky-500/10 via-blue-600/5 to-purple-500/5 blur-3xl pointer-events-none rounded-full -z-10" />
 
-          <GalaxyLogo
-            text="df-script"
-            className={isMobile ? "" : "animate-fade-in"}
-            triggerPulse={copyPulse}
-            skipIntro={isMobile}
-          />
+          {backgroundTheme === "galaxy" ? (
+            <GalaxyLogo
+              text="df-script"
+              className={isMobile ? "" : "animate-fade-in"}
+              triggerPulse={copyPulse}
+              skipIntro={isMobile}
+            />
+          ) : (
+            <WaveLogo
+              text="df-script"
+              className={isMobile ? "" : "animate-fade-in"}
+              triggerPulse={copyPulse}
+              skipIntro={isMobile}
+            />
+          )}
 
           <div className={isMobile ? "max-w-lg" : "animate-hero-desc max-w-lg"}>
-            <p className="text-sm md:text-base diamond-glisten leading-relaxed select-none">
+            <p
+              className={`text-sm md:text-base diamond-glisten leading-relaxed select-none transition-all duration-300 ${
+                backgroundTheme === "wave"
+                  ? "[--base-color:#e0f2fe] [--glint-color:#ffffff] [--glint-prism:#7dd3fc] drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                  : "[--base-color:#9c9c9c] [--glint-color:#ffffff] [--glint-prism:#dbeafe]"
+              }`}
+            >
               A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.
             </p>
           </div>
@@ -69,7 +86,13 @@ export function Home() {
         </div>
 
         {/* Footer of Hero (hidden on mobile, shown on md+ screens) */}
-        <div className="hidden md:grid w-full grid-cols-3 items-center text-[10px] font-mono text-[#5c5c5c] border-t border-[#1a1a1a] p-4 md:px-8 bg-[#060606] shrink-0 select-none">
+        <div
+          className={`hidden md:grid w-full grid-cols-3 items-center text-[10px] font-mono p-4 md:px-8 bg-transparent shrink-0 select-none transition-colors duration-300 ${
+            backgroundTheme === "wave"
+              ? "text-sky-200/75 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+              : "text-[#5c5c5c]"
+          }`}
+        >
           <span className="text-left">ZERO DEPENDENCIES</span>
           <span className="text-center">&lt; 43.4 KB GZIPPED</span>
           <span className="text-right">HIGH-PERFORMANCE DATA PIPELINES</span>

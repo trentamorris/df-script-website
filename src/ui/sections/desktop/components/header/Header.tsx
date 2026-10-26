@@ -2,6 +2,7 @@ import React from "react";
 import { Menu, Favorite } from "@mui/icons-material";
 import { GITHUB_REPO_URL, NPM_PACKAGE_URL } from "../../../../../constants";
 import { NOTEBOOK_PATH, ABOUT_PATH, SUPPORT_PATH } from "../../constants";
+import { useBackgroundTheme } from "../../../../../hooks/useBackgroundTheme";
 import type { HeaderProps } from "./types";
 
 export function Header({
@@ -13,6 +14,7 @@ export function Header({
   setActiveVersion,
   versionOptions = []
 }: HeaderProps) {
+  const { backgroundTheme, toggleBackgroundTheme } = useBackgroundTheme();
   const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = React.useState(false);
   const headerDropdownRef = React.useRef<HTMLDivElement>(null);
   const isNotebookPage = path === NOTEBOOK_PATH;
@@ -48,7 +50,8 @@ export function Header({
         : "bg-[#060606]/90 backdrop-blur-md"
       }`}>
       {/* Left Side: Menu Trigger & App Links */}
-      <div className="flex items-center gap-6 font-outfit text-[11px] tracking-widest text-text-muted select-none">
+      <div className={`flex items-center gap-6 font-outfit text-[11px] tracking-widest transition-colors select-none ${isHomePage && backgroundTheme === "wave" ? "text-slate-200/90" : "text-text-muted"
+        }`}>
         <button
           onClick={() => {
             setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -117,7 +120,18 @@ export function Header({
       </div>
 
       {/* Right Side: Support & Resource Links */}
-      <nav className="flex items-center gap-6 font-outfit text-[11px] tracking-widest text-text-muted select-none">
+      <nav className={`flex items-center gap-6 font-outfit text-[11px] tracking-widest transition-colors select-none ${isHomePage && backgroundTheme === "wave" ? "text-slate-200/90" : "text-text-muted"
+        }`}>
+        <button
+          onClick={toggleBackgroundTheme}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-border-dark bg-bg-darker/60 hover:border-white/30 text-text-muted hover:text-white transition-all duration-200 cursor-pointer text-[10px] font-outfit uppercase tracking-widest select-none"
+          title={`Switch to ${backgroundTheme === "galaxy" ? "Wave" : "Galaxy"} background`}
+          aria-label="Toggle background theme"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+          <span>{backgroundTheme === "galaxy" ? "GALAXY" : "WAVE"}</span>
+        </button>
+
         <a
           href={SUPPORT_PATH}
           className={`${path === SUPPORT_PATH ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase flex items-center gap-1.5 text-[#fb7185]/90 hover:text-[#fb7185]`}

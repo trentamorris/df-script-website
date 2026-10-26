@@ -3,6 +3,7 @@ import { DesktopLayout, MobileLayout } from "./ui/sections";
 import { useGithubVersions, useGithubDocs } from "./hooks/useGithubHooks";
 import { useRouter } from "./hooks/useRouter";
 import { LayoutProvider, useLayout } from "./hooks/useLayout";
+import { BackgroundThemeProvider } from "./hooks/useBackgroundTheme";
 
 function AppContent() {
   const routerProps = useRouter();
@@ -47,7 +48,9 @@ function AppContent() {
 export default function App() {
   return (
     <LayoutProvider>
-      <AppContent />
+      <BackgroundThemeProvider>
+        <AppContent />
+      </BackgroundThemeProvider>
     </LayoutProvider>
   );
 }

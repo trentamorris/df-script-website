@@ -1,5 +1,6 @@
 import React from "react";
-import { GalaxyBackground } from "../../elements";
+import { GalaxyBackground, WaveBackground } from "../../elements";
+import { useBackgroundTheme } from "../../../hooks/useBackgroundTheme";
 import { About, Support, Docs, Home, Sidebar } from "../shared";
 import { MobileHeader } from "./components/MobileHeader";
 import { MobileBottomNav } from "./components/MobileBottomNav";
@@ -9,6 +10,7 @@ import { ABOUT_PATH, SUPPORT_PATH } from "../desktop/constants";
 import { SEARCH_PATH } from "./constants";
 import { getQualifiedPath } from "../../../utils/routing";
 import type { OperationItem } from "../../../types";
+import "./mobile.module.css";
 
 export function MobileLayout({
   path,
@@ -19,6 +21,7 @@ export function MobileLayout({
   versionOptions,
   operationsIndex
 }: MobileLayoutProps) {
+  const { backgroundTheme } = useBackgroundTheme();
   const isSearchPage = path === SEARCH_PATH;
   const isHomePage = !isDocs && path !== ABOUT_PATH && path !== SUPPORT_PATH && !isSearchPage;
 
@@ -70,15 +73,16 @@ export function MobileLayout({
 
   return (
     <div className="h-[100dvh] w-screen flex flex-col relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased touch-pan-y overscroll-none">
-      {isHomePage && <GalaxyBackground />}
+      {isHomePage && (backgroundTheme === "galaxy" ? <GalaxyBackground /> : <WaveBackground />)}
 
       {/* Top Mobile Header (hidden on Home landing screen and dedicated Search screen) */}
       {!isHomePage && !isSearchPage && <MobileHeader activeVersion={activeVersion} />}
 
-      {/* Main Content Area: padded 56px (pb-14) at bottom so fixed bottom nav never overlaps content */}
-      <div className={`flex-1 min-h-0 w-full relative z-10 box-border pb-14 ${
-        isHomePage || isSearchPage ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto"
-      }`}>
+      {/* Main Content Area: padded with Tailwind using CSS variables to account for bottom nav and minibar */}
+      <div className={`flex-1 min-h-0 w-full relative z-10 box-border transition-[padding-bottom] duration-300 ease-[var(--mobile-panel-easing)] ${
+        activeDocOp ? "pb-[var(--mobile-content-pb-with-minibar)]" : "pb-[var(--mobile-content-pb-default)]"
+      } ${isHomePage || isSearchPage ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto"
+        }`}>
         {(() => {
           if (isSearchPage) {
             return (

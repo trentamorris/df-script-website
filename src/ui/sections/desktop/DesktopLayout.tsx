@@ -3,7 +3,8 @@ import { Header } from "./components/header/Header";
 import { About, Support, Docs, Home, Sidebar } from "../shared";
 import { DFScriptNotebook } from "../../../df-script-notebook";
 import { getQualifiedPath } from "../../../utils/routing";
-import { GalaxyBackground } from "../../elements";
+import { GalaxyBackground, WaveBackground } from "../../elements";
+import { useBackgroundTheme } from "../../../hooks/useBackgroundTheme";
 import type { DesktopLayoutProps } from "./types";
 import { NOTEBOOK_PATH, ABOUT_PATH, SUPPORT_PATH } from "./constants";
 
@@ -16,13 +17,14 @@ export function DesktopLayout({
   versionOptions,
   operationsIndex
 }: DesktopLayoutProps) {
+  const { backgroundTheme } = useBackgroundTheme();
   // Only expand sidebar by default when actively viewing documentation
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(!isDocs);
   const isHomePage = !isDocs && path !== ABOUT_PATH && path !== SUPPORT_PATH && path !== NOTEBOOK_PATH;
 
   return (
     <div className="h-screen w-screen flex flex-col relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased">
-      {isHomePage && <GalaxyBackground />}
+      {isHomePage && (backgroundTheme === "galaxy" ? <GalaxyBackground /> : <WaveBackground />)}
       <Header
         path={path}
         isSidebarCollapsed={isSidebarCollapsed}

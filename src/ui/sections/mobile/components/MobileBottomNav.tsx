@@ -39,9 +39,8 @@ export function MobileBottomNav({
   return (
     <nav
       style={style}
-      className={`fixed bottom-0 left-0 right-0 z-50 h-14 bg-[#1D1D1D] select-none will-change-transform ${
-        className || ""
-      }`}
+      className={`fixed bottom-0 left-0 right-0 z-50 h-14 bg-[#1D1D1D] select-none will-change-transform ${className || ""
+        }`}
     >
       <div className="flex items-center justify-around h-full max-w-md mx-auto px-2">
         {/* Home Tab */}
@@ -51,9 +50,8 @@ export function MobileBottomNav({
             e.preventDefault();
             navigateTo("/");
           }}
-          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${
-            isHomeActive ? "text-white" : "text-text-muted hover:text-white"
-          }`}
+          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${isHomeActive ? "text-white" : "text-text-muted hover:text-white"
+            }`}
         >
           {isHomeActive ? (
             <Home style={{ fontSize: "24px" }} />
@@ -73,9 +71,8 @@ export function MobileBottomNav({
             navigateTo(SEARCH_PATH);
           }}
           aria-label="Search and API Explorer"
-          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${
-            isSearchActive ? "text-white" : "text-text-muted hover:text-white"
-          }`}
+          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${isSearchActive ? "text-white" : "text-text-muted hover:text-white"
+            }`}
         >
           <Search
             style={{
@@ -96,9 +93,8 @@ export function MobileBottomNav({
             e.preventDefault();
             navigateTo(ABOUT_PATH);
           }}
-          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${
-            isAboutActive ? "text-white" : "text-text-muted hover:text-white"
-          }`}
+          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${isAboutActive ? "text-white" : "text-text-muted hover:text-white"
+            }`}
         >
           {isAboutActive ? (
             <Info style={{ fontSize: "24px" }} />
@@ -117,9 +113,8 @@ export function MobileBottomNav({
             e.preventDefault();
             navigateTo(SUPPORT_PATH);
           }}
-          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${
-            isSupportActive ? "text-[#ff6b81]" : "text-text-muted hover:text-[#ff6b81]"
-          }`}
+          className={`flex flex-col items-center justify-center gap-0.5 w-16 transition-colors ${isSupportActive ? "text-[#ff6b81]" : "text-text-muted hover:text-[#ff6b81]"
+            }`}
         >
           {isSupportActive ? (
             <Favorite style={{ fontSize: "23px", color: "#ff6b81" }} />

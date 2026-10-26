@@ -213,7 +213,7 @@ export function Sidebar({
 
                   {isOpen && (
                     <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-1 md:gap-2">
-                       {ops.map((op) => {
+                      {ops.map((op) => {
                         const qualifiedPath = getQualifiedPath(op);
                         const isCurrent = qualifiedPath === currentOpName;
                         return (
