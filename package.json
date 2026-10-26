@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "deploy": "npx vercel@56.3.2 build --yes --prod && npx vercel@56.3.2 deploy --prebuilt --prod && npx vercel@56.3.2 alias set df-script.js.org && npx vercel@56.3.2 alias set df-script.vercel.app",
+    "deploy": "npx vercel@56.3.2 deploy --prod --yes",
     "deploy-preview": "npx vercel@56.3.2"
   },
   "dependencies": {
