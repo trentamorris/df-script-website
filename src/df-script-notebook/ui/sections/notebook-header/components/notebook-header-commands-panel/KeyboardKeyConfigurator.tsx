@@ -179,7 +179,7 @@ export function KeyboardKeyConfigurator({
       setIsListening(false);
     }, 6000);
 
-    let debounceFinishTimer: NodeJS.Timeout | null = null;
+    let debounceFinishTimer: ReturnType<typeof setTimeout> | null = null;
     let recordedSequence: string[] = [];
 
     const handleKeyDown = (e: KeyboardEvent) => {
