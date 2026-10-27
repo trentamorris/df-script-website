@@ -217,3 +217,51 @@ body {
   animation-name: scale-response;
   animation-timing-function: cubic-bezier(0.05, 0, 0, 1);
 }
+
+/* Smooth spring-like slide up & fade for floating drawers */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up-fade {
+  animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Louis Vuitton floating pill expansion keyframe */
+@keyframes lvPillExpand {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-lv-pill {
+  animation: lvPillExpand 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Louis Vuitton floating pill condense/exit keyframe */
+@keyframes lvPillCondense {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+}
+
+.animate-lv-pill-exit {
+  animation: lvPillCondense 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}

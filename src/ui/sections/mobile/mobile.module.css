@@ -1,4 +1,5 @@
 :root {
+  --mobile-header-height: 56px;
   --mobile-bottom-nav-height: 56px;
   --mobile-minibar-height: 56px;
   --mobile-content-pb-default: var(--mobile-bottom-nav-height);

@@ -104,7 +104,7 @@ export function MobileLayout({
 
           switch (path) {
             case ABOUT_PATH:
-              return <About />;
+              return <About hasActiveDocOp={Boolean(activeDocOp)} />;
             case SUPPORT_PATH:
               return <Support />;
             default:

@@ -4,3 +4,7 @@ export interface AboutNavSection {
   level: number;
 }
 
+export interface AboutProps {
+  hasActiveDocOp?: boolean;
+}
+

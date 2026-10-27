@@ -9,7 +9,7 @@ interface MobileHeaderProps {
 
 export function MobileHeader({}: MobileHeaderProps) {
   return (
-    <header className="sticky top-0 left-0 right-0 z-30 h-14 bg-bg-pitch/90 backdrop-blur-md px-4 flex items-center justify-between select-none">
+    <header className="sticky top-0 left-0 right-0 z-30 h-[var(--mobile-header-height,56px)] bg-bg-pitch/90 backdrop-blur-md px-4 flex items-center justify-between select-none">
       {/* Brand logo */}
       <a href="/" className="flex items-center">
         <span className="text-lg font-medium tracking-wide text-white font-outfit lowercase">
