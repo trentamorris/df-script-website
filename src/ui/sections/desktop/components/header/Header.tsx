@@ -134,7 +134,11 @@ export function Header({
 
         <a
           href={SUPPORT_PATH}
-          className={`${path === SUPPORT_PATH ? "text-white font-medium" : "hover:text-white"} transition-colors uppercase flex items-center gap-1.5 text-[#fb7185]/90 hover:text-[#fb7185]`}
+          className={`transition-colors uppercase flex items-center gap-1.5 ${
+            path === SUPPORT_PATH
+              ? "text-[#fb7185] font-semibold"
+              : "text-text-muted hover:text-[#fb7185]"
+          }`}
         >
           <Favorite style={{ fontSize: "14px" }} />
           <span>SPONSOR</span>

@@ -23,7 +23,9 @@
   --breakpoint-2xl: 1536px;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   height: 100dvh;
   overflow: hidden;
@@ -224,6 +226,7 @@ body {
     opacity: 0;
     transform: translateY(14px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -240,6 +243,7 @@ body {
     opacity: 0;
     transform: translateY(20px) scale(0.92);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -256,6 +260,7 @@ body {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
   to {
     opacity: 0;
     transform: translateY(16px) scale(0.94);

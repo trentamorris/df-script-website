@@ -32,3 +32,5 @@ export type {
   ScrollableCanvasDirection,
   ScrollableCanvasArrowProps,
 } from "./scrollable-canvas/types";
+export { ArticleCanvas } from "./article-canvas";
+export type { ArticleCanvasProps, ArticleNavSection } from "./article-canvas";
