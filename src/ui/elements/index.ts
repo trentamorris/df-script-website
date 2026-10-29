@@ -34,3 +34,5 @@ export type {
 } from "./scrollable-canvas/types";
 export { ArticleCanvas } from "./article-canvas";
 export type { ArticleCanvasProps, ArticleNavSection } from "./article-canvas";
+export { SearchInput } from "./search-input";
+export type { SearchInputProps } from "./search-input/types";

@@ -5,7 +5,7 @@ import { $df } from "df-script";
 
 import { getQualifiedPath } from "../../../../utils/routing";
 import type { SidebarProps } from "./types";
-import { SearchInput } from "@elements";
+import { SearchInput } from "../../../elements";
 import { useLayout } from "../../../../hooks/useLayout";
 
 export function Sidebar({

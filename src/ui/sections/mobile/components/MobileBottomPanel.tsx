@@ -1,10 +1,10 @@
 import React from "react";
 import { KeyboardArrowDown, OpenInFull, Close } from "@mui/icons-material";
-import { DraggableSection } from "../../../../df-script-notebook/ui/elements/draggable-section/DraggableSection";
+import { DraggableSection } from "../../../elements/draggable-section/DraggableSection";
 import type {
   DraggableSectionOnPointerMove,
   DraggableSectionOnPointerUp,
-} from "../../../../df-script-notebook/ui/elements/draggable-section/types";
+} from "../../../elements/draggable-section/types";
 import { MOBILE_MINIBAR_HEIGHT } from "../constants";
 
 export interface MobileBottomPanelProps {

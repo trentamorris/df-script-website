@@ -11,13 +11,10 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@elements": ["src/df-script-notebook/ui/elements/index.ts"],
-      "@elements/*": ["src/df-script-notebook/ui/elements/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": [
-    "src/**/*",
-    "../src/**/*"
+    "src/**/*"
   ]
 }

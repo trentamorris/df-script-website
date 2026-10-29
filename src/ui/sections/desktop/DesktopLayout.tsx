@@ -1,7 +1,8 @@
 import React from "react";
 import { Header } from "./components/header/Header";
 import { About, Support, Docs, Home, Sidebar } from "../shared";
-import { DFScriptNotebook } from "../../../df-script-notebook";
+import { DFScriptNotebook } from "@df-script/notebook";
+import "@df-script/notebook/styles.css";
 import { getQualifiedPath } from "../../../utils/routing";
 import { GalaxyBackground, WaveBackground } from "../../elements";
 import { useBackgroundTheme } from "../../../hooks/useBackgroundTheme";

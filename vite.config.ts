@@ -8,7 +8,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@elements": path.resolve(__dirname, "./src/df-script-notebook/ui/elements"),
     },
   },
   build: {
@@ -18,8 +17,6 @@ export default defineConfig({
         manualChunks: {
           vendor: ["react", "react-dom"],
           mui: ["@mui/material", "@mui/icons-material", "@emotion/react", "@emotion/styled"],
-          "mui-grid": ["@mui/x-data-grid"],
-          monaco: ["@monaco-editor/react"],
         },
       },
     },
