@@ -1,12 +1,12 @@
 import React from "react";
 import { GalaxyBackground, WaveBackground } from "../../elements";
 import { useBackgroundTheme } from "../../../hooks/useBackgroundTheme";
-import { About, Support, Docs, Home, Sidebar } from "../shared";
+import { About, Support, Docs, Home, Sidebar, LlmView } from "../shared";
 import { MobileHeader } from "./components/MobileHeader";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import { MobileBottomPanel } from "./components/MobileBottomPanel";
 import type { MobileLayoutProps } from "./types";
-import { ABOUT_PATH, SUPPORT_PATH } from "../desktop/constants";
+import { ABOUT_PATH, SUPPORT_PATH, LLM_PATH } from "../constants";
 import { SEARCH_PATH } from "./constants";
 import { getQualifiedPath } from "../../../utils/routing";
 import type { OperationItem } from "../../../types";
@@ -19,11 +19,13 @@ export function MobileLayout({
   isDocs,
   activeOpName,
   versionOptions,
-  operationsIndex
+  operationsIndex,
+  typesMap
 }: MobileLayoutProps) {
   const { backgroundTheme } = useBackgroundTheme();
   const isSearchPage = path === SEARCH_PATH;
-  const isHomePage = !isDocs && path !== ABOUT_PATH && path !== SUPPORT_PATH && !isSearchPage;
+  const isLlmPage = path.startsWith(LLM_PATH);
+  const isHomePage = !isDocs && path !== ABOUT_PATH && path !== SUPPORT_PATH && !isLlmPage && !isSearchPage;
 
   // Active doc operation for the YouTube Music style slide-up/condensed sheet
   const [activeDocOp, setActiveDocOp] = React.useState<OperationItem | undefined>(undefined);
@@ -40,48 +42,23 @@ export function MobileLayout({
     }
   }, [isDocs, activeOpName, operationsIndex]);
 
-  // Intercept laptop trackpad pinch-to-zoom (which Chrome maps to wheel events with ctrlKey)
-  // and mobile touch gestures on the landing view
-  React.useEffect(() => {
-    // Intercept laptop trackpad pinch-to-zoom (ctrlKey + wheel) and mobile multi-touch pinch gestures everywhere on mobile
-    const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-
-    const handleGesture = (e: Event) => {
-      e.preventDefault();
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("gesturestart", handleGesture);
-
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("gesturestart", handleGesture);
-    };
-  }, []);
-
   return (
-    <div className="h-[100dvh] w-screen flex flex-col relative overflow-hidden select-none bg-bg-pitch text-text-muted font-sans antialiased touch-pan-y overscroll-none">
+    <div className="h-screen w-screen flex flex-col relative overflow-hidden bg-[#060606] text-text-muted font-sans antialiased">
+      {/* Background layer */}
       {isHomePage && (backgroundTheme === "galaxy" ? <GalaxyBackground /> : <WaveBackground />)}
 
-      {/* Top Mobile Header (hidden on Home landing screen and dedicated Search screen) */}
-      {!isHomePage && !isSearchPage && <MobileHeader activeVersion={activeVersion} />}
+      {/* Mobile Top Header */}
+      {!isSearchPage && (
+        <MobileHeader
+          activeVersion={activeVersion}
+        />
+      )}
 
-      {/* Main Content Area: padded with Tailwind using CSS variables to account for bottom nav and minibar */}
-      <div className={`flex-1 min-h-0 w-full relative z-10 box-border transition-[padding-bottom] duration-300 ease-[var(--mobile-panel-easing)] ${
-        activeDocOp ? "pb-[var(--mobile-content-pb-with-minibar)]" : "pb-[var(--mobile-content-pb-default)]"
-      } ${isHomePage || isSearchPage ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto"
+      {/* Main View Area */}
+      <div
+        className={`flex-1 min-h-0 w-full relative z-10 ${
+          isHomePage ? "bg-transparent" : "bg-[#060606]"
+        } ${isHomePage || isSearchPage ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto"
         }`}>
         {(() => {
           if (isSearchPage) {
@@ -102,6 +79,10 @@ export function MobileLayout({
             );
           }
 
+          if (isLlmPage) {
+            return <LlmView path={path} />;
+          }
+
           switch (path) {
             case ABOUT_PATH:
               return <About hasActiveDocOp={Boolean(activeDocOp)} />;
@@ -111,7 +92,7 @@ export function MobileLayout({
               if (isDocs) {
                 // If not using sheet overlay, render Docs in-place as fallback
                 const op = activeDocOp || operationsIndex.find((o) => getQualifiedPath(o) === activeOpName);
-                return <Docs op={op} activeVersion={activeVersion} />;
+                return <Docs op={op} activeVersion={activeVersion} typesMap={typesMap} />;
               }
               return <Home />;
           }
@@ -145,7 +126,7 @@ export function MobileLayout({
           ) : null
         }
       >
-        <Docs op={activeDocOp} activeVersion={activeVersion} />
+        <Docs op={activeDocOp} activeVersion={activeVersion} typesMap={typesMap} />
       </MobileBottomPanel>
 
       {/* Bottom Bar Navigation: translates out of screen opposite the expansion percentage */}

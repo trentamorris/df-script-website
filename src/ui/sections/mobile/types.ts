@@ -1,4 +1,4 @@
-import type { OperationItem } from "../../../types";
+import type { OperationItem, TypeDefinitionItem } from "../../../types";
 
 export interface MobileLayoutProps {
   path: string;
@@ -8,4 +8,5 @@ export interface MobileLayoutProps {
   activeOpName: string;
   versionOptions: string[];
   operationsIndex: OperationItem[];
+  typesMap?: Record<string, TypeDefinitionItem>;
 }

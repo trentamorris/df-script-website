@@ -32,7 +32,14 @@ export type {
   ScrollableCanvasDirection,
   ScrollableCanvasArrowProps,
 } from "./scrollable-canvas/types";
-export { ArticleCanvas } from "./article-canvas";
+export {
+  ArticleCanvas,
+  parseMarkdownSections,
+  extractDomSections,
+  slugify,
+} from "./article-canvas";
 export type { ArticleCanvasProps, ArticleNavSection } from "./article-canvas";
 export { SearchInput } from "./search-input";
 export type { SearchInputProps } from "./search-input/types";
+export { TabShelf, Tab } from "./tab-shelf";
+export type { TabValue, TabContextValue, TabProps, TabShelfProps } from "./tab-shelf";

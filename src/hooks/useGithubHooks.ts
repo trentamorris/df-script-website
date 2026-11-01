@@ -1,5 +1,5 @@
 import React from "react";
-import type { OperationItem, DocsVersion } from "../types";
+import type { OperationItem, DocsVersion, TypeDefinitionItem } from "../types";
 import { GITHUB_RAW_BASE_URL, GITHUB_API_BASE_URL } from "../constants";
 
 export function useGithubVersions() {
@@ -61,6 +61,7 @@ export function useGithubVersions() {
 
 export function useGithubDocs(activeVersion: DocsVersion) {
   const [operationsIndex, setOperationsIndex] = React.useState<OperationItem[]>([]);
+  const [typesMap, setTypesMap] = React.useState<Record<string, TypeDefinitionItem>>({});
   const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -71,46 +72,114 @@ export function useGithubDocs(activeVersion: DocsVersion) {
         if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
         return r.json();
       })
-      .then((rawDocs: Record<string, Record<string, any>>) => {
+      .then((rawDocs: any) => {
         const mappedList: OperationItem[] = [];
-        for (const [filePath, symbols] of Object.entries(rawDocs)) {
-          for (const [symbolName, info] of Object.entries(symbols)) {
-            let name = symbolName;
-            if (info.category === "DataFrame") {
-              name = `.${symbolName}()`;
-            } else if (info.category === "ColumnExpression") {
-              if (info.namespace === "$df") {
-                name = `${symbolName}()`;
-              } else if (info.namespace && info.namespace.startsWith("$df.col.")) {
-                const sub = info.namespace.slice(8);
-                name = `.${sub}.${symbolName}()`;
-              } else {
-                name = `.${symbolName}()`;
-              }
-            }
+        let extractedTypes: Record<string, TypeDefinitionItem> = {};
 
-            mappedList.push({
-              name,
-              category: info.category || "ColumnExpression",
-              syntax: info.syntax || "",
-              desc: info.desc || "",
-              version: activeVersion,
-              examples: info.examples,
-              params: info.params,
-              returns: info.returns,
-              signature: info.signature,
-              filePath,
-              lineStart: info.lineStart
-            });
+        // Check if rawDocs uses the new restructured layout
+        const isRestructured =
+          rawDocs &&
+          (rawDocs.columnExpressions ||
+            rawDocs.dataframe ||
+            rawDocs.datatypes ||
+            rawDocs.exceptions ||
+            rawDocs.functions ||
+            rawDocs.types);
+
+        if (isRestructured) {
+          if (rawDocs.types && typeof rawDocs.types === "object") {
+            extractedTypes = rawDocs.types;
+          }
+
+          const addSymbols = (symbolsObj: Record<string, any>) => {
+            if (!symbolsObj || typeof symbolsObj !== "object") return;
+            for (const [symbolName, info] of Object.entries(symbolsObj)) {
+              mappedList.push({
+                name: info.name || symbolName,
+                category: info.category || "ColumnExpression",
+                syntax: info.syntax,
+                desc: info.desc || "",
+                version: activeVersion,
+                examples: info.examples,
+                params: info.params,
+                returns: info.returns,
+                signature: info.signature,
+                filePath: info.filePath || "",
+                lineStart: info.lineStart,
+                subTypes: info.subTypes || []
+              });
+            }
+          };
+
+          // 1. columnExpressions (nested mixin objects: arrayExpr, standardExpr, etc.)
+          if (rawDocs.columnExpressions) {
+            for (const mixinGroup of Object.values(rawDocs.columnExpressions)) {
+              addSymbols(mixinGroup as Record<string, any>);
+            }
+          }
+
+          // 2. dataframe, datatypes, exceptions, functions
+          if (rawDocs.dataframe) addSymbols(rawDocs.dataframe);
+          if (rawDocs.datatypes) addSymbols(rawDocs.datatypes);
+          if (rawDocs.exceptions) addSymbols(rawDocs.exceptions);
+          if (rawDocs.functions) addSymbols(rawDocs.functions);
+        } else {
+          // Fallback: older flat-by-filePath format (e.g. v2.3.0)
+          for (const [filePath, symbols] of Object.entries(rawDocs as Record<string, Record<string, any>>)) {
+            if (filePath === "types" || filePath === "__types__") {
+              if (symbols && typeof symbols === "object") {
+                extractedTypes = symbols as any;
+              }
+              continue;
+            }
+            for (const [symbolName, info] of Object.entries(symbols)) {
+              let name = info.name || symbolName;
+              if (!info.name) {
+                if (info.category === "DataFrame") {
+                  name = `.${symbolName}()`;
+                } else if (info.category === "Function") {
+                  name = `${symbolName}()`;
+                } else if (info.category === "ColumnExpression") {
+                  if (info.namespace === "$df") {
+                    name = `${symbolName}()`;
+                  } else if (info.namespace && info.namespace.startsWith("$df.col.")) {
+                    const sub = info.namespace.slice(8);
+                    name = `.${sub}.${symbolName}()`;
+                  } else {
+                    name = `.${symbolName}()`;
+                  }
+                }
+              }
+
+              mappedList.push({
+                name,
+                category: info.category || "ColumnExpression",
+                syntax: info.syntax,
+                desc: info.desc || "",
+                version: activeVersion,
+                examples: info.examples,
+                params: info.params,
+                returns: info.returns,
+                signature: info.signature,
+                filePath,
+                lineStart: info.lineStart,
+                subTypes: info.subTypes || []
+              });
+            }
           }
         }
+
+        setTypesMap(extractedTypes);
         setOperationsIndex(mappedList);
       })
-      .catch(() => setOperationsIndex([]))
+      .catch(() => {
+        setOperationsIndex([]);
+        setTypesMap({});
+      })
       .finally(() => setIsLoading(false));
   }, [activeVersion]);
 
-  return { operationsIndex, isLoading };
+  return { operationsIndex, typesMap, isLoading };
 }
 
 /**

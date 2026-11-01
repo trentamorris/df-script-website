@@ -1,0 +1,82 @@
+/* Continuous AI-style text glisten (used when loadingText is provided or applied directly) */
+.shimmerText {
+  color: #8c8c8c;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-image: linear-gradient(110deg,
+      #6e6e6e 35%,
+      #ffffff 50%,
+      #6e6e6e 65%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  animation: textShimmerSweep 2s infinite linear;
+}
+
+@keyframes textShimmerSweep {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* Pure GPU-composited vertical spring rise + micro-scale entrance */
+.springRiseBlock {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0) scale(0.985);
+  transform-origin: left bottom;
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.springRiseVisible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Stable scrollbar gutter on TOC with hover-only scrollbar thumb */
+.tocScrollContainer {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.tocScrollContainer:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.tocScrollContainer::-webkit-scrollbar {
+  width: 5px;
+}
+
+.tocScrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tocScrollContainer::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.tocScrollContainer:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tocScrollContainer:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .springRiseBlock {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

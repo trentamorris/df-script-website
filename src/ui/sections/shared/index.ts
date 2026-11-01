@@ -6,3 +6,4 @@ export { Home } from "./home/Home";
 export { Sidebar } from "./sidebar/Sidebar";
 export type { SidebarProps } from "./sidebar/types";
 export { Support } from "./support/Support";
+export { LlmView } from "./llm/LlmView";

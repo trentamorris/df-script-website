@@ -8,7 +8,7 @@ import { BackgroundThemeProvider } from "./hooks/useBackgroundTheme";
 function AppContent() {
   const routerProps = useRouter();
   const versionOptions = useGithubVersions();
-  const { operationsIndex } = useGithubDocs(routerProps.activeVersion);
+  const { operationsIndex, typesMap } = useGithubDocs(routerProps.activeVersion);
   const { isMobile } = useLayout();
 
   // If no version was in the URL, automatically select the latest fetched version from GitHub
@@ -29,6 +29,7 @@ function AppContent() {
           activeOpName={routerProps.activeOpName}
           versionOptions={versionOptions}
           operationsIndex={operationsIndex}
+          typesMap={typesMap}
         />
       ) : (
         <MobileLayout
@@ -39,6 +40,7 @@ function AppContent() {
           activeOpName={routerProps.activeOpName}
           versionOptions={versionOptions}
           operationsIndex={operationsIndex}
+          typesMap={typesMap}
         />
       )}
     </>

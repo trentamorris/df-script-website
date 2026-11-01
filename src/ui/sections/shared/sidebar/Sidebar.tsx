@@ -101,6 +101,7 @@ export function Sidebar({
   const getFolderDisplayName = (category: string) => {
     if (category === "DataFrame") return "DataFrame Operations";
     if (category === "ColumnExpression") return "Column Expressions";
+    if (category === "Function") return "Functions";
     if (category === "DataType") return "Data Types";
     if (category === "Exception") return "Exceptions";
     return category; // fallback for any new/custom categories
@@ -127,7 +128,7 @@ export function Sidebar({
 
   const content = (
     <div
-      className="flex-grow flex flex-col min-h-0 select-none h-full overflow-hidden"
+      className="flex-1 flex flex-col min-h-0 select-none h-full overflow-hidden"
       style={{ backgroundColor: effectiveBgColor }}
     >
       {/* Explorer Header with Interactive Version Selector (Sticky at the top) */}
@@ -182,116 +183,116 @@ export function Sidebar({
       </div>
 
       {/* Scrollable Container */}
-      <div className="relative flex-grow min-h-0 flex flex-col overflow-hidden bg-transparent pt-3">
-        {/* Scrollable Explorer List */}
-        <div className="flex-grow overflow-y-auto select-none pt-0 pb-12 min-h-0 text-[11px] flex flex-col gap-4">
-          <div className="flex flex-col gap-0 px-4 md:px-8">
-            {categoriesList.map((cat) => {
-              const ops = getFilteredOps(cat);
-              if (ops.length === 0) return null;
+        <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden bg-transparent pt-3">
+          {/* Scrollable Explorer List */}
+            <div className="flex-1 overflow-y-auto select-none pt-0 pb-12 min-h-0 text-[11px] flex flex-col gap-4">
+              <div className="flex flex-col gap-0 px-4 md:px-8">
+                {categoriesList.map((cat) => {
+                  const ops = getFilteredOps(cat);
+                  if (ops.length === 0) return null;
 
-              const isOpen = q ? true : openFolders[cat] !== false;
+                  const isOpen = q ? true : openFolders[cat] !== false;
 
-              return (
-                <div key={cat} className="flex flex-col">
-                  <button
-                    onClick={() => setOpenFolders(prev => ({ ...prev, [cat]: openFolders[cat] === false }))}
-                    style={{ backgroundColor: effectiveBgColor }}
-                    className="sticky top-0 z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2.5 md:py-2 before:content-[''] before:absolute before:-top-1.5 before:left-0 before:right-0 before:h-1.5 before:bg-inherit before:pointer-events-none"
-                  >
-                    <span className="text-text-dim w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      {isOpen ? (
-                        <KeyboardArrowDown className="!text-[16px] md:!text-[14px]" />
-                      ) : (
-                        <KeyboardArrowRight className="!text-[16px] md:!text-[14px]" />
+                  return (
+                    <div key={cat} className="flex flex-col">
+                      <button
+                        onClick={() => setOpenFolders(prev => ({ ...prev, [cat]: openFolders[cat] === false }))}
+                        style={{ backgroundColor: effectiveBgColor }}
+                        className="sticky top-0 z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2.5 md:py-2 before:content-[''] before:absolute before:-top-1.5 before:left-0 before:right-0 before:h-1.5 before:bg-inherit before:pointer-events-none"
+                      >
+                        <span className="text-text-dim w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                          {isOpen ? (
+                            <KeyboardArrowDown className="!text-[16px] md:!text-[14px]" />
+                          ) : (
+                            <KeyboardArrowRight className="!text-[16px] md:!text-[14px]" />
+                          )}
+                        </span>
+                        <span className="font-bold md:font-semibold tracking-widest font-outfit text-[13px] md:text-[11px] uppercase text-[#f0f0f0]">
+                          {getFolderDisplayName(cat)}
+                        </span>
+                      </button>
+
+                      {isOpen && (
+                        <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-1 md:gap-2">
+                          {ops.map((op) => {
+                            const qualifiedPath = getQualifiedPath(op);
+                            const isCurrent = qualifiedPath === currentOpName;
+                            return (
+                              <div key={op.name} className="flex flex-col">
+                                <button
+                                  onClick={() => {
+                                    if (onSelectOp) {
+                                      onSelectOp(op);
+                                    } else {
+                                      const url = `/docs/${activeVersion}/${qualifiedPath}`;
+                                      window.history.pushState ? window.history.pushState({}, "", url) : (window.location.pathname = url);
+                                      window.dispatchEvent(new Event("popstate"));
+                                    }
+                                    setIsMenuOpen?.(false);
+                                  }}
+                                  className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer text-[14px] md:text-[12px] py-1.5 md:py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
+                                >
+                                  <span>{renderHighlightedName(op.name)}</span>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
-                    </span>
-                    <span className="font-bold md:font-semibold tracking-widest font-outfit text-[13px] md:text-[11px] uppercase text-[#f0f0f0]">
-                      {getFolderDisplayName(cat)}
-                    </span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-1 md:gap-2">
-                      {ops.map((op) => {
-                        const qualifiedPath = getQualifiedPath(op);
-                        const isCurrent = qualifiedPath === currentOpName;
-                        return (
-                          <div key={op.name} className="flex flex-col">
-                            <button
-                              onClick={() => {
-                                if (onSelectOp) {
-                                  onSelectOp(op);
-                                } else {
-                                  const url = `/docs/${activeVersion}/${qualifiedPath}`;
-                                  window.history.pushState ? window.history.pushState({}, "", url) : (window.location.pathname = url);
-                                  window.dispatchEvent(new Event("popstate"));
-                                }
-                                setIsMenuOpen?.(false);
-                              }}
-                              className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer text-[14px] md:text-[12px] py-1.5 md:py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
-                            >
-                              <span>{renderHighlightedName(op.name)}</span>
-                            </button>
-                          </div>
-                        );
-                      })}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Bottom Fade Gradient */}
-        <div
-          className="absolute bottom-0 left-0 right-[16px] h-10 pointer-events-none z-10"
-          style={{
-            background: `linear-gradient(to top, ${effectiveBgColor} 0%, ${effectiveBgColor}cc 60%, transparent 100%)`
-          }}
-        />
-      </div>
-    </div>
-  );
-
-  if (isDrawer) {
-    return (
-      <div className={`fixed inset-0 z-50 select-none transition-all duration-300 ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
-        {/* Backdrop overlay */}
-        <div
-          onClick={() => setIsMenuOpen?.(false)}
-          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isMenuOpen ? "opacity-100" : "opacity-0"}`}
-        />
-
-        {/* Side Panel Drawer - Pinned scrollbar layout */}
-        <div
-          style={{ backgroundColor: effectiveBgColor }}
-          className={`absolute top-0 left-0 bottom-0 w-full sm:w-[380px] border-r border-border-dark flex flex-col justify-between pt-0 pb-6 px-0 transform transition-transform duration-300 ease-out z-50 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between w-full p-4 border-b border-border-dark shrink-0 px-6 md:px-12">
-            <button
-              onClick={() => setIsMenuOpen?.(false)}
-              className="flex items-center gap-2 text-[11px] font-outfit tracking-widest text-text-muted hover:text-white transition-colors cursor-pointer uppercase font-medium select-none text-left mr-2"
-            >
-              <Close style={{ fontSize: "14px" }} />
-              <span>CLOSE</span>
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-medium tracking-wide text-white font-outfit lowercase leading-none">
-                df-script
-              </span>
-              <span className="text-[10px] font-mono text-text-dim leading-none">{activeVersion}</span>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Drawer Explorer */}
-          {content}
+            {/* Bottom Fade Gradient */}
+            <div
+              className="absolute bottom-0 left-0 right-[16px] h-10 pointer-events-none z-10"
+              style={{
+                background: `linear-gradient(to top, ${effectiveBgColor} 0%, ${effectiveBgColor}cc 60%, transparent 100%)`
+              }}
+            />
+          </div>
         </div>
-      </div>
-    );
+        );
+
+        if (isDrawer) {
+    return (
+        <div className={`fixed inset-0 z-50 select-none transition-all duration-300 ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
+          {/* Backdrop overlay */}
+          <div
+            onClick={() => setIsMenuOpen?.(false)}
+            className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isMenuOpen ? "opacity-100" : "opacity-0"}`}
+          />
+
+          {/* Side Panel Drawer - Pinned scrollbar layout */}
+          <div
+            style={{ backgroundColor: effectiveBgColor }}
+            className={`absolute top-0 left-0 bottom-0 w-full sm:w-[380px] border-r border-border-dark flex flex-col justify-between pt-0 pb-6 px-0 transform transition-transform duration-300 ease-out z-50 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between w-full p-4 border-b border-border-dark shrink-0 px-6 md:px-12">
+              <button
+                onClick={() => setIsMenuOpen?.(false)}
+                className="flex items-center gap-2 text-[11px] font-outfit tracking-widest text-text-muted hover:text-white transition-colors cursor-pointer uppercase font-medium select-none text-left mr-2"
+              >
+                <Close style={{ fontSize: "14px" }} />
+                <span>CLOSE</span>
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-medium tracking-wide text-white font-outfit lowercase leading-none">
+                  df-script
+                </span>
+                <span className="text-[10px] font-mono text-text-dim leading-none">{activeVersion}</span>
+              </div>
+            </div>
+
+            {/* Drawer Explorer */}
+            {content}
+          </div>
+        </div>
+        );
   }
 
-  return content;
+        return content;
 }

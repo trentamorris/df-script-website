@@ -19,7 +19,7 @@ export function parseMarkdownSections(markdown: string): {
   let currentH2 = "";
 
   renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
-    const cleanTitle = text.replace(/<[^>]*>/g, "").trim();
+    const cleanTitle = text.replace(/<[^>]*>/g, "").replace(/`/g, "").trim();
     const id = slugify(cleanTitle);
 
     if (depth === 2) {
@@ -29,16 +29,18 @@ export function parseMarkdownSections(markdown: string): {
       sections.push({ id, title: cleanTitle, level: 3 });
     }
 
-    return `<h${depth} id="${id}">${text}</h${depth}>`;
+    const inlineHtml = marked.parseInline(text) as string;
+    return `<h${depth} id="${id}">${inlineHtml}</h${depth}>`;
   };
 
   renderer.link = ({ href, title, text }: { href: string; title?: string | null; text: string }) => {
     const titleAttr = title ? ` title="${title}"` : "";
+    const inlineHtml = marked.parseInline(text) as string;
     const isAnchor = href.startsWith("#");
     if (isAnchor) {
-      return `<a href="${href}"${titleAttr}>${text}</a>`;
+      return `<a href="${href}"${titleAttr}>${inlineHtml}</a>`;
     }
-    return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`;
+    return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${inlineHtml}</a>`;
   };
 
   renderer.table = (token) => {
@@ -73,7 +75,7 @@ export function parseMarkdownSections(markdown: string): {
     const escapedText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     return `
-      <div class="relative group my-5 rounded-2xl bg-[#1e1f20] shadow-xl overflow-hidden flex flex-col w-full">
+      <div class="article-code-card relative group my-5 rounded-2xl bg-[#1e1f20] overflow-hidden flex flex-col w-full">
         <div class="px-5 pt-3.5 pb-2 text-xs font-medium text-zinc-400 select-none tracking-wide flex items-center justify-between">
           <span>${languageLabel}</span>
           <span class="text-[10px] text-zinc-500">df-script</span>
@@ -101,4 +103,27 @@ export function parseMarkdownSections(markdown: string): {
 
   const html = marked.parse(markdown, { renderer, gfm: true, breaks: true }) as string;
   return { html, sections };
+}
+
+export function extractDomSections(container: HTMLElement): ArticleNavSection[] {
+  const discovered: ArticleNavSection[] = [];
+  const headings = container.querySelectorAll("h2, h3");
+
+  for (let i = 0; i < headings.length; i++) {
+    const heading = headings[i] as HTMLElement;
+    const title = (heading.textContent || "").trim();
+    if (!title) continue;
+
+    const parentSection = heading.closest("section[id]") as HTMLElement | null;
+    let id = parentSection?.id || heading.id;
+    if (!id) {
+      id = slugify(title);
+      heading.id = id;
+    }
+
+    const level = heading.tagName.toLowerCase() === "h3" ? 3 : 2;
+    discovered.push({ id, title, level });
+  }
+
+  return discovered;
 }

@@ -1,32 +1,65 @@
 import React from "react";
-import { ContentCopy, Check } from "@mui/icons-material";
 import { useCopyToClipboard } from "../../../hooks/useCopyToClipboard";
 import type { CodeBlockProps } from "./types";
 
-export function CodeBlock({ code, className = "", unstyled = false }: CodeBlockProps) {
-  const { copy, isCopied } = useCopyToClipboard();
-  const id = React.useId();
+  export function CodeBlock({
+    code,
+    language = "typescript",
+    className = "",
+    unstyled = false,
+  }: CodeBlockProps) {
+    const { copy, isCopied } = useCopyToClipboard();
+    const id = React.useId();
+    const copied = isCopied(id);
 
-  const containerClass = unstyled
-    ? "relative group w-full"
-    : "relative border border-[#1e1e1e] rounded bg-[#0c0c0c] p-4 flex flex-col gap-3 group";
+    if (unstyled) {
+      return (
+        <div className="relative group w-full">
+          <pre className={`font-mono overflow-x-auto select-text leading-relaxed ${className}`}>
+            {code}
+          </pre>
+        </div>
+      );
+    }
 
-  return (
-    <div className={containerClass}>
-      <pre className={`font-mono overflow-x-auto select-text leading-relaxed ${className}`}>
-        {code}
-      </pre>
-      <button
-        onClick={() => copy(code, id)}
-        className="absolute top-3 right-3 p-1.5 rounded bg-[#060606] hover:bg-[#111] border border-[#1e1e1e] text-[#9c9c9c] hover:text-[#ffffff] transition-all opacity-0 group-hover:opacity-100 cursor-pointer select-none flex items-center justify-center"
-        title="Copy code"
-      >
-        {isCopied(id) ? (
-          <Check style={{ fontSize: 13 }} className="text-emerald-400" />
-        ) : (
-          <ContentCopy style={{ fontSize: 13 }} />
-        )}
-      </button>
-    </div>
-  );
+    return (
+        <div className="article-code-card relative group rounded-2xl bg-[#1e1f20] overflow-hidden flex flex-col w-full">
+          <div className="px-5 pt-3.5 pb-2 text-xs font-medium text-zinc-400 select-none tracking-wide flex items-center justify-between">
+            <span>{language.toLowerCase()}</span>
+            <span className="text-[10px] text-zinc-500">df-script</span>
+          </div>
+          <div className="px-5 py-3 overflow-x-auto bg-[#1e1f20]">
+            <pre
+              className={`!bg-transparent !p-0 !m-0 !border-0 text-[12.5px] leading-[1.45] text-zinc-200 whitespace-pre overflow-visible select-text ${className}`}
+              style={{
+                fontFamily: "'Roboto Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace",
+                fontVariantNumeric: "tabular-nums",
+                fontFeatureSettings: "'tnum'",
+              }}
+            >
+              <code className="!bg-transparent !p-0 !border-0 !text-inherit">{code}</code>
+            </pre>
+          </div>
+          <div className="flex items-center justify-between px-5 py-2.5 bg-[#18191a] select-none text-[11px] text-zinc-500">
+            <span className="text-zinc-500">Run directly in-memory</span>
+            <button
+              type="button"
+              onClick={() => copy(code, id)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer select-none text-[11px] ${copied ? "text-emerald-400" : "text-zinc-400 hover:text-white"
+                }`}
+              title="Copy code"
+            >
+              <svg
+                className="w-3.5 h-3.5 fill-current"
+                viewBox="0 0 24 24"
+                focusable="false"
+                aria-hidden="true"
+              >
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+              </svg>
+              <span>{copied ? "Copied!" : "Copy"}</span>
+            </button>
+          </div>
+        </div>
+        );
 }

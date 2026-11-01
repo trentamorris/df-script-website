@@ -1,13 +1,13 @@
 import React from "react";
-import { Favorite, GitHub } from "@mui/icons-material";
-import { SUPPORT_PATH } from "../../desktop/constants";
+import { GitHub } from "@mui/icons-material";
+import { GITHUB_REPO_URL } from "../../../../constants";
 
 interface MobileHeaderProps {
   activeVersion?: string;
   isMenuOpen?: boolean;
 }
 
-export function MobileHeader({}: MobileHeaderProps) {
+export function MobileHeader({ }: MobileHeaderProps) {
   return (
     <header className="sticky top-0 left-0 right-0 z-30 h-[var(--mobile-header-height,56px)] bg-bg-pitch/90 backdrop-blur-md px-4 flex items-center justify-between select-none">
       {/* Brand logo */}
@@ -20,7 +20,7 @@ export function MobileHeader({}: MobileHeaderProps) {
       {/* Action link: GitHub */}
       <div className="flex items-center gap-4 text-xs font-outfit uppercase tracking-widest">
         <a
-          href="https://github.com/trentamorris/df-script"
+          href={GITHUB_REPO_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="text-text-muted hover:text-white transition-colors"

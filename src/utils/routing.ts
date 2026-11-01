@@ -3,7 +3,7 @@ import type { OperationItem } from "../types";
 export function getQualifiedPath(op: Pick<OperationItem, "name" | "category">): string {
   const cleanSymbol = op.name.replace(/^\./, "").replace(/\(\)$/, "");
   
-  if (op.category === "DataFrame") {
+  if (op.category === "DataFrame" || op.category === "Function") {
     return `$df.${cleanSymbol}`;
   }
   if (op.category === "ColumnExpression") {

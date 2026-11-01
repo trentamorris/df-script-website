@@ -17,6 +17,8 @@ export interface ArticleCanvasProps {
   children?: React.ReactNode;
   /** Loading state displaying standard skeleton */
   isLoading?: boolean;
+  /** Optional glistening status text rendered when isLoading is true */
+  loadingText?: string;
   /** Error message displaying standard error box */
   error?: string | null;
   /** Top header slot above the content */
@@ -25,6 +27,10 @@ export interface ArticleCanvasProps {
   hasActiveDocOp?: boolean;
   /** Custom ref for container element */
   contentContainerRef?: React.RefObject<HTMLDivElement>;
+  /** Enable smooth viewport spring-rise reveal on scroll. Defaults to true. */
+  animateOnScroll?: boolean;
+  /** Show the sliding indicator along the desktop TOC track. Defaults to true. */
+  showTocIndicator?: boolean;
   /** Optional class name */
   className?: string;
 }

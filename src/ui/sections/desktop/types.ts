@@ -1,4 +1,4 @@
-import type { OperationItem } from "../../../types";
+import type { OperationItem, TypeDefinitionItem } from "../../../types";
 
 export interface DesktopLayoutProps {
   path: string;
@@ -8,4 +8,5 @@ export interface DesktopLayoutProps {
   activeOpName: string;
   versionOptions: string[];
   operationsIndex: OperationItem[];
+  typesMap?: Record<string, TypeDefinitionItem>;
 }

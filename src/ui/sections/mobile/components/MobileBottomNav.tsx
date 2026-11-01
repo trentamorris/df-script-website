@@ -8,7 +8,7 @@ import {
   Favorite,
   FavoriteBorder,
 } from "@mui/icons-material";
-import { ABOUT_PATH, SUPPORT_PATH } from "../../desktop/constants";
+import { ABOUT_PATH, SUPPORT_PATH } from "../../constants";
 import { SEARCH_PATH } from "../constants";
 
 interface MobileBottomNavProps {
