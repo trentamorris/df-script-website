@@ -4,7 +4,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>df-script</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+  <title>df-script - High-Performance TypeScript DataFrame Engine</title>
+  <style>
+    .skip-link { position: absolute; left: 0; top: 0; padding: 0.75rem 1rem; background: #000; color: #fff; z-index: 10000; transform: translateY(-120%); }
+    .skip-link:focus { transform: none; outline: 3px solid #ffbf47; outline-offset: 2px; }
+    #root:focus { outline: none; }
+    noscript > div { max-width: 40rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 system-ui, sans-serif; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto !important; } }
+  </style>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon-128.png">
@@ -18,12 +28,63 @@
   <link rel="alternate" type="text/markdown" href="/llms-full.txt" title="Full df-script API Reference (Markdown)">
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="df-script Overview (Markdown)">
   <link rel="alternate" type="application/json" href="/docs.json" title="df-script API Schema (JSON)">
+  <link rel="canonical" href="https://df-script.js.org/">
   <meta name="description" content="A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.">
+  <meta name="keywords" content="dataframe, typescript, javascript, polars, pandas, data processing, expression engine, zero dependency">
+  <meta name="author" content="Trent Morris">
+  
+  <!-- Open Graph / Facebook / Reddit / LinkedIn -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="df-script">
+  <meta property="og:url" content="https://df-script.js.org/">
+  <meta property="og:title" content="df-script - High-Performance TypeScript DataFrame Engine">
+  <meta property="og:description" content="A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.">
+  <meta property="og:image" content="https://df-script.js.org/diamond.png">
+  <meta property="og:image:alt" content="df-script logo">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:url" content="https://df-script.js.org/">
+  <meta name="twitter:title" content="df-script - High-Performance TypeScript DataFrame Engine">
+  <meta name="twitter:description" content="A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.">
+  <meta name="twitter:image" content="https://df-script.js.org/diamond.png">
+  <meta name="twitter:image:alt" content="df-script logo">
+
+  <!-- JSON-LD Structured Data for Search Engines & Crawlers -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "df-script",
+    "url": "https://df-script.js.org/",
+    "codeRepository": "https://github.com/trentamorris/df-script",
+    "programmingLanguage": ["TypeScript", "JavaScript"],
+    "description": "A zero-dependency, high-performance, expression-based DataFrame engine designed for lightning-fast data processing in JavaScript and TypeScript.",
+    "license": "https://opensource.org/licenses/MIT",
+    "author": {
+      "@type": "Person",
+      "name": "Trent Morris"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="/index.css">
 </head>
 
 <body>
-  <div id="root"></div>
+  <a class="skip-link" href="#root">Skip to main content</a>
+  <div id="root" tabindex="-1"></div>
+  <noscript>
+    <div>
+      <h1>df-script</h1>
+      <p>A zero-dependency, high-performance, expression-based DataFrame engine for JavaScript and TypeScript.</p>
+      <p>This site needs JavaScript to display its interactive documentation. Without it, you can use:</p>
+      <ul>
+        <li><a href="/llms.txt">Overview (Markdown)</a></li>
+        <li><a href="/llms-full.txt">Full API reference (Markdown)</a></li>
+        <li><a href="https://github.com/trentamorris/df-script">Source code on GitHub</a></li>
+      </ul>
+    </div>
+  </noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

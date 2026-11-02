@@ -94,8 +94,15 @@ export function useGithubDocs(activeVersion: DocsVersion) {
           const addSymbols = (symbolsObj: Record<string, any>) => {
             if (!symbolsObj || typeof symbolsObj !== "object") return;
             for (const [symbolName, info] of Object.entries(symbolsObj)) {
+              const callExpression = info.callExpression || info.name || symbolName;
+              const propertyAccess = info.propertyAccess || symbolName;
+
               mappedList.push({
-                name: info.name || symbolName,
+                callExpression,
+                propertyAccess,
+                name: callExpression, // maintains compatibility with any lingering consumers
+                namespace: info.namespace,
+                accessor: info.accessor,
                 category: info.category || "ColumnExpression",
                 syntax: info.syntax,
                 desc: info.desc || "",
@@ -151,8 +158,15 @@ export function useGithubDocs(activeVersion: DocsVersion) {
                 }
               }
 
+              const callExpression = info.callExpression || name;
+              const propertyAccess = info.propertyAccess || symbolName;
+
               mappedList.push({
-                name,
+                callExpression,
+                propertyAccess,
+                name: callExpression,
+                namespace: info.namespace,
+                accessor: info.accessor,
                 category: info.category || "ColumnExpression",
                 syntax: info.syntax,
                 desc: info.desc || "",

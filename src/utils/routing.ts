@@ -1,13 +1,14 @@
 import type { OperationItem } from "../types";
 
-export function getQualifiedPath(op: Pick<OperationItem, "name" | "category">): string {
-  const cleanSymbol = op.name.replace(/^\./, "").replace(/\(\)$/, "");
+export function getQualifiedPath(op: Pick<OperationItem, "category"> & { callExpression?: string; name?: string }): string {
+  const expr = op.callExpression || op.name || "";
+  const cleanSymbol = expr.replace(/^\./, "").replace(/\(\)$/, "");
   
   if (op.category === "DataFrame" || op.category === "Function") {
     return `$df.${cleanSymbol}`;
   }
   if (op.category === "ColumnExpression") {
-    if (op.name.match(/^\w/)) { // Top-level functions like lit(), all(), when()
+    if (expr.match(/^\w/)) { // Top-level functions like lit(), all(), when()
       return `$df.${cleanSymbol}`;
     }
     return `$df.col.${cleanSymbol}`;

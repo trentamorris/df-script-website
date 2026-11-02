@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# LLM References & Machine Discovery
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /docs.json
+

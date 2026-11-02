@@ -18,7 +18,10 @@ export interface TypeDefinitionItem {
 }
 
 export interface OperationItem {
-  name: string;
+  callExpression: string;
+  propertyAccess: string;
+  namespace?: string;
+  accessor?: string;
   category: "DataFrame" | "ColumnExpression" | "Function" | "DataType" | "Exception";
   syntax?: string;
   desc: string;
@@ -30,4 +33,5 @@ export interface OperationItem {
   filePath: string;
   lineStart?: number;
   subTypes?: string[];
+  name?: string; // backwards compatibility alias if referenced
 }

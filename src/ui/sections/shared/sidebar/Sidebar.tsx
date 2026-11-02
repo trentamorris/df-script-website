@@ -32,7 +32,7 @@ export function Sidebar({
   // Auto-expand folder when currentOpName changes (e.g. from routing)
   React.useEffect(() => {
     if (currentOpName) {
-      const op = operationsIndex.find((o) => o.name === currentOpName);
+      const op = operationsIndex.find((o) => (o.callExpression || o.name) === currentOpName);
       if (op && op.category) {
         setOpenFolders((prev) => ({ ...prev, [op.category]: true }));
       }
@@ -91,11 +91,11 @@ export function Sidebar({
 
     if (q) {
       filtered = filtered.filter(
-        $df.col("name").str.toLowerCase().str.contains(q)
+        $df.col("callExpression").str.toLowerCase().str.contains(q)
       );
     }
 
-    return filtered.sort({ by: "name" }).toDicts() as OperationItem[];
+    return filtered.sort({ by: "callExpression" }).toDicts() as OperationItem[];
   };
 
   const getFolderDisplayName = (category: string) => {
@@ -218,7 +218,7 @@ export function Sidebar({
                             const qualifiedPath = getQualifiedPath(op);
                             const isCurrent = qualifiedPath === currentOpName;
                             return (
-                              <div key={op.name} className="flex flex-col">
+                              <div key={op.callExpression || op.name} className="flex flex-col">
                                 <button
                                   onClick={() => {
                                     if (onSelectOp) {
@@ -232,7 +232,7 @@ export function Sidebar({
                                   }}
                                   className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer text-[14px] md:text-[12px] py-1.5 md:py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
                                 >
-                                  <span>{renderHighlightedName(op.name)}</span>
+                                  <span>{renderHighlightedName(op.callExpression || op.name || "")}</span>
                                 </button>
                               </div>
                             );

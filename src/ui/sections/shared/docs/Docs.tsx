@@ -291,28 +291,29 @@ export function Docs({ op, activeVersion, typesMap = {} }: DocsProps) {
     );
   }
 
+  const opName = op.callExpression || op.name || "";
   let fullPath = "";
   let importStatement = `import { $df } from "df-script"`;
 
   if (op.category === "DataFrame") {
-    fullPath = `df${op.name}`;
+    fullPath = `df${opName}`;
   } else if (op.category === "Function") {
-    fullPath = op.name.startsWith("$df.") ? op.name : `$df.${op.name}`;
+    fullPath = opName.startsWith("$df.") ? opName : `$df.${opName}`;
   } else if (op.category === "ColumnExpression") {
-    if (op.name.startsWith("$df.")) {
-      fullPath = op.name;
-    } else if (op.name.startsWith("col") || op.name.startsWith("all")) {
-      fullPath = `$df.${op.name}`;
-    } else if (op.name.startsWith(".")) {
-      fullPath = `$df.col(<column_name>)${op.name}`;
+    if (opName.startsWith("$df.")) {
+      fullPath = opName;
+    } else if (opName.startsWith("col") || opName.startsWith("all")) {
+      fullPath = `$df.${opName}`;
+    } else if (opName.startsWith(".")) {
+      fullPath = `$df.col(<column_name>)${opName}`;
     } else {
-      fullPath = `$df.${op.name}`;
+      fullPath = `$df.${opName}`;
     }
   } else if (op.category === "DataType") {
-    fullPath = `$df.DataType.${op.name}`;
+    fullPath = `$df.DataType.${opName}`;
   } else if (op.category === "Exception") {
-    fullPath = op.name;
-    importStatement = `import { ${op.name} } from "df-script"`;
+    fullPath = opName;
+    importStatement = `import { ${opName} } from "df-script"`;
   }
 
   const combinedExamples = op.examples ? op.examples.join("\n\n") : "";
