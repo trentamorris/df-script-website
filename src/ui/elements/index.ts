@@ -43,3 +43,5 @@ export { SearchInput } from "./search-input";
 export type { SearchInputProps } from "./search-input/types";
 export { TabShelf, Tab } from "./tab-shelf";
 export type { TabValue, TabContextValue, TabProps, TabShelfProps } from "./tab-shelf";
+export { ThreadTree, ThreadTreeItem } from "./thread-tree/ThreadTree";
+export type { ThreadTreeNode, ThreadTreeItemProps, ThreadTreeProps } from "./thread-tree/types";

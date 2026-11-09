@@ -1,7 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,300;1,400;1,500;1,700;1,900&family=Roboto+Condensed:ital,wght@0,300..900;1,300..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
-@import "@df-script/notebook/styles.css";
 @import "tailwindcss";
-@source "./node_modules/@df-script/notebook/dist";
+
+:root {
+  --surface: rgba(20, 21, 22, 1);
+  --surface-inner: rgba(26, 27, 28, 1);
+  --surface-badge: rgba(31, 32, 34, 1);
+  --muted: rgba(156, 156, 156, 1);
+  --dim: rgba(92, 92, 92, 1);
+  --darker: rgba(12, 12, 12, 1);
+  --pitch: rgba(6, 6, 6, 1);
+  --border-dark: rgba(255, 255, 255, 0.15);
+  --border-light: rgba(255, 255, 255, 0.18);
+}
 
 @theme {
   --font-sans: 'Roboto', 'Noto Naskh Arabic UI', 'Noto Naskh Arabic', Arial, sans-serif;
@@ -9,13 +19,25 @@
   --font-outfit: 'Outfit', system-ui, sans-serif;
   --font-mono: 'Roboto Mono', monospace;
 
-  /* Theme Color Variables */
-  --color-border-dark: rgba(255, 255, 255, 0.15);
-  --color-border-light: rgba(255, 255, 255, 0.18);
-  --color-text-muted: #9c9c9c;
-  --color-text-dim: #5c5c5c;
-  --color-bg-darker: #0c0c0c;
-  --color-bg-pitch: #060606;
+  /* Generic Color Tokens */
+  --color-border-dark: var(--border-dark);
+  --color-border-light: var(--border-light);
+  --color-surface: var(--surface);
+  --color-surface-inner: var(--surface-inner);
+  --color-surface-badge: var(--surface-badge);
+  --color-muted: var(--muted);
+  --color-dim: var(--dim);
+  --color-darker: var(--darker);
+  --color-pitch: var(--pitch);
+
+  /* Aliases */
+  --color-text-muted: var(--muted);
+  --color-text-dim: var(--dim);
+  --color-bg-darker: var(--darker);
+  --color-bg-pitch: var(--pitch);
+  --color-doc-card: var(--surface);
+  --color-doc-card-inner: var(--surface-inner);
+  --color-doc-card-badge: var(--surface-badge);
 
   /* Screen Breakpoints */
   --breakpoint-sm: 640px;

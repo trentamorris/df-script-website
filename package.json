@@ -10,7 +10,7 @@
     "deploy-preview": "npx vercel@56.3.2"
   },
   "dependencies": {
-    "@df-script/notebook": "^0.1.2",
+    "@df-script/notebook": "^0.1.3",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.1",

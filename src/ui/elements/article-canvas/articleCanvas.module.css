@@ -39,6 +39,51 @@
   transform: translate3d(0, 0, 0) scale(1);
 }
 
+/* Container-query-driven TOC Sidebar matching df-script.js.org */
+@container (width < 48rem) {
+  .tocSidebar {
+    display: none !important;
+  }
+}
+
+@container (width >= 48rem) {
+  .tocSidebar {
+    display: block !important;
+  }
+}
+
+@container (width >= 48rem) {
+  .mobileTocPill {
+    display: none !important;
+  }
+}
+
+/* Explicit Container-Query Setup for Article Canvas */
+.articleCanvasRoot {
+  container-type: inline-size;
+  container-name: articleCanvas;
+}
+
+@container articleCanvas (min-width: 64rem) {
+  .articleToc {
+    display: block !important;
+  }
+
+  .articleMobilePill {
+    display: none !important;
+  }
+}
+
+@container articleCanvas (max-width: 63.99rem) {
+  .articleToc {
+    display: none !important;
+  }
+
+  .articleMobilePill {
+    display: flex !important;
+  }
+}
+
 /* Stable scrollbar gutter on TOC with hover-only scrollbar thumb */
 .tocScrollContainer {
   scrollbar-gutter: stable;

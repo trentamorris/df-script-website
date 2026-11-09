@@ -44,7 +44,7 @@ export function Header({
   }, []);
 
   return (
-    <header className={`flex items-center justify-between w-full p-4 border-0 z-20 shrink-0 sticky top-0 px-6 md:px-12 select-none transition-all duration-300 ease-in-out ${isNotebookPage
+    <header className={`flex items-center justify-between w-full py-4 border-0 z-20 shrink-0 sticky top-0 px-6 md:px-8 select-none transition-all duration-300 ease-in-out ${isNotebookPage
       ? "bg-[#030303] backdrop-blur-none"
       : isHomePage
         ? "bg-transparent hover:bg-[#060606]/90 backdrop-blur-none hover:backdrop-blur-md"

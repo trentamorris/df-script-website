@@ -75,15 +75,15 @@ export function parseMarkdownSections(markdown: string): {
     const escapedText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     return `
-      <div class="article-code-card relative group my-5 rounded-2xl bg-[#1e1f20] overflow-hidden flex flex-col w-full">
-        <div class="px-5 pt-3.5 pb-2 text-xs font-medium text-zinc-400 select-none tracking-wide flex items-center justify-between">
+      <div class="article-code-card relative group my-5 rounded-xl bg-surface overflow-hidden flex flex-col w-full border-0">
+        <div class="px-5 pt-3.5 pb-2 text-xs font-medium text-zinc-400 select-none tracking-wide flex items-center justify-between bg-surface">
           <span>${languageLabel}</span>
           <span class="text-[10px] text-zinc-500">df-script</span>
         </div>
-        <div class="px-5 py-3 overflow-x-auto bg-[#1e1f20]">
+        <div class="px-5 py-3 overflow-x-auto bg-surface">
           <pre class="!bg-transparent !p-0 !m-0 !border-0 text-[12.5px] leading-[1.45] text-zinc-200 whitespace-pre overflow-visible" style="font-family: 'Roboto Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum';"><code class="!bg-transparent !p-0 !border-0 !text-inherit">${escapedText}</code></pre>
         </div>
-        <div class="flex items-center justify-between px-5 py-2.5 bg-[#18191a] select-none text-[11px] text-zinc-500">
+        <div class="flex items-center justify-between px-5 py-2.5 bg-surface select-none text-[11px] text-zinc-500">
           <span class="text-zinc-500">Run directly in-memory</span>
           <button
             type="button"

@@ -7,14 +7,25 @@ export interface OperationParam {
   children?: OperationParam[];
 }
 
-export type DocsVersion = "v2.3.0" | (string & {});
+export type DocsVersion = "v2.4.0" | (string & {});
+
+export interface TypeTreeNode {
+  type: string;
+  optional: boolean;
+  variadic?: boolean;
+  default?: string;
+  desc: string;
+  resolvedType?: string;
+  properties?: Record<string, TypeTreeNode>;
+}
 
 export interface TypeDefinitionItem {
   signature: string;
-  subTypes: string[];
+  desc?: string;
   filePath?: string;
   lineStart?: number;
   lineEnd?: number;
+  properties?: Record<string, TypeTreeNode>;
 }
 
 export interface OperationItem {
@@ -30,8 +41,9 @@ export interface OperationItem {
   params?: OperationParam[];
   returns?: string;
   signature?: string;
+  signatureDetailed?: string;
   filePath: string;
   lineStart?: number;
-  subTypes?: string[];
+  typeTree?: Record<string, TypeTreeNode>;
   name?: string; // backwards compatibility alias if referenced
 }

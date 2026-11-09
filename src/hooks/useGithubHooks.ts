@@ -16,7 +16,7 @@ export function useGithubVersions() {
             if (!match) return false;
             const maj = Number(match[1]);
             const min = Number(match[2]);
-            return maj > 2 || (maj === 2 && min >= 3);
+            return maj > 2 || (maj === 2 && min >= 4);
           });
 
         const validVersions: DocsVersion[] = [];
@@ -67,125 +67,88 @@ export function useGithubDocs(activeVersion: DocsVersion) {
   React.useEffect(() => {
     if (!activeVersion) return;
     setIsLoading(true);
-    fetch(`${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json?t=${Date.now()}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-        return r.json();
-      })
-      .then((rawDocs: any) => {
-        const mappedList: OperationItem[] = [];
-        let extractedTypes: Record<string, TypeDefinitionItem> = {};
 
-        // Check if rawDocs uses the new restructured layout
-        const isRestructured =
-          rawDocs &&
-          (rawDocs.columnExpressions ||
-            rawDocs.dataframe ||
-            rawDocs.datatypes ||
-            rawDocs.exceptions ||
-            rawDocs.functions ||
-            rawDocs.types);
+    const parseDocs = (rawDocs: any) => {
+      const mappedList: OperationItem[] = [];
+      let extractedTypes: Record<string, TypeDefinitionItem> = {};
 
-        if (isRestructured) {
-          if (rawDocs.types && typeof rawDocs.types === "object") {
-            extractedTypes = rawDocs.types;
+      const isRestructured =
+        rawDocs &&
+        (rawDocs.columnExpressions ||
+          rawDocs.dataframe ||
+          rawDocs.datatypes ||
+          rawDocs.exceptions ||
+          rawDocs.functions ||
+          rawDocs.types);
+
+      if (isRestructured) {
+        if (rawDocs.types && typeof rawDocs.types === "object") {
+          extractedTypes = rawDocs.types;
+        }
+
+        const addSymbols = (symbolsObj: Record<string, any>) => {
+          if (!symbolsObj || typeof symbolsObj !== "object") return;
+          for (const [symbolName, info] of Object.entries(symbolsObj)) {
+            const callExpression = info.callExpression || info.name || symbolName;
+            const propertyAccess = info.propertyAccess || symbolName;
+
+            mappedList.push({
+              callExpression,
+              propertyAccess,
+              name: callExpression,
+              namespace: info.namespace,
+              accessor: info.accessor,
+              category: info.category || "ColumnExpression",
+              syntax: info.syntax,
+              desc: info.desc || "",
+              version: activeVersion,
+              examples: info.examples,
+              params: info.params,
+              returns: info.returns,
+              signature: info.signature,
+              signatureDetailed: info.signatureDetailed,
+              filePath: info.filePath || "",
+              lineStart: info.lineStart,
+              typeTree: info.typeTree
+            });
           }
+        };
 
-          const addSymbols = (symbolsObj: Record<string, any>) => {
-            if (!symbolsObj || typeof symbolsObj !== "object") return;
-            for (const [symbolName, info] of Object.entries(symbolsObj)) {
-              const callExpression = info.callExpression || info.name || symbolName;
-              const propertyAccess = info.propertyAccess || symbolName;
-
-              mappedList.push({
-                callExpression,
-                propertyAccess,
-                name: callExpression, // maintains compatibility with any lingering consumers
-                namespace: info.namespace,
-                accessor: info.accessor,
-                category: info.category || "ColumnExpression",
-                syntax: info.syntax,
-                desc: info.desc || "",
-                version: activeVersion,
-                examples: info.examples,
-                params: info.params,
-                returns: info.returns,
-                signature: info.signature,
-                filePath: info.filePath || "",
-                lineStart: info.lineStart,
-                subTypes: info.subTypes || []
-              });
-            }
-          };
-
-          // 1. columnExpressions (nested mixin objects: arrayExpr, standardExpr, etc.)
-          if (rawDocs.columnExpressions) {
-            for (const mixinGroup of Object.values(rawDocs.columnExpressions)) {
-              addSymbols(mixinGroup as Record<string, any>);
-            }
-          }
-
-          // 2. dataframe, datatypes, exceptions, functions
-          if (rawDocs.dataframe) addSymbols(rawDocs.dataframe);
-          if (rawDocs.datatypes) addSymbols(rawDocs.datatypes);
-          if (rawDocs.exceptions) addSymbols(rawDocs.exceptions);
-          if (rawDocs.functions) addSymbols(rawDocs.functions);
-        } else {
-          // Fallback: older flat-by-filePath format (e.g. v2.3.0)
-          for (const [filePath, symbols] of Object.entries(rawDocs as Record<string, Record<string, any>>)) {
-            if (filePath === "types" || filePath === "__types__") {
-              if (symbols && typeof symbols === "object") {
-                extractedTypes = symbols as any;
-              }
-              continue;
-            }
-            for (const [symbolName, info] of Object.entries(symbols)) {
-              let name = info.name || symbolName;
-              if (!info.name) {
-                if (info.category === "DataFrame") {
-                  name = `.${symbolName}()`;
-                } else if (info.category === "Function") {
-                  name = `${symbolName}()`;
-                } else if (info.category === "ColumnExpression") {
-                  if (info.namespace === "$df") {
-                    name = `${symbolName}()`;
-                  } else if (info.namespace && info.namespace.startsWith("$df.col.")) {
-                    const sub = info.namespace.slice(8);
-                    name = `.${sub}.${symbolName}()`;
-                  } else {
-                    name = `.${symbolName}()`;
-                  }
-                }
-              }
-
-              const callExpression = info.callExpression || name;
-              const propertyAccess = info.propertyAccess || symbolName;
-
-              mappedList.push({
-                callExpression,
-                propertyAccess,
-                name: callExpression,
-                namespace: info.namespace,
-                accessor: info.accessor,
-                category: info.category || "ColumnExpression",
-                syntax: info.syntax,
-                desc: info.desc || "",
-                version: activeVersion,
-                examples: info.examples,
-                params: info.params,
-                returns: info.returns,
-                signature: info.signature,
-                filePath,
-                lineStart: info.lineStart,
-                subTypes: info.subTypes || []
-              });
-            }
+        if (rawDocs.columnExpressions) {
+          for (const mixinGroup of Object.values(rawDocs.columnExpressions)) {
+            addSymbols(mixinGroup as Record<string, any>);
           }
         }
 
-        setTypesMap(extractedTypes);
-        setOperationsIndex(mappedList);
+        if (rawDocs.dataframe) addSymbols(rawDocs.dataframe);
+        if (rawDocs.datatypes) addSymbols(rawDocs.datatypes);
+        if (rawDocs.exceptions) addSymbols(rawDocs.exceptions);
+        if (rawDocs.functions) addSymbols(rawDocs.functions);
+      }
+
+      setTypesMap(extractedTypes);
+      setOperationsIndex(mappedList);
+    };
+
+    const fetchUrl =
+      activeVersion === "v2.4.0"
+        ? `/docs.json?t=${Date.now()}`
+        : `${GITHUB_RAW_BASE_URL}/${activeVersion}/docs.json?t=${Date.now()}`;
+
+    fetch(fetchUrl)
+      .then((r) => {
+        if (!r.ok) {
+          if (activeVersion !== "v2.4.0") {
+            return fetch(`/docs.json?t=${Date.now()}`).then((fallbackRes) => {
+              if (!fallbackRes.ok) throw new Error(`HTTP error! status: ${fallbackRes.status}`);
+              return fallbackRes.json();
+            });
+          }
+          throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
       })
+      .then((rawDocs) => parseDocs(rawDocs))
       .catch(() => {
         setOperationsIndex([]);
         setTypesMap({});

@@ -377,7 +377,7 @@ export function ArticleCanvas({
     sections.find((s) => s.id === activeSectionId)?.title || "Table of contents";
 
   return (
-    <main className="@container flex-1 w-full flex flex-col h-full bg-[#060606] min-w-0 select-text overflow-hidden relative">
+    <main className={`${styles.articleCanvasRoot} @container flex-1 w-full flex flex-col h-full bg-[#060606] min-w-0 select-text overflow-hidden relative`}>
       {/* Subtle Top and Bottom Scroll Edge Fades */}
       <div
         className={`pointer-events-none absolute top-0 left-0 right-0 h-5 bg-gradient-to-b from-[#060606] to-transparent z-20 transition-opacity duration-300 ${scrollEdgeState.showTopShadow ? "opacity-100" : "opacity-0"
@@ -396,7 +396,7 @@ export function ArticleCanvas({
         <div
           className={
             hasSections
-              ? "max-w-[1440px] mx-auto w-full grid grid-cols-1 @3xl:grid-cols-12 gap-8 @5xl:gap-12"
+              ? "max-w-[1440px] mx-auto w-full grid grid-cols-1 @5xl:grid-cols-12 gap-8 @5xl:gap-12"
               : "max-w-3xl mx-auto w-full flex justify-center"
           }
         >
@@ -404,264 +404,264 @@ export function ArticleCanvas({
           {hasSections && (
             <aside
               ref={tocAsideRef}
-              className={`hidden @3xl:block @3xl:col-start-1 @3xl:col-span-3 sticky top-0 self-start select-none pt-8 pr-1 max-h-[calc(100dvh-5rem)] overflow-y-auto overflow-x-hidden min-w-0 ${styles.tocScrollContainer}`}
+              className={`${styles.articleToc} @5xl:col-start-1 @5xl:col-span-3 sticky top-0 self-start select-none pt-8 pr-1 max-h-[calc(100dvh-5rem)] overflow-y-auto overflow-x-hidden min-w-0 ${styles.tocScrollContainer}`}
             >
-              <nav
-                ref={tocNavRef}
-                aria-label="Table of contents"
-                className="relative flex flex-col min-w-0"
-              >
-                {/* Root Vertical TOC Track + Sliding Indicator */}
-                {showTocIndicator && (
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute left-0 top-1 bottom-1 w-[1px] bg-white/[0.07] rounded-full"
-                  >
+                <nav
+                  ref={tocNavRef}
+                  aria-label="Table of contents"
+                  className="relative flex flex-col min-w-0"
+                >
+                  {/* Root Vertical TOC Track + Sliding Indicator */}
+                  {showTocIndicator && (
                     <div
-                      className="w-[2px] -ml-[0.5px] rounded-full bg-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                      style={{
-                        transform: `translateY(${tocIndicatorStyle.top}px)`,
-                        height: `${tocIndicatorStyle.height}px`,
-                        opacity: tocIndicatorStyle.opacity,
-                      }}
-                    />
-                  </div>
-                )}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-0 top-1 bottom-1 w-[1px] bg-white/[0.07] rounded-full"
+                    >
+                      <div
+                        className="w-[2px] -ml-[0.5px] rounded-full bg-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                        style={{
+                          transform: `translateY(${tocIndicatorStyle.top}px)`,
+                          height: `${tocIndicatorStyle.height}px`,
+                          opacity: tocIndicatorStyle.opacity,
+                        }}
+                      />
+                    </div>
+                  )}
 
-                <ul className={`relative flex flex-col gap-0.5 min-w-0 ${showTocIndicator ? "pl-3" : ""}`}>
-                  {tocGroups.map((group) => {
-                    const hasChildren = group.children.length > 0;
-                    const isCollapsed = !!collapsedGroups[group.parent.id];
-                    const isParentActive = effectiveActiveTocId === group.parent.id;
-                    const hasActiveChild = group.children.some((c) => c.id === activeSectionId);
+                  <ul className={`relative flex flex-col gap-0.5 min-w-0 ${showTocIndicator ? "pl-3" : ""}`}>
+                    {tocGroups.map((group) => {
+                      const hasChildren = group.children.length > 0;
+                      const isCollapsed = !!collapsedGroups[group.parent.id];
+                      const isParentActive = effectiveActiveTocId === group.parent.id;
+                      const hasActiveChild = group.children.some((c) => c.id === activeSectionId);
 
-                    return (
-                      <li key={group.parent.id} className="flex flex-col min-w-0">
-                        {/* Parent H2 Row with Left Chevron Toggle */}
-                        <div className="flex items-center min-w-0 group/toc-row">
-                          {hasChildren && (
+                      return (
+                        <li key={group.parent.id} className="flex flex-col min-w-0">
+                          {/* Parent H2 Row with Left Chevron Toggle */}
+                          <div className="flex items-center min-w-0 group/toc-row">
+                            {hasChildren && (
+                              <button
+                                type="button"
+                                onClick={(e) => toggleGroupCollapse(group.parent.id, e)}
+                                aria-label={
+                                  isCollapsed
+                                    ? `Expand ${group.parent.title}`
+                                    : `Collapse ${group.parent.title}`
+                                }
+                                aria-expanded={!isCollapsed}
+                                className="w-4 h-4 mr-1 flex items-center justify-center rounded text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0"
+                              >
+                                <svg
+                                  className={`w-3 h-3 transition-transform duration-200 ease-out ${isCollapsed ? "-rotate-90" : "rotate-0"
+                                    }`}
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={2.2}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+
                             <button
                               type="button"
-                              onClick={(e) => toggleGroupCollapse(group.parent.id, e)}
-                              aria-label={
-                                isCollapsed
-                                  ? `Expand ${group.parent.title}`
-                                  : `Collapse ${group.parent.title}`
-                              }
-                              aria-expanded={!isCollapsed}
-                              className="w-4 h-4 mr-1 flex items-center justify-center rounded text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0"
+                              data-toc-id={group.parent.id}
+                              onClick={() => scrollToSection(group.parent.id)}
+                              className={`flex-1 min-w-0 text-left text-xs transition-colors duration-200 truncate py-1.5 cursor-pointer font-sans ${isParentActive
+                                ? "text-white font-medium"
+                                : hasActiveChild
+                                  ? "text-zinc-200 font-medium"
+                                  : "text-text-muted hover:text-zinc-200"
+                                }`}
+                              title={group.parent.title}
                             >
-                              <svg
-                                className={`w-3 h-3 transition-transform duration-200 ease-out ${isCollapsed ? "-rotate-90" : "rotate-0"
-                                  }`}
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={2.2}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M19 9l-7 7-7-7"
-                                />
-                              </svg>
+                              {group.parent.title}
                             </button>
-                          )}
-
-                          <button
-                            type="button"
-                            data-toc-id={group.parent.id}
-                            onClick={() => scrollToSection(group.parent.id)}
-                            className={`flex-1 min-w-0 text-left text-xs transition-colors duration-200 truncate py-1.5 cursor-pointer font-sans ${isParentActive
-                              ? "text-white font-medium"
-                              : hasActiveChild
-                                ? "text-zinc-200 font-medium"
-                                : "text-text-muted hover:text-zinc-200"
-                              }`}
-                            title={group.parent.title}
-                          >
-                            {group.parent.title}
-                          </button>
-                        </div>
-
-                        {/* Nested H3 Children: Vertical depth line drops directly from the center of the left chevron */}
-                        {hasChildren && (
-                          <div
-                            className={`grid transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0 ${isCollapsed
-                              ? "grid-rows-[0fr] opacity-0 pointer-events-none"
-                              : "grid-rows-[1fr] opacity-100"
-                              }`}
-                          >
-                            <div className="overflow-hidden min-w-0">
-                              <ul className="relative ml-[7.5px] pl-3.5 border-l border-white/[0.1] flex flex-col gap-0.5 my-0.5 min-w-0">
-                                {group.children.map((child) => {
-                                  const isChildActive = activeSectionId === child.id;
-                                  return (
-                                    <li key={child.id} className="min-w-0">
-                                      <button
-                                        type="button"
-                                        data-toc-id={child.id}
-                                        onClick={() => scrollToSection(child.id)}
-                                        className={`text-left text-[11px] transition-colors duration-200 block w-full truncate py-1 cursor-pointer font-sans ${isChildActive
-                                          ? "text-white font-medium"
-                                          : "text-zinc-500 hover:text-zinc-200"
-                                          }`}
-                                        title={child.title}
-                                      >
-                                        {child.title}
-                                      </button>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
                           </div>
-                        )
-                        }
-                      </li>
+
+                          {/* Nested H3 Children: Vertical depth line drops directly from the center of the left chevron */}
+                          {hasChildren && (
+                            <div
+                              className={`grid transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0 ${isCollapsed
+                                ? "grid-rows-[0fr] opacity-0 pointer-events-none"
+                                : "grid-rows-[1fr] opacity-100"
+                                }`}
+                            >
+                              <div className="overflow-hidden min-w-0">
+                                <ul className="relative ml-[7.5px] pl-3.5 border-l border-white/[0.1] flex flex-col gap-0.5 my-0.5 min-w-0">
+                                  {group.children.map((child) => {
+                                    const isChildActive = activeSectionId === child.id;
+                                    return (
+                                      <li key={child.id} className="min-w-0">
+                                        <button
+                                          type="button"
+                                          data-toc-id={child.id}
+                                          onClick={() => scrollToSection(child.id)}
+                                          className={`text-left text-[11px] transition-colors duration-200 block w-full truncate py-1 cursor-pointer font-sans ${isChildActive
+                                            ? "text-white font-medium"
+                                            : "text-zinc-500 hover:text-zinc-200"
+                                            }`}
+                                          title={child.title}
+                                        >
+                                          {child.title}
+                                        </button>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </div>
+                            </div>
+                          )
+                          }
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+              </aside>
+            )
+            }
+
+            {/* Content Column: centered in columns 4-10 on wide screens so the article is optically balanced */}
+            <div
+              ref={contentColumnRef}
+              className={
+                hasSections
+                  ? "col-span-1 @5xl:col-start-4 @5xl:col-span-7 min-w-0 flex flex-col gap-8 pt-8 pb-24"
+                  : "w-full max-w-3xl flex flex-col gap-8 pt-8 pb-24 min-w-0"
+              }
+            >
+              {headerSlot}
+
+              {/* Loading State: Optional Glisten Text + Skeleton */}
+              {isLoading && (
+                <div className="flex flex-col gap-4 py-6">
+                  {loadingText && (
+                    <div className="flex items-center gap-2 text-xs font-mono tracking-wide select-none">
+                      <span className={styles.shimmerText}>{loadingText}</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-3 animate-pulse">
+                    <div className="h-6 bg-[#111111] rounded w-2/3"></div>
+                    <div className="h-4 bg-[#111111] rounded w-full"></div>
+                    <div className="h-4 bg-[#111111] rounded w-5/6"></div>
+                    <div className="h-4 bg-[#111111] rounded w-3/4"></div>
+                    <div className="h-24 bg-[#111111] rounded w-full mt-4"></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Notice */}
+              {error && (
+                <div className="border border-red-950/40 bg-red-950/10 rounded p-4 text-[12px] font-mono text-red-400">
+                  {error}
+                </div>
+              )}
+
+              {/* Markdown Content */}
+              {html && !isLoading && (
+                <div
+                  className="flex flex-col gap-4 text-text-muted leading-relaxed [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:text-white [&_h1]:font-outfit [&_h1]:mt-4 [&_h1]:scroll-mt-6 [&_h1]:w-fit [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_h2]:font-outfit [&_h2]:mt-8 [&_h2]:scroll-mt-6 [&_h2]:w-fit [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-white [&_h3]:font-outfit [&_h3]:mt-6 [&_h3]:scroll-mt-6 [&_h3]:w-fit [&_p]:mb-2 [&_p_strong]:text-white [&_p_code]:font-mono [&_p_code]:text-[12px] [&_p_code]:text-zinc-200 [&_p_code]:bg-[#141414] [&_p_code]:px-1.5 [&_p_code]:py-0.5 [&_p_code]:rounded [&_p_code]:break-all [&_pre]:bg-surface [&_pre]:p-4 [&_pre]:rounded-xl [&_pre]:overflow-x-auto [&_pre_code]:font-mono [&_pre_code]:text-[12px] [&_pre_code]:leading-[1.25] [&_pre_code]:tracking-normal [&_pre_code]:whitespace-pre [&_code]:font-mono [&_code]:text-[12px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1.5 [&_li]:text-text-muted [&_li_strong]:text-white [&_li_code]:font-mono [&_li_code]:text-[12px] [&_li_code]:text-zinc-200 [&_li_code]:bg-[#141414] [&_li_code]:px-1.5 [&_li_code]:py-0.5 [&_li_code]:rounded [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 [&_thead]:hidden [&_thead]:md:table-header-group [&_thead_tr]:border-b [&_thead_tr]:border-white/[0.08] [&_tbody]:block [&_tbody]:md:table-row-group [&_tbody_tr]:border-b [&_tbody_tr]:border-white/[0.04] [&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_th]:bg-[#060606] [&_th]:py-3.5 [&_th]:px-4 [&_th]:text-left [&_th]:text-white [&_th]:text-xs [&_th]:font-semibold [&_th:first-child]:md:w-[38%] [&_tr]:flex [&_tr]:flex-col [&_tr]:py-3 [&_tr]:md:table-row [&_tr]:md:py-0 [&_tr]:transition-colors [&_tr]:hover:bg-white/[0.02] [&_td]:block [&_td]:p-0 [&_td]:md:table-cell [&_td]:md:py-3.5 [&_td]:md:px-4 [&_td]:text-xs [&_td]:leading-relaxed [&_td:first-child]:font-mono [&_td:first-child]:text-[13px] [&_td:first-child]:font-semibold [&_td:first-child]:text-white [&_td:first-child]:mb-1 [&_td:first-child]:md:mb-0 [&_td:first-child]:md:text-zinc-100 [&_td:first-child]:md:whitespace-nowrap [&_td:last-child]:font-sans [&_td:last-child]:text-text-muted [&_td:last-child]:text-xs [&_hr]:hidden [&_a]:text-white [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+              )}
+
+              {/* Custom Children Content */}
+              {children}
+
+              <Footer className="pt-8" />
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Bottom TOC Pill for narrow containers (< @3xl) */}
+        {hasSections && (
+          <div
+            ref={mobileMenuRef}
+            className={`${styles.articleMobilePill} fixed ${hasActiveDocOp
+              ? "bottom-[calc(var(--mobile-bottom-nav-height,56px)+var(--mobile-minibar-height,56px)+1rem)]"
+              : "bottom-[calc(var(--mobile-bottom-nav-height,56px)+1rem)]"
+              } md:absolute md:bottom-6 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center transition-[bottom] duration-300 ease-[var(--mobile-panel-easing,ease)]`}
+          >
+            {/* Stacked Pills Menu (Louis Vuitton Floating Stack aesthetic) */}
+            {isMobileMenuOpen && (
+              <div className="relative flex flex-col items-center">
+                <div
+                  ref={stackedMenuContainerRef}
+                  className={`mb-3 overflow-y-auto px-4 py-3 flex flex-col items-center gap-2.5 no-scrollbar relative transition-opacity duration-150 ${isExiting ? "pointer-events-none opacity-0" : ""
+                    }`}
+                  style={{
+                    maxHeight: hasActiveDocOp
+                      ? "calc(100dvh - var(--mobile-header-height, 56px) - var(--mobile-bottom-nav-height, 56px) - var(--mobile-minibar-height, 56px) - 5rem)"
+                      : "calc(100dvh - var(--mobile-header-height, 56px) - var(--mobile-bottom-nav-height, 56px) - 5rem)",
+                  }}
+                >
+                  {sections.map((section, idx) => {
+                    const isActive = activeSectionId === section.id;
+                    const reverseIndex = sections.length - 1 - idx;
+                    const delayMs = isExiting ? 0 : Math.min(200, reverseIndex * 25);
+                    return (
+                      <button
+                        key={section.id}
+                        data-section-id={section.id}
+                        type="button"
+                        onClick={() => scrollToSection(section.id)}
+                        style={{ animationDelay: `${delayMs}ms` }}
+                        className={`${isExiting ? "animate-lv-pill-exit" : "animate-lv-pill"
+                          } flex items-center justify-center px-6 py-3 rounded-full text-[13px] font-medium transition-all duration-200 cursor-pointer active:scale-95 select-none w-max max-w-[320px] ${isActive
+                            ? "bg-white text-black font-semibold"
+                            : "bg-[#1D1D1D]/95 hover:bg-[#282828] text-zinc-300 hover:text-white backdrop-blur-md"
+                          } ${section.level === 3 ? "text-xs py-2.5 opacity-90" : ""}`}
+                      >
+                        <span className="truncate">{section.title}</span>
+                      </button>
                     );
                   })}
-                </ul>
-              </nav>
-            </aside>
-          )
-          }
-
-          {/* Content Column: centered in columns 4-10 on wide screens so the article is optically balanced */}
-          < div
-            ref={contentColumnRef}
-            className={
-              hasSections
-                ? "col-span-1 @3xl:col-start-4 @3xl:col-span-9 @5xl:col-start-4 @5xl:col-span-7 min-w-0 flex flex-col gap-8 pt-8 pb-24"
-                : "w-full max-w-3xl flex flex-col gap-8 pt-8 pb-24 min-w-0"
-            }
-          >
-            {headerSlot}
-
-            {/* Loading State: Optional Glisten Text + Skeleton */}
-            {isLoading && (
-              <div className="flex flex-col gap-4 py-6">
-                {loadingText && (
-                  <div className="flex items-center gap-2 text-xs font-mono tracking-wide select-none">
-                    <span className={styles.shimmerText}>{loadingText}</span>
-                  </div>
-                )}
-                <div className="flex flex-col gap-3 animate-pulse">
-                  <div className="h-6 bg-[#111111] rounded w-2/3"></div>
-                  <div className="h-4 bg-[#111111] rounded w-full"></div>
-                  <div className="h-4 bg-[#111111] rounded w-5/6"></div>
-                  <div className="h-4 bg-[#111111] rounded w-3/4"></div>
-                  <div className="h-24 bg-[#111111] rounded w-full mt-4"></div>
                 </div>
               </div>
             )}
 
-            {/* Error Notice */}
-            {error && (
-              <div className="border border-red-950/40 bg-red-950/10 rounded p-4 text-[12px] font-mono text-red-400">
-                {error}
-              </div>
-            )}
-
-            {/* Markdown Content */}
-            {html && !isLoading && (
-              <div
-                className="flex flex-col gap-4 text-text-muted leading-relaxed [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:text-white [&_h1]:font-outfit [&_h1]:mt-4 [&_h1]:scroll-mt-6 [&_h1]:w-fit [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_h2]:font-outfit [&_h2]:mt-8 [&_h2]:scroll-mt-6 [&_h2]:w-fit [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-white [&_h3]:font-outfit [&_h3]:mt-6 [&_h3]:scroll-mt-6 [&_h3]:w-fit [&_p]:mb-2 [&_p_strong]:text-white [&_p_code]:font-mono [&_p_code]:text-[12px] [&_p_code]:text-zinc-200 [&_p_code]:bg-[#141414] [&_p_code]:px-1.5 [&_p_code]:py-0.5 [&_p_code]:rounded [&_p_code]:break-all [&_pre]:bg-[#0c0c0c] [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre_code]:font-mono [&_pre_code]:text-[12px] [&_pre_code]:leading-[1.25] [&_pre_code]:tracking-normal [&_pre_code]:whitespace-pre [&_code]:font-mono [&_code]:text-[12px] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1.5 [&_li]:text-text-muted [&_li_strong]:text-white [&_li_code]:font-mono [&_li_code]:text-[12px] [&_li_code]:text-zinc-200 [&_li_code]:bg-[#141414] [&_li_code]:px-1.5 [&_li_code]:py-0.5 [&_li_code]:rounded [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 [&_thead]:hidden [&_thead]:md:table-header-group [&_thead_tr]:border-b [&_thead_tr]:border-white/[0.08] [&_tbody]:block [&_tbody]:md:table-row-group [&_tbody_tr]:border-b [&_tbody_tr]:border-white/[0.04] [&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_th]:bg-[#060606] [&_th]:py-3.5 [&_th]:px-4 [&_th]:text-left [&_th]:text-white [&_th]:text-xs [&_th]:font-semibold [&_th:first-child]:md:w-[38%] [&_tr]:flex [&_tr]:flex-col [&_tr]:py-3 [&_tr]:md:table-row [&_tr]:md:py-0 [&_tr]:transition-colors [&_tr]:hover:bg-white/[0.02] [&_td]:block [&_td]:p-0 [&_td]:md:table-cell [&_td]:md:py-3.5 [&_td]:md:px-4 [&_td]:text-xs [&_td]:leading-relaxed [&_td:first-child]:font-mono [&_td:first-child]:text-[13px] [&_td:first-child]:font-semibold [&_td:first-child]:text-white [&_td:first-child]:mb-1 [&_td:first-child]:md:mb-0 [&_td:first-child]:md:text-zinc-100 [&_td:first-child]:md:whitespace-nowrap [&_td:last-child]:font-sans [&_td:last-child]:text-text-muted [&_td:last-child]:text-xs [&_hr]:hidden [&_a]:text-white [&_a]:underline"
-                dangerouslySetInnerHTML={{ __html: html }}
-              />
-            )}
-
-            {/* Custom Children Content */}
-            {children}
-
-            <Footer className="pt-8" />
-          </div>
-        </div>
-      </div>
-
-      {/* Floating Bottom TOC Pill for narrow containers (< @3xl) */}
-      {hasSections && (
-        <div
-          ref={mobileMenuRef}
-          className={`@3xl:hidden fixed ${hasActiveDocOp
-            ? "bottom-[calc(var(--mobile-bottom-nav-height,56px)+var(--mobile-minibar-height,56px)+1rem)]"
-            : "bottom-[calc(var(--mobile-bottom-nav-height,56px)+1rem)]"
-            } md:absolute md:bottom-6 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center transition-[bottom] duration-300 ease-[var(--mobile-panel-easing,ease)]`}
-        >
-          {/* Stacked Pills Menu (Louis Vuitton Floating Stack aesthetic) */}
-          {isMobileMenuOpen && (
-            <div className="relative flex flex-col items-center">
-              <div
-                ref={stackedMenuContainerRef}
-                className={`mb-3 overflow-y-auto px-4 py-3 flex flex-col items-center gap-2.5 no-scrollbar relative transition-opacity duration-150 ${isExiting ? "pointer-events-none opacity-0" : ""
-                  }`}
-                style={{
-                  maxHeight: hasActiveDocOp
-                    ? "calc(100dvh - var(--mobile-header-height, 56px) - var(--mobile-bottom-nav-height, 56px) - var(--mobile-minibar-height, 56px) - 5rem)"
-                    : "calc(100dvh - var(--mobile-header-height, 56px) - var(--mobile-bottom-nav-height, 56px) - 5rem)",
-                }}
+            {/* Main Floating Pill Trigger */}
+            <button
+              type="button"
+              onClick={toggleMobileMenu}
+              className="flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-full text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 select-none"
+              aria-expanded={isMobileMenuOpen}
+              aria-label="Table of contents outline"
+            >
+              < svg
+                className="w-4 h-4 text-black"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {sections.map((section, idx) => {
-                  const isActive = activeSectionId === section.id;
-                  const reverseIndex = sections.length - 1 - idx;
-                  const delayMs = isExiting ? 0 : Math.min(200, reverseIndex * 25);
-                  return (
-                    <button
-                      key={section.id}
-                      data-section-id={section.id}
-                      type="button"
-                      onClick={() => scrollToSection(section.id)}
-                      style={{ animationDelay: `${delayMs}ms` }}
-                      className={`${isExiting ? "animate-lv-pill-exit" : "animate-lv-pill"
-                        } flex items-center justify-center px-6 py-3 rounded-full text-[13px] font-medium transition-all duration-200 cursor-pointer active:scale-95 select-none w-max max-w-[320px] ${isActive
-                          ? "bg-white text-black font-semibold"
-                          : "bg-[#1D1D1D]/95 hover:bg-[#282828] text-zinc-300 hover:text-white backdrop-blur-md"
-                        } ${section.level === 3 ? "text-xs py-2.5 opacity-90" : ""}`}
-                    >
-                      <span className="truncate">{section.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Main Floating Pill Trigger */}
-          <button
-            type="button"
-            onClick={toggleMobileMenu}
-            className="flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-full text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 select-none"
-            aria-expanded={isMobileMenuOpen}
-            aria-label="Table of contents outline"
-          >
-            < svg
-              className="w-4 h-4 text-black"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h10M4 18h14"
-              />
-            </svg>
-            <span className="truncate max-w-[200px]">
-              {activeSectionTitle}
-            </span>
-            <svg
-              className={`w-4 h-4 text-black transition-transform duration-200 ${isMobileMenuOpen ? "rotate-180" : ""
-                }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-      )}
-    </main>
-  );
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h10M4 18h14"
+                />
+              </svg>
+              <span className="truncate max-w-[200px]">
+                {activeSectionTitle}
+              </span>
+              <svg
+                className={`w-4 h-4 text-black transition-transform duration-200 ${isMobileMenuOpen ? "rotate-180" : ""
+                  }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </main>
+      );
 }

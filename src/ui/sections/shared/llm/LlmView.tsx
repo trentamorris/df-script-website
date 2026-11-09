@@ -71,7 +71,7 @@ export function LlmView({ path }: LlmViewProps) {
           Loading {activeTab}...
         </div>
       ) : (
-        <pre className="font-mono text-[12px] leading-relaxed text-zinc-300 bg-[#141516] p-5 rounded-2xl overflow-x-auto whitespace-pre-wrap select-text">
+        <pre className="font-mono text-[12px] leading-relaxed text-zinc-300 bg-surface p-5 rounded-xl overflow-x-auto whitespace-pre-wrap select-text">
           {content}
         </pre>
       )}
