@@ -45,7 +45,11 @@ function _buildTypeThreadNodes(
           ? "Nested Object Property"
           : "Property";
 
-    const displayName = node.variadic ? `...${nodeName}` : nodeName;
+    const baseName = node.variadic ? `...${nodeName}` : nodeName;
+    const displayName = node.optional && !baseName.endsWith("?") ? `${baseName}?` : baseName;
+
+    const displayedType = node.resolvedType || node.type;
+    const hasDifferentOriginalType = Boolean(node.resolvedType && node.type && node.resolvedType !== node.type);
 
     return {
       id: nodePath,
@@ -55,67 +59,26 @@ function _buildTypeThreadNodes(
       data: node,
       headerMeta: (
         <>
-          {node.type && (
-            <span className={`text-[10px] font-mono rounded-md px-2 py-0.5 ${getTypeBadgeClass(node.type)}`}>
-              {node.type}
-            </span>
-          )}
-          {node.optional && (
-            <span className="text-[9px] font-mono text-[#7c7c7c] bg-white/[0.04] rounded-md px-1.5 py-0.5 uppercase">
-              optional
+          {displayedType && (
+            <span
+              title={hasDifferentOriginalType ? `Alias for: ${node.type}` : undefined}
+              className={`text-[11px] rounded-md px-2 py-0.5 font-medium ${getTypeBadgeClass(displayedType)}`}
+            >
+              {displayedType}
             </span>
           )}
           {node.default !== undefined && (
-            <span className="text-[9px] font-mono text-zinc-400 bg-white/[0.04] rounded-md px-1.5 py-0.5">
+            <span className="text-[10px] text-zinc-400 bg-white/[0.04] rounded-md px-1.5 py-0.5 font-medium">
               default: {node.default}
             </span>
           )}
         </>
       ),
-      headerRight: typeDef?.filePath ? (
-        <a
-          href={`${GITHUB_REPO_URL}/blob/${activeVersion}/src/${typeDef.filePath}${typeDef.lineStart ? `#L${typeDef.lineStart}` : ""}`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-[10px] font-mono text-zinc-500 hover:text-indigo-400 underline decoration-zinc-700 transition-colors shrink-0"
-        >
-          {typeDef.filePath.split("/").pop()}
-          {typeDef.lineStart ? `:${typeDef.lineStart}` : ""}
-        </a>
-      ) : undefined,
-      body: (
-        <div className="rounded-xl bg-surface px-4 py-3.5 flex flex-col gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-[12px] text-indigo-300 font-semibold">
-              {displayName}
-            </span>
-            <span className={`text-[10px] font-mono rounded-md px-2 py-0.5 ${getTypeBadgeClass(node.type)}`}>
-              {node.type}
-            </span>
-            {node.optional && (
-              <span className="text-[9px] font-mono text-[#7c7c7c] bg-white/[0.04] rounded-md px-1.5 py-0.5 uppercase">
-                optional
-              </span>
-            )}
-            {node.default !== undefined && (
-              <span className="text-[9px] font-mono text-zinc-400 bg-white/[0.04] rounded-md px-1.5 py-0.5">
-                default: {node.default}
-              </span>
-            )}
-          </div>
-
-          {node.resolvedType && node.resolvedType !== node.type && (
-            <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400 bg-surface-inner rounded-lg px-3 py-1.5 overflow-x-auto">
-              <span className="text-zinc-500 select-none shrink-0">=</span>
-              <span className="text-emerald-400/90">{node.resolvedType}</span>
-            </div>
-          )}
-
-          {node.desc && (
-            <p className="text-[12.5px] text-[#9c9c9c] leading-relaxed">{node.desc}</p>
-          )}
+      body: node.desc ? (
+        <div className="pt-1 pb-1.5 flex flex-col gap-1.5 pl-0.5">
+          <p className="text-[13px] text-zinc-300 leading-relaxed">{node.desc}</p>
         </div>
-      ),
+      ) : undefined,
       children: hasChildren
         ? _buildTypeThreadNodes(childEntries, typesMap, activeVersion, depth + 1, nodePath)
         : undefined,
@@ -138,7 +101,6 @@ export function Docs({ op, activeVersion, typesMap = {} }: DocsProps) {
     if (op.desc) items.push({ id: "description", title: "Description", level: 2 });
     if (displayedSignature) items.push({ id: "signature", title: "Signature", level: 2 });
     if (typeTreeNodes.length > 0) items.push({ id: "parameters", title: "Parameters", level: 2 });
-    if (op.returns) items.push({ id: "returns", title: "Returns", level: 2 });
     if (op.syntax) items.push({ id: "syntax", title: "Syntax", level: 2 });
     if (op.examples && op.examples.length > 0) items.push({ id: "examples", title: "Examples", level: 2 });
     return items;
@@ -186,32 +148,29 @@ export function Docs({ op, activeVersion, typesMap = {} }: DocsProps) {
   const combinedExamples = op.examples ? op.examples.join("\n\n") : "";
 
   const header = (
-    <div id="overview" className="flex flex-col gap-3 pb-2 min-w-0 scroll-mt-6">
-      <div className="text-[11px] font-mono text-zinc-300 select-none bg-surface rounded-lg px-3 py-1.5 w-fit">
-        {importStatement}
-      </div>
-      <div className="flex items-center mt-1 min-w-0">
+    <div id="overview" className="flex flex-col gap-2.5 pb-2 min-w-0 scroll-mt-6">
+      <div className="flex items-center min-w-0">
         {op.filePath ? (
           <a
             href={`${GITHUB_REPO_URL}/blob/${activeVersion}/src/${op.filePath}${op.lineStart ? `#L${op.lineStart}` : ""}`}
             target="_blank"
             rel="noreferrer"
-            className="transition-colors group min-w-0 max-w-full"
-            title="View Source on GitHub"
+            className="group min-w-0 max-w-full transition-colors"
+            title={`View source in src/${op.filePath}`}
           >
-            <h1 className="text-base md:text-lg font-semibold tracking-tight text-[#ffffff] group-hover:text-indigo-400 group-hover:underline decoration-indigo-400/30 font-mono lowercase transition-colors break-all">
+            <h1 className="text-xl md:text-2xl font-bold tracking-normal text-[#ffffff] group-hover:text-indigo-400 lowercase transition-colors break-all">
               {fullPath}
             </h1>
           </a>
         ) : (
-          <h1 className="text-base md:text-lg font-semibold tracking-tight text-[#ffffff] font-mono lowercase break-all min-w-0 max-w-full">
+          <h1 className="text-xl md:text-2xl font-bold tracking-normal text-[#ffffff] lowercase break-all min-w-0 max-w-full">
             {fullPath}
           </h1>
         )}
       </div>
-      <div className="flex items-center gap-2.5 text-[10px] font-mono text-[#6c6c6c] select-none uppercase tracking-wider">
+      <div className="flex items-center gap-2.5 text-[10px] text-[#6c6c6c] select-none uppercase tracking-wider font-medium">
         <span>df-script API REFERENCE</span>
-        <span className="px-2 py-0.5 rounded-md text-[9px] font-mono text-zinc-400 uppercase bg-surface select-none shrink-0 tracking-normal">
+        <span className="px-2 py-0.5 rounded-md text-[9px] text-zinc-400 uppercase bg-surface select-none shrink-0 tracking-normal font-medium">
           {op.category}
         </span>
       </div>
@@ -241,7 +200,7 @@ export function Docs({ op, activeVersion, typesMap = {} }: DocsProps) {
           <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
             Signature
           </h2>
-          <CodeBlock code={displayedSignature} className="text-[#dcdcdc] whitespace-pre-wrap" />
+          <CodeBlock code={displayedSignature} format={false} className="text-[#dcdcdc] whitespace-pre" />
         </section>
       )}
 
@@ -255,18 +214,6 @@ export function Docs({ op, activeVersion, typesMap = {} }: DocsProps) {
             nodes={typeTreeNodes}
             defaultExpandedAll={true}
           />
-        </section>
-      )}
-
-      {/* Returns */}
-      {op.returns && (
-        <section id="returns" className="flex flex-col gap-3 scroll-mt-6">
-          <h2 className="text-xs font-semibold tracking-widest text-[#ffffff] uppercase font-outfit">
-            Returns
-          </h2>
-          <div className="rounded-xl bg-surface px-4 py-3.5">
-            <span className="font-mono text-[12px] text-emerald-400 font-semibold">{op.returns}</span>
-          </div>
         </section>
       )}
 

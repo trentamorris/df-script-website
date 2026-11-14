@@ -3,4 +3,5 @@ export interface CodeBlockProps {
   language?: string;
   className?: string;
   unstyled?: boolean;
+  format?: boolean;
 }
