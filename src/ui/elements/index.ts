@@ -45,3 +45,15 @@ export { TabShelf, Tab } from "./tab-shelf";
 export type { TabValue, TabContextValue, TabProps, TabShelfProps } from "./tab-shelf";
 export { ThreadTree, ThreadTreeItem } from "./thread-tree/ThreadTree";
 export type { ThreadTreeNode, ThreadTreeItemProps, ThreadTreeProps } from "./thread-tree/types";
+export { PanelNavigation, PanelItem } from "./panel-navigation";
+export type {
+  NavigationPanelItem,
+  NavigationPanelProps,
+  PanelItemProps,
+} from "./panel-navigation";
+export { Tooltip } from "./tooltip/Tooltip";
+export type { TooltipProps } from "./tooltip/types";
+export { ModalSheet } from "./modal-sheet";
+export type { ModalSheetProps } from "./modal-sheet";
+export { Chip } from "./chip";
+export type { ChipProps, ChipVariant } from "./chip";

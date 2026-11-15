@@ -24,8 +24,8 @@ export function GalaxyLogo({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const mouseStateRef = useCanvasMouse(canvasRef, false);
   const lastTriggerRef = React.useRef<number | undefined>(triggerPulse);
-  const pulseStarsRef = React.useRef<() => void>(() => {});
-  const retriggerIntroRef = React.useRef<(clickX?: number, clickY?: number) => void>(() => {});
+  const pulseStarsRef = React.useRef<() => void>(() => { });
+  const retriggerIntroRef = React.useRef<(clickX?: number, clickY?: number) => void>(() => { });
 
   // 3D tilt angles for mouse hover + zero-G wave
   const tiltRef = React.useRef({
@@ -89,8 +89,9 @@ export function GalaxyLogo({
       setupCanvasResolution();
 
       const rect = container.getBoundingClientRect();
-      const logoWidth = Math.max(rect.width, 360);
-      const logoHeight = Math.max(rect.height, 120);
+      // True container dimensions without artificial minimum clamping
+      const logoWidth = Math.max(rect.width, 240);
+      const logoHeight = Math.max(rect.height, 80);
 
       // Create an offscreen canvas to sample text pixel positions accurately
       const offscreen = document.createElement("canvas");
@@ -104,7 +105,7 @@ export function GalaxyLogo({
       const textWidth = offCtx.measureText(text).width;
       const targetMaxWidth = logoWidth * 0.92;
 
-      if (textWidth > targetMaxWidth) {
+      if (textWidth > targetMaxWidth && textWidth > 0) {
         fontSize = Math.floor(fontSize * (targetMaxWidth / textWidth));
         offCtx.font = `700 ${fontSize}px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
       }
@@ -117,12 +118,12 @@ export function GalaxyLogo({
       const imgData = offCtx.getImageData(0, 0, logoWidth, logoHeight);
       const data = imgData.data;
 
-      stars.length = 0;
-      startTime = null;
-
       // Center of the container box
-      const centerTargetX = rect.left + logoWidth / 2;
-      const centerTargetY = rect.top + logoHeight / 2;
+      const centerTargetX = rect.left + rect.width / 2;
+      const centerTargetY = rect.top + rect.height / 2;
+
+      // Sample new stars into a temporary buffer so canvas never renders empty while resizing
+      const newStars: GalaxyLogoStar[] = [];
 
       // Crisp 3px sampling grid
       const step = 3;
@@ -154,7 +155,7 @@ export function GalaxyLogo({
             const targetX = centerTargetX + localOffsetX;
             const targetY = centerTargetY + localOffsetY;
 
-            stars.push({
+            newStars.push({
               originX: targetX,
               originY: targetY,
               originZ,
@@ -183,9 +184,9 @@ export function GalaxyLogo({
       }
 
       // Ambient cosmic stardust around the letters
-      const ambientCount = Math.floor(stars.length * 0.08);
+      const ambientCount = Math.floor(newStars.length * 0.08);
       for (let i = 0; i < ambientCount; i++) {
-        const ref = stars[Math.floor(Math.random() * stars.length)];
+        const ref = newStars[Math.floor(Math.random() * newStars.length)];
         if (!ref) continue;
         const angle = Math.random() * Math.PI * 2;
         const dist = 6 + Math.random() * 22;
@@ -203,7 +204,7 @@ export function GalaxyLogo({
         const targetX = centerTargetX + localOffsetX;
         const targetY = centerTargetY + localOffsetY;
 
-        stars.push({
+        newStars.push({
           originX: targetX,
           originY: targetY,
           originZ,
@@ -232,11 +233,11 @@ export function GalaxyLogo({
       // Pre-compute 2-3 nearest neighbors within the same letter stroke (distance <= 14px)
       // to form luminous constellation filaments during hover
       const maxFilamentDistSq = 14 * 14;
-      for (let i = 0; i < stars.length; i++) {
-        const sA = stars[i];
+      for (let i = 0; i < newStars.length; i++) {
+        const sA = newStars[i];
         const neighbors: GalaxyLogoStar[] = [];
-        for (let j = i + 1; j < stars.length; j++) {
-          const sB = stars[j];
+        for (let j = i + 1; j < newStars.length; j++) {
+          const sB = newStars[j];
           const dx = sA.localOffsetX - sB.localOffsetX;
           // Fast bounding box check
           if (Math.abs(dx) > 14) continue;
@@ -252,6 +253,13 @@ export function GalaxyLogo({
           sA.neighbors = neighbors;
         }
       }
+
+      // Only swap stars if valid stars were produced (prevents temporary empty flash)
+      if (newStars.length > 0) {
+        stars.length = 0;
+        stars.push(...newStars);
+        if (!startTime) startTime = null;
+      }
     };
 
     // Ensure fonts are loaded and container is ready before sampling pixel data
@@ -262,6 +270,7 @@ export function GalaxyLogo({
     let lastRenderedHeight = 0;
     let settledFrames = 0;
 
+    let initAttempts = 0;
     const runInit = () => {
       if (isDisposed) return;
       const rect = container.getBoundingClientRect();
@@ -276,8 +285,9 @@ export function GalaxyLogo({
       settledFrames = 0;
       initScene();
 
-      // If initial sampling yielded 0 stars, retry shortly
-      if (stars.length === 0 && !isDisposed) {
+      // If initial sampling yielded 0 stars (e.g. font still loading over network), keep retrying until stars are sampled
+      if (stars.length === 0 && !isDisposed && initAttempts < 25) {
+        initAttempts++;
         if (retryTimer) clearTimeout(retryTimer);
         retryTimer = window.setTimeout(runInit, 80);
       }
@@ -291,8 +301,14 @@ export function GalaxyLogo({
         .catch(() => {
           if (!isDisposed) runInit();
         });
-      // Safety fallback in case fonts.ready promise hangs
-      retryTimer = window.setTimeout(runInit, 150);
+
+      // Also listen to font loading completion in case fonts.ready fired early
+      const handleFontsDone = () => {
+        if (!isDisposed && stars.length === 0) {
+          runInit();
+        }
+      };
+      document.fonts.addEventListener?.("loadingdone", handleFontsDone);
     } else {
       runInit();
     }
@@ -307,13 +323,26 @@ export function GalaxyLogo({
       // Re-sample stars only if not yet initialized or if container size changed noticeably after layout settles
       if (!isDisposed && stars.length === 0) {
         runInit();
-      } else if (!isDisposed && (Math.abs(entryW - lastRenderedWidth) > 24 || Math.abs(entryH - lastRenderedHeight) > 24)) {
+      } else if (!isDisposed && (Math.abs(entryW - lastRenderedWidth) > 32 || Math.abs(entryH - lastRenderedHeight) > 32)) {
         if (resizeTimer) clearTimeout(resizeTimer);
-        resizeTimer = window.setTimeout(runInit, 100);
+        resizeTimer = window.setTimeout(runInit, 150);
       }
     });
     resizeObserver.observe(container);
-    window.addEventListener("resize", setupCanvasResolution);
+
+    const handleWindowResize = () => {
+      setupCanvasResolution();
+      // Instantly recalculate target center without destroying star field
+      const rect = container.getBoundingClientRect();
+      const newCenterX = rect.left + rect.width / 2;
+      const newCenterY = rect.top + rect.height / 2;
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        s.originX = newCenterX + s.localOffsetX;
+        s.originY = newCenterY + s.localOffsetY;
+      }
+    };
+    window.addEventListener("resize", handleWindowResize);
 
     // Gravitational Singularity Bloom: stars first pull inward toward the click point for ~90ms,
     // building kinetic tension before exploding outward in a celestial swirl and spring snapping back
@@ -735,13 +764,13 @@ export function GalaxyLogo({
         const posX = isCyanChannel
           ? p.projX + caShiftX * 0.45
           : isVioletChannel
-          ? p.projX - caShiftX * 0.45
-          : p.projX;
+            ? p.projX - caShiftX * 0.45
+            : p.projX;
         const posY = isCyanChannel
           ? p.projY + caShiftY * 0.45
           : isVioletChannel
-          ? p.projY - caShiftY * 0.45
-          : p.projY;
+            ? p.projY - caShiftY * 0.45
+            : p.projY;
 
         // Render point star without inflating particle radius on hover
         ctx.beginPath();
@@ -815,10 +844,10 @@ export function GalaxyLogo({
       if (resizeTimer) clearTimeout(resizeTimer);
       if (clickTimeoutId) clearTimeout(clickTimeoutId);
       resizeObserver.disconnect();
-      window.removeEventListener("resize", setupCanvasResolution);
+      window.removeEventListener("resize", handleWindowResize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [text, repelRadius, repelStrength, mouseStateRef, enableFilaments, skipIntro]);
+  }, [text, repelRadius, repelStrength, mouseStateRef, enableFilaments]);
 
   React.useEffect(() => {
     if (triggerPulse !== undefined && triggerPulse !== lastTriggerRef.current) {

@@ -15,36 +15,12 @@ export function Header({
   versionOptions = []
 }: HeaderProps) {
   const { backgroundTheme } = useBackgroundTheme();
-  const [isHeaderVersionDropdownOpen, setIsHeaderVersionDropdownOpen] = React.useState(false);
-  const headerDropdownRef = React.useRef<HTMLDivElement>(null);
   const isNotebookPage = path === NOTEBOOK_PATH;
   const isLlmPage = path.startsWith(LLM_PATH);
   const isHomePage = path === "/" || (!path.startsWith("/docs") && path !== ABOUT_PATH && path !== SUPPORT_PATH && path !== NOTEBOOK_PATH && !isLlmPage);
 
-  React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        headerDropdownRef.current &&
-        !headerDropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsHeaderVersionDropdownOpen(false);
-      }
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsHeaderVersionDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
   return (
-    <header className={`flex items-center justify-between w-full py-4 border-0 z-20 shrink-0 sticky top-0 px-6 md:px-8 select-none transition-all duration-300 ease-in-out ${isNotebookPage
+    <header className={`flex items-center justify-between w-full h-[var(--header-height,56px)] border-0 z-20 shrink-0 sticky top-0 px-6 md:px-8 select-none transition-all duration-300 ease-in-out ${isNotebookPage
       ? "bg-[#030303] backdrop-blur-none"
       : isHomePage
         ? "bg-transparent hover:bg-[#060606]/90 backdrop-blur-none hover:backdrop-blur-md"
@@ -84,46 +60,34 @@ export function Header({
 
       {/* Center: centered df-script wordmark */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
-        <a
-          href="/"
-          onClick={() => {
-            setIsMenuOpen(false);
-          }}
-          className="text-xl font-medium tracking-wide text-white font-outfit select-none lowercase hover:opacity-85 transition-opacity"
-        >
-          df-script
-        </a>
-        <div ref={headerDropdownRef} className="relative flex items-center select-none pt-0.5">
-          <button
-            onClick={() => setIsHeaderVersionDropdownOpen(!isHeaderVersionDropdownOpen)}
-            className="text-[10px] font-mono text-text-dim hover:text-white transition-colors cursor-pointer select-none flex items-center gap-1 leading-none"
+        {isNotebookPage ? (
+          <a
+            href="/"
+            onClick={() => {
+              setIsMenuOpen(false);
+            }}
+            className="text-base font-medium tracking-wide font-outfit select-none lowercase hover:opacity-85 transition-opacity"
+            title="@df-script/notebook"
           >
-            <span>{activeVersion}</span>
-            <svg className="w-2.5 h-2.5 text-text-dim shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {isHeaderVersionDropdownOpen && (
-            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-24 bg-[#161616] border border-[#2e2e2e]/60 rounded-md shadow-xl z-50 py-1 flex flex-col font-outfit select-none overflow-hidden">
-              {versionOptions.map((v) => (
-                <button
-                  key={v}
-                  onClick={() => {
-                    setActiveVersion(v);
-                    setIsHeaderVersionDropdownOpen(false);
-                  }}
-                  className={`text-left px-3 py-1.5 text-[9px] tracking-wider uppercase transition-colors cursor-pointer select-none ${activeVersion === v
-                    ? "bg-white/10 text-white font-semibold"
-                    : "text-text-muted hover:bg-white/5 hover:text-white"
-                    }`}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            <span className="text-white/40">@df-script/</span>
+            <span className="text-white">notebook</span>
+          </a>
+        ) : (
+          <>
+            <a
+              href="/"
+              onClick={() => {
+                setIsMenuOpen(false);
+              }}
+              className="text-xl font-medium tracking-wide text-white font-outfit select-none lowercase hover:opacity-85 transition-opacity"
+            >
+              df-script
+            </a>
+            <span className="text-[10px] font-mono text-text-dim select-none leading-none pt-0.5">
+              {activeVersion}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Right Side: Support & Resource Links */}
@@ -141,7 +105,7 @@ export function Header({
           <span>SPONSOR</span>
         </a>
         <a
-          href={NPM_PACKAGE_URL}
+          href={isNotebookPage ? "https://www.npmjs.com/package/@df-script/notebook" : NPM_PACKAGE_URL}
           target="_blank"
           rel="noreferrer"
           className="hover:text-white transition-colors uppercase"

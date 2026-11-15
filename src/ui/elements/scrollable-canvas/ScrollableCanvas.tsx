@@ -48,6 +48,7 @@ export const ScrollableCanvas = React.forwardRef<ScrollableCanvasHandle, Scrolla
   gap,
   arrowBackgroundColor,
   arrowColor,
+  showArrows = true,
   onOverflowChange,
 }, ref) => {
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -155,7 +156,7 @@ export const ScrollableCanvas = React.forwardRef<ScrollableCanvasHandle, Scrolla
       className={clsx(styles.scrollableCanvasContainer, "relative flex items-center min-w-0", className ?? "")}
     >
       {/* Left Arrow */}
-      {showLeftArrow && (
+      {showArrows && showLeftArrow && (
         <ScrollableCanvasArrow
           ref={leftArrowRef}
           direction="left"
@@ -177,7 +178,7 @@ export const ScrollableCanvas = React.forwardRef<ScrollableCanvasHandle, Scrolla
       </div>
 
       {/* Right Arrow */}
-      {showRightArrow && (
+      {showArrows && showRightArrow && (
         <ScrollableCanvasArrow
           ref={rightArrowRef}
           direction="right"

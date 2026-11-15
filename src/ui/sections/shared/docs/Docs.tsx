@@ -158,12 +158,12 @@ export function Docs({ op, activeVersion, typesMap = {} }: DocsProps) {
             className="group min-w-0 max-w-full transition-colors"
             title={`View source in src/${op.filePath}`}
           >
-            <h1 className="text-xl md:text-2xl font-bold tracking-normal text-[#ffffff] group-hover:text-indigo-400 lowercase transition-colors break-all">
+            <h1 className="text-xl md:text-2xl font-bold tracking-normal text-[#ffffff] group-hover:text-indigo-400 transition-colors break-all">
               {fullPath}
             </h1>
           </a>
         ) : (
-          <h1 className="text-xl md:text-2xl font-bold tracking-normal text-[#ffffff] lowercase break-all min-w-0 max-w-full">
+          <h1 className="text-xl md:text-2xl font-bold tracking-normal text-[#ffffff] break-all min-w-0 max-w-full">
             {fullPath}
           </h1>
         )}

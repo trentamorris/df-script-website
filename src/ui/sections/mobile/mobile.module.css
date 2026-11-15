@@ -4,5 +4,11 @@
   --mobile-minibar-height: 56px;
   --mobile-content-pb-default: var(--mobile-bottom-nav-height);
   --mobile-content-pb-with-minibar: calc(var(--mobile-bottom-nav-height) + var(--mobile-minibar-height));
+  --mobile-content-pb: var(--mobile-content-pb-default);
+  --mobile-viewport-height: calc(100dvh - var(--mobile-header-height) - var(--mobile-content-pb));
   --mobile-panel-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root[data-minibar="true"] {
+  --mobile-content-pb: var(--mobile-content-pb-with-minibar);
 }

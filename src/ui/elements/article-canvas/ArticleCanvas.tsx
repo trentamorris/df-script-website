@@ -1,6 +1,9 @@
 import React from "react";
 import { Footer } from "../../sections/shared/footer/Footer";
 import { parseMarkdownSections, extractDomSections } from "./utils";
+import { PanelNavigation } from "../panel-navigation";
+import type { NavigationPanelItem } from "../panel-navigation";
+import { useLayout } from "../../../hooks/useLayout";
 import styles from "./articleCanvas.module.css";
 import type { ArticleCanvasProps, ArticleNavSection } from "./types";
 
@@ -24,6 +27,7 @@ export function ArticleCanvas({
   showTocIndicator = true,
   className = "",
 }: ArticleCanvasProps) {
+  const { isMobile } = useLayout();
   const internalContainerRef = React.useRef<HTMLDivElement>(null);
   const contentContainerRef = externalContainerRef || internalContainerRef;
   const contentColumnRef = React.useRef<HTMLDivElement>(null);
@@ -44,10 +48,8 @@ export function ArticleCanvas({
   }>({ showTopShadow: false, showBottomShadow: true });
   const [hasOverflow, setHasOverflow] = React.useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState<boolean>(false);
-  const [isExiting, setIsExiting] = React.useState<boolean>(false);
 
-  const mobileMenuRef = React.useRef<HTMLDivElement>(null);
-  const stackedMenuContainerRef = React.useRef<HTMLDivElement>(null);
+  const mobileTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   // Parse markdown if provided
   const { html, sections: parsedSections } = React.useMemo(() => {
@@ -143,44 +145,12 @@ export function ArticleCanvas({
   }, [html, contentContainerRef]);
 
   const closeMobileMenu = React.useCallback(() => {
-    setIsExiting(true);
-    setTimeout(() => {
-      setIsMobileMenuOpen(false);
-      setIsExiting(false);
-    }, 180);
+    setIsMobileMenuOpen(false);
   }, []);
 
   const toggleMobileMenu = React.useCallback(() => {
-    if (isMobileMenuOpen) {
-      closeMobileMenu();
-    } else {
-      setIsExiting(false);
-      setIsMobileMenuOpen(true);
-    }
-  }, [isMobileMenuOpen, closeMobileMenu]);
-
-  // Center active pill in mobile menu
-  React.useEffect(() => {
-    if (!isMobileMenuOpen || isExiting || !stackedMenuContainerRef.current) return;
-    const activeEl = stackedMenuContainerRef.current.querySelector(
-      `[data-section-id="${CSS.escape(activeSectionId)}"]`
-    ) as HTMLElement | null;
-    if (activeEl) {
-      activeEl.scrollIntoView({ block: "center", behavior: "smooth" });
-    }
-  }, [isMobileMenuOpen, isExiting, activeSectionId]);
-
-  // Close mobile menu on outside click
-  React.useEffect(() => {
-    if (!isMobileMenuOpen || isExiting) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
-        closeMobileMenu();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isMobileMenuOpen, isExiting, closeMobileMenu]);
+    setIsMobileMenuOpen((prev) => !prev);
+  }, []);
 
   // Scroll spy & smart scroll edge shadows
   React.useEffect(() => {
@@ -422,7 +392,7 @@ export function ArticleCanvas({
           {hasSections && (
             <aside
               ref={tocAsideRef}
-              className={`${styles.articleToc} @5xl:col-start-1 @5xl:col-span-3 sticky top-0 self-start select-none pt-8 pr-1 max-h-[calc(100dvh-5rem)] overflow-y-auto overflow-x-hidden min-w-0 ${styles.tocScrollContainer}`}
+              className={`${styles.articleToc} @5xl:col-start-1 @5xl:col-span-3 sticky top-0 self-start select-none pt-8 pb-10 pr-1 max-h-[calc(100dvh-var(--header-height,56px))] overflow-y-auto overflow-x-hidden min-w-0 ${styles.tocScrollContainer}`}
             >
               <nav
                 ref={tocNavRef}
@@ -496,7 +466,6 @@ export function ArticleCanvas({
                                 ? "text-zinc-200 font-medium"
                                 : "text-text-muted hover:text-zinc-200"
                               }`}
-                            title={group.parent.title}
                           >
                             {group.parent.title}
                           </button>
@@ -524,7 +493,6 @@ export function ArticleCanvas({
                                           ? "text-white font-medium"
                                           : "text-zinc-500 hover:text-zinc-200"
                                           }`}
-                                        title={child.title}
                                       >
                                         {child.title}
                                       </button>
@@ -550,8 +518,8 @@ export function ArticleCanvas({
             ref={contentColumnRef}
             className={
               hasSections
-                ? "col-span-1 @5xl:col-start-4 @5xl:col-span-7 min-w-0 flex flex-col gap-8 pt-8 pb-24"
-                : "w-full max-w-3xl flex flex-col gap-8 pt-8 pb-24 min-w-0"
+                ? "col-span-1 @5xl:col-start-4 @5xl:col-span-7 min-w-0 flex flex-col gap-8 pt-8"
+                : "w-full max-w-3xl flex flex-col gap-8 pt-8 min-w-0"
             }
           >
             {headerSlot}
@@ -600,57 +568,18 @@ export function ArticleCanvas({
       {/* Floating Bottom TOC Pill for narrow containers (< @3xl) */}
       {hasSections && (
         <div
-          ref={mobileMenuRef}
-          className={`${styles.articleMobilePill} absolute ${hasActiveDocOp
-            ? "bottom-[calc(var(--mobile-bottom-nav-height,56px)+var(--mobile-minibar-height,56px)+1rem)] md:bottom-6"
-            : "bottom-[calc(var(--mobile-bottom-nav-height,56px)+1rem)] md:bottom-6"
-            } left-1/2 -translate-x-1/2 z-40 flex flex-col items-center transition-[bottom] duration-300 ease-[var(--mobile-panel-easing,ease)]`}
+          className={`${styles.articleMobilePill} absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center transition-[bottom] duration-300 ease-[var(--mobile-panel-easing,ease)]`}
         >
-          {/* Glass Popover Menu (Seamless unified card rising from bottom) */}
-          {isMobileMenuOpen && (
-            <div className="relative flex flex-col items-center mb-3">
-              <div
-                ref={stackedMenuContainerRef}
-                className={`overflow-y-auto p-1.5 flex flex-col gap-0.5 no-scrollbar relative rounded-2xl bg-[#18191b]/95 backdrop-blur-2xl shadow-[0_16px_50px_rgba(0,0,0,0.9)] ring-1 ring-white/[0.08] min-w-[220px] max-w-[320px] transition-all duration-200 ${
-                  isExiting ? "animate-lv-pill-exit pointer-events-none" : "animate-slide-up-fade"
-                }`}
-                style={{
-                  maxHeight: hasActiveDocOp
-                    ? "calc(100dvh - var(--mobile-header-height, 56px) - var(--mobile-bottom-nav-height, 56px) - var(--mobile-minibar-height, 56px) - 5rem)"
-                    : "calc(100dvh - var(--mobile-header-height, 56px) - var(--mobile-bottom-nav-height, 56px) - 5rem)",
-                }}
-              >
-                {sections.map((section) => {
-                  const isActive = activeSectionId === section.id;
-                  return (
-                    <button
-                      key={section.id}
-                      data-section-id={section.id}
-                      type="button"
-                      onClick={() => scrollToSection(section.id)}
-                      className={`flex items-center px-3.5 py-2 rounded-xl text-left text-[13px] transition-all duration-150 cursor-pointer active:scale-[0.98] select-none ${
-                        isActive
-                          ? "bg-indigo-500/15 text-indigo-300 font-semibold"
-                          : "text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] font-normal"
-                      } ${section.level === 3 ? "pl-6 text-xs opacity-90" : ""}`}
-                    >
-                      <span className="truncate">{section.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Main Floating Pill Trigger */}
           <button
+            ref={mobileTriggerRef}
             type="button"
             onClick={toggleMobileMenu}
             className="flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-full text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 select-none"
             aria-expanded={isMobileMenuOpen}
             aria-label="Table of contents outline"
           >
-            < svg
+            <svg
               className="w-4 h-4 text-black"
               fill="none"
               stroke="currentColor"
@@ -676,6 +605,31 @@ export function ArticleCanvas({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
+
+          {/* PanelNavigation Menu (Modal on mobile, anchored popover on desktop) */}
+          <PanelNavigation
+            isOpen={isMobileMenuOpen}
+            onClose={closeMobileMenu}
+            anchorEl={mobileTriggerRef.current}
+            placement="top"
+            isModal={isMobile}
+            modalAlign="bottom"
+            sheetTopGap="var(--mobile-header-height, 56px)"
+            swipeToDismiss={isMobile}
+            title="Table of Contents"
+            items={sections.map((section): NavigationPanelItem => {
+              const isActive = activeSectionId === section.id;
+              return {
+                id: section.id,
+                label: section.title,
+                className: `!px-4 !py-3 rounded-xl text-[13.5px] transition-all cursor-pointer ${isActive
+                  ? "!bg-white/10 !text-white font-medium"
+                  : "!text-zinc-300 hover:!text-white hover:!bg-white/5 font-normal"
+                  } ${section.level === 3 ? "!pl-8 text-xs opacity-80" : ""}`,
+                onClick: () => scrollToSection(section.id),
+              };
+            })}
+          />
         </div>
       )}
     </main>

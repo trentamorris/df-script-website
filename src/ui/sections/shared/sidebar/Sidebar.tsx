@@ -1,11 +1,11 @@
 import React from "react";
-import { KeyboardArrowDown, KeyboardArrowRight, Close } from "@mui/icons-material";
+import { KeyboardArrowDown, KeyboardArrowRight, ChevronRight, Close, Check } from "@mui/icons-material";
 import type { OperationItem, DocsVersion } from "../../../../types";
 import { $df } from "df-script";
 
 import { getQualifiedPath } from "../../../../utils/routing";
 import type { SidebarProps } from "./types";
-import { SearchInput } from "../../../elements";
+import { SearchInput, ScrollableCanvas, Chip } from "../../../elements";
 import { useLayout } from "../../../../hooks/useLayout";
 
 export function Sidebar({
@@ -22,12 +22,16 @@ export function Sidebar({
   onSelectOp,
 }: SidebarProps) {
   const [explorerSearchQuery, setExplorerSearchQuery] = React.useState("");
-  const [isVersionDropdownOpen, setIsVersionDropdownOpen] = React.useState(false);
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
 
   // Dynamic open folders state
   const [openFolders, setOpenFolders] = React.useState<Record<string, boolean>>({});
-
-  const sidebarDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [stuckCategories, setStuckCategories] = React.useState<Record<string, boolean>>({});
+  const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const chipsNavRef = React.useRef<HTMLDivElement>(null);
+  const targetCategoryRef = React.useRef<string | null>(null);
+  const scrollEndTimerRef = React.useRef<number | null>(null);
 
   // Auto-expand folder when currentOpName changes (e.g. from routing)
   React.useEffect(() => {
@@ -38,29 +42,6 @@ export function Sidebar({
       }
     }
   }, [currentOpName, operationsIndex]);
-
-  // Click outside and ESC handlers for version dropdown
-  React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        sidebarDropdownRef.current &&
-        !sidebarDropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsVersionDropdownOpen(false);
-      }
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsVersionDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
 
   // Listen to Escape key to close the drawer overlay
   React.useEffect(() => {
@@ -77,14 +58,150 @@ export function Sidebar({
   const q = explorerSearchQuery.trim().toLowerCase();
 
   // Create DataFrame from the list of operations for dogfooding!
-  const df = operationsIndex.length > 0 ? $df.data(operationsIndex) : null;
+  const df = React.useMemo(() => {
+    return operationsIndex.length > 0 ? $df.data(operationsIndex) : null;
+  }, [operationsIndex]);
+
+  const allAvailableCategories: string[] = React.useMemo(() => {
+    if (!df) return [];
+    return df.select("category").unique().sort({ by: "category" }).toArray("category") as string[];
+  }, [df]);
 
   // Dynamically find categories present in the operations index
-  const categoriesList: string[] = df
-    ? (df.select("category").unique().sort({ by: "category" }).toArray("category") as string[])
-    : [];
+  const categoriesList: string[] = React.useMemo(() => {
+    return allAvailableCategories;
+  }, [allAvailableCategories]);
 
-  const getFilteredOps = (category: string): OperationItem[] => {
+  // Two-way scroll-spy: Highlight active category based on scroll position
+  React.useEffect(() => {
+    const root = scrollContainerRef.current;
+    if (!root) return;
+
+    const handleScroll = () => {
+      const rootRect = root.getBoundingClientRect();
+      const offsetTop = rootRect.top;
+
+      let currentActive: string | null = categoriesList[0] || null;
+      for (const cat of categoriesList) {
+        const el = document.getElementById(`sidebar-section-${cat}`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // If top of section is at or above the sticky threshold
+          if (rect.top - offsetTop <= 48) {
+            currentActive = cat;
+          } else {
+            break;
+          }
+        }
+      }
+
+      // If a click target was set, don't update active category until we've reached it (or user takes over with touch)
+      if (targetCategoryRef.current) {
+        if (currentActive === targetCategoryRef.current) {
+          targetCategoryRef.current = null;
+        } else {
+          return;
+        }
+      }
+
+      setActiveCategory(currentActive);
+    };
+
+    const handleUserInteraction = () => {
+      // If user touches or wheels manually, dismiss keyboard and cancel programmatic lock
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      targetCategoryRef.current = null;
+    };
+
+    root.addEventListener("scroll", handleScroll, { passive: true });
+    root.addEventListener("touchstart", handleUserInteraction, { passive: true });
+    root.addEventListener("wheel", handleUserInteraction, { passive: true });
+    handleScroll();
+    return () => {
+      root.removeEventListener("scroll", handleScroll);
+      root.removeEventListener("touchstart", handleUserInteraction);
+      root.removeEventListener("wheel", handleUserInteraction);
+    };
+  }, [categoriesList]);
+
+  // Set default active category on mount
+  React.useEffect(() => {
+    if (!activeCategory && categoriesList.length > 0) {
+      setActiveCategory(categoriesList[0]);
+    }
+  }, [categoriesList, activeCategory]);
+
+  // Auto-scroll the active chip into view horizontally
+  React.useEffect(() => {
+    const nav = chipsNavRef.current;
+    if (!nav || !activeCategory) return;
+    const chipBtn = nav.querySelector(`[data-chip-key="${activeCategory}"]`) as HTMLElement | null;
+    if (chipBtn) {
+      chipBtn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }, [activeCategory]);
+
+  const scrollToCategory = (cat: string) => {
+    const root = scrollContainerRef.current;
+    if (!root) return;
+
+    // Immediately highlight the target chip and pin it
+    setActiveCategory(cat);
+    targetCategoryRef.current = cat;
+
+    if (scrollEndTimerRef.current) {
+      clearTimeout(scrollEndTimerRef.current);
+    }
+
+    const el = document.getElementById(`sidebar-section-${cat}`);
+    if (el) {
+      const rootTop = root.getBoundingClientRect().top;
+      const elTop = el.getBoundingClientRect().top;
+      const relativeTop = elTop - rootTop + root.scrollTop;
+      root.scrollTo({ top: relativeTop, behavior: "smooth" });
+    }
+
+    // Fallback release if target is reached or after smooth scroll settles
+    scrollEndTimerRef.current = setTimeout(() => {
+      targetCategoryRef.current = null;
+    }, 1500);
+  };
+
+  // Detect when sticky headers are stuck using an IntersectionObserver on 1px sentinels
+  React.useEffect(() => {
+    const root = scrollContainerRef.current;
+    if (!root || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setStuckCategories((prev) => {
+          let changed = false;
+          const next = { ...prev };
+          entries.forEach((entry) => {
+            const cat = entry.target.getAttribute("data-sentinel-for");
+            if (cat) {
+              const isStuck = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0);
+              if (next[cat] !== isStuck) {
+                next[cat] = isStuck;
+                changed = true;
+              }
+            }
+          });
+          return changed ? next : prev;
+        });
+      },
+      { root, threshold: 0 }
+    );
+
+    const sentinels = root.querySelectorAll("[data-sentinel-for]");
+    sentinels.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [categoriesList]);
+
+  const getFilteredOps = React.useCallback((category: string): OperationItem[] => {
     if (!df) return [];
 
     let filtered = df.filter($df.col("category").eq(category));
@@ -92,11 +209,12 @@ export function Sidebar({
     if (q) {
       filtered = filtered.filter(
         $df.col("callExpression").str.toLowerCase().str.contains(q)
+          .or($df.col("desc").str.toLowerCase().str.contains(q))
       );
     }
 
     return filtered.sort({ by: "callExpression" }).toDicts() as OperationItem[];
-  };
+  }, [df, q]);
 
   const getFolderDisplayName = (category: string) => {
     if (category === "DataFrame") return "DataFrame Operations";
@@ -136,43 +254,15 @@ export function Sidebar({
         {showHeader && (
           <div className="flex items-center justify-between px-6 md:px-8 pt-2.5 pb-3">
             <span className="text-[9px] font-outfit text-text-dim uppercase tracking-widest select-none font-semibold">API EXPLORER</span>
-            <div ref={sidebarDropdownRef} className="relative flex items-center select-none shrink-0">
-              <button
-                onClick={() => setIsVersionDropdownOpen(!isVersionDropdownOpen)}
-                className="flex items-center gap-1 rounded-full bg-[#161616] px-2.5 py-1 text-[9px] font-outfit text-text-muted hover:text-white transition-colors cursor-pointer select-none font-semibold uppercase tracking-wider"
-              >
-                <span className="text-[8px] text-text-dim tracking-widest font-semibold mr-0.5">VERSION:</span>
-                <span>{activeVersion}</span>
-                <svg className="w-2.5 h-2.5 text-text-dim shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {isVersionDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-24 bg-[#161616] border border-[#2e2e2e]/60 rounded-md shadow-xl z-40 py-1 flex flex-col font-outfit select-none overflow-hidden">
-                  {versionOptions.map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => {
-                        setActiveVersion(v);
-                        setIsVersionDropdownOpen(false);
-                      }}
-                      className={`text-left px-3 py-1.5 text-[9px] tracking-wider uppercase transition-colors cursor-pointer select-none ${activeVersion === v
-                        ? "bg-white/10 text-white font-semibold"
-                        : "text-text-muted hover:bg-white/5 hover:text-white"
-                        }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center gap-1 text-[9px] font-outfit text-text-muted select-none font-semibold uppercase tracking-wider shrink-0 bg-transparent py-1">
+              <span className="text-[8px] text-text-dim tracking-widest font-semibold mr-0.5">VERSION:</span>
+              <span>{activeVersion}</span>
             </div>
           </div>
         )}
 
-        {/* Search/Filter Bar */}
-        <div className="px-4 md:px-8 pb-0 pt-4 md:pt-1">
+        {/* Search Bar */}
+        <div className="px-4 md:px-8 pb-0 pt-1">
           <SearchInput
             value={explorerSearchQuery}
             onChange={setExplorerSearchQuery}
@@ -180,40 +270,80 @@ export function Sidebar({
             variant={isMobile ? "pill" : "underline"}
           />
         </div>
+
+        {/* Category Navigation Chips: full width edge-to-edge scroll with content offsets */}
+        {allAvailableCategories.length > 0 && (
+          <div ref={chipsNavRef} className="pt-4 pb-2 w-full">
+            <ScrollableCanvas
+              showArrows={false}
+              gap={6}
+              scrollContentStartOffset={isMobile ? 16 : 32}
+              scrollContentEndOffset={isMobile ? 16 : 32}
+              className="w-full select-none overflow-visible"
+            >
+              {allAvailableCategories.map((cat) => {
+                const isSelected = activeCategory === cat;
+                return (
+                  <Chip
+                    key={cat}
+                    variant={isSelected ? "active" : "default"}
+                    pressFeedback
+                    onClick={() => scrollToCategory(cat)}
+                    data-chip-key={cat}
+                    className="!rounded-[8px] !border-0 !font-semibold"
+                  >
+                    <span>{getFolderDisplayName(cat)}</span>
+                  </Chip>
+                );
+              })}
+            </ScrollableCanvas>
+          </div>
+        )}
       </div>
 
       {/* Scrollable Container */}
-        <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden bg-transparent pt-3">
+        <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden bg-transparent pt-0 md:pt-3">
           {/* Scrollable Explorer List */}
-            <div className="flex-1 overflow-y-auto select-none pt-0 pb-12 min-h-0 text-[11px] flex flex-col gap-4">
-              <div className="flex flex-col gap-0 px-4 md:px-8">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto select-none pt-0 pb-8 min-h-0 text-[11px] flex flex-col gap-4">
+              <div className="flex flex-col gap-0 w-full">
                 {categoriesList.map((cat) => {
                   const ops = getFilteredOps(cat);
                   if (ops.length === 0) return null;
 
-                  const isOpen = q ? true : openFolders[cat] !== false;
+                  const isOpen = isMobile || q ? true : openFolders[cat] !== false;
+                  const isStuck = stuckCategories[cat];
 
                   return (
-                    <div key={cat} className="flex flex-col">
-                      <button
-                        onClick={() => setOpenFolders(prev => ({ ...prev, [cat]: openFolders[cat] === false }))}
+                    <div id={`sidebar-section-${cat}`} key={cat} className="flex flex-col relative w-full">
+                      {/* Invisible 1px sentinel placed right before the sticky header */}
+                      <div data-sentinel-for={cat} className="h-[1px] -mb-[1px] pointer-events-none opacity-0" />
+                      <div
+                        onClick={() => {
+                          if (!isMobile) {
+                            setOpenFolders(prev => ({ ...prev, [cat]: openFolders[cat] === false }));
+                          }
+                        }}
                         style={{ backgroundColor: effectiveBgColor }}
-                        className="sticky top-0 z-10 flex items-center gap-2.5 w-full text-left text-text-muted hover:text-white transition-colors cursor-pointer select-none py-2.5 md:py-2 before:content-[''] before:absolute before:-top-1.5 before:left-0 before:right-0 before:h-1.5 before:bg-inherit before:pointer-events-none"
+                        className={`sticky top-0 z-10 flex items-center gap-2.5 w-full px-4 md:px-8 text-left text-text-muted transition-colors select-none py-2.5 md:py-2 border-b ${isStuck ? "border-white/10" : "border-transparent"
+                          } before:content-[''] before:absolute before:-top-1.5 before:left-0 before:right-0 before:h-1.5 before:bg-inherit before:pointer-events-none ${isMobile ? "cursor-default" : "hover:text-white cursor-pointer"
+                          }`}
                       >
-                        <span className="text-text-dim w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                          {isOpen ? (
-                            <KeyboardArrowDown className="!text-[16px] md:!text-[14px]" />
-                          ) : (
-                            <KeyboardArrowRight className="!text-[16px] md:!text-[14px]" />
-                          )}
-                        </span>
-                        <span className="font-bold md:font-semibold tracking-widest font-outfit text-[13px] md:text-[11px] uppercase text-[#f0f0f0]">
+                        {!isMobile && (
+                          <span className="text-text-dim w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                            {isOpen ? (
+                              <KeyboardArrowDown className="!text-[14px]" />
+                            ) : (
+                              <KeyboardArrowRight className="!text-[14px]" />
+                            )}
+                          </span>
+                        )}
+                        <span className="font-bold md:font-semibold tracking-widest font-outfit text-[14px] md:text-[11px] uppercase text-[#f0f0f0]">
                           {getFolderDisplayName(cat)}
                         </span>
-                      </button>
+                      </div>
 
                       {isOpen && (
-                        <div className="pl-4 mt-2 border-l border-border-dark ml-1.5 flex flex-col gap-1 md:gap-2">
+                        <div className="px-4 md:px-8 md:pl-12 mt-2 md:border-l md:border-border-dark md:ml-9.5 flex flex-col gap-1 md:gap-2">
                           {ops.map((op) => {
                             const qualifiedPath = getQualifiedPath(op);
                             const isCurrent = qualifiedPath === currentOpName;
@@ -230,9 +360,21 @@ export function Sidebar({
                                     }
                                     setIsMenuOpen?.(false);
                                   }}
-                                  className={`text-left hover:text-[#ffffff] transition-colors cursor-pointer text-[14px] md:text-[12px] py-1.5 md:py-0.5 ${isCurrent ? "text-white font-semibold" : "text-text-muted"}`}
+                                  className={`group text-left flex items-center justify-between gap-3 hover:text-[#ffffff] transition-colors cursor-pointer py-2 md:py-0.5 text-white h-[56px] md:h-auto ${isCurrent ? "font-semibold" : "font-normal"}`}
                                 >
-                                  <span>{renderHighlightedName(op.callExpression || op.name || "")}</span>
+                                  <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
+                                    <span className="text-[16px] md:text-[12px] font-semibold leading-snug truncate">
+                                      {renderHighlightedName(op.callExpression || op.name || "")}
+                                    </span>
+                                    {isMobile && op.desc && (
+                                      <span className="text-[12px] text-zinc-400 font-sans font-normal leading-tight mt-0.5 truncate">
+                                        {op.desc}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {isMobile && (
+                                    <ChevronRight className="!text-[20px] text-zinc-500 group-hover:text-zinc-300 transition-colors shrink-0" />
+                                  )}
                                 </button>
                               </div>
                             );

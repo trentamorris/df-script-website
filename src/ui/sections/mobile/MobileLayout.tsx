@@ -42,24 +42,40 @@ export function MobileLayout({
     }
   }, [isDocs, activeOpName, operationsIndex]);
 
+  const hasMinibar = Boolean(activeDocOp);
+
+  // Sync data-minibar on document root so CSS variables automatically adjust bottom clearance
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.setAttribute("data-minibar", String(hasMinibar));
+    return () => {
+      document.documentElement.removeAttribute("data-minibar");
+    };
+  }, [hasMinibar]);
+
   return (
-    <div className="h-screen w-screen flex flex-col relative overflow-hidden bg-[#060606] text-text-muted font-sans antialiased">
-      {/* Background layer */}
-      {isHomePage && (backgroundTheme === "galaxy" ? <GalaxyBackground /> : <WaveBackground />)}
+    <div
+      data-minibar={String(hasMinibar)}
+      className="h-[100dvh] w-screen flex flex-col relative overflow-hidden bg-[#060606] text-text-muted font-sans antialiased"
+    >
+      {/* Background layer: keep mounted to prevent unmount glitch, toggle opacity */}
+      <div className={`transition-opacity duration-300 ${isHomePage ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+        {backgroundTheme === "galaxy" ? <GalaxyBackground /> : <WaveBackground />}
+      </div>
 
       {/* Mobile Top Header */}
-      {!isSearchPage && (
-        <MobileHeader
-          activeVersion={activeVersion}
-        />
-      )}
+      <MobileHeader activeVersion={activeVersion} />
 
-      {/* Main View Area */}
+      {/* Main View Area: unified container accounting for bottom nav and condensed minibar via --mobile-content-pb */}
       <div
-        className={`flex-1 min-h-0 w-full relative z-10 ${
-          isHomePage ? "bg-transparent" : "bg-[#060606]"
-        } ${isHomePage || isSearchPage ? "h-full overflow-hidden flex flex-col" : "overflow-y-auto"
-        }`}>
+        className={`flex-1 min-h-0 w-full relative z-10 pb-[var(--mobile-content-pb,56px)] ${
+          isHomePage
+            ? "bg-transparent overflow-hidden flex flex-col"
+            : isSearchPage
+            ? "bg-[#060606] h-full overflow-hidden flex flex-col"
+            : "bg-[#060606] overflow-y-auto"
+        }`}
+      >
         {(() => {
           if (isSearchPage) {
             return (
@@ -116,7 +132,7 @@ export function MobileLayout({
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[13px] font-semibold text-white truncate font-sans">
-                  .{activeDocOp.name}()
+                  {activeDocOp.callExpression || activeDocOp.name}
                 </span>
                 <span className="text-[10px] font-outfit uppercase tracking-wider text-text-dim truncate">
                   {activeDocOp.category || "Operation"}

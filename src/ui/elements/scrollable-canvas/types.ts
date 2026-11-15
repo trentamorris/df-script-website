@@ -15,6 +15,7 @@ export type ScrollableCanvasProps = {
   gap?: string | number;
   arrowBackgroundColor?: string;
   arrowColor?: string;
+  showArrows?: boolean;
   onOverflowChange?: (hasOverflow: boolean) => void;
 };
 

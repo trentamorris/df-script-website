@@ -42,7 +42,7 @@ export function SearchInput({
           onBlur={() => setIsFocused(false)}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`bg-transparent text-[16px] md:text-[14px] font-medium leading-none font-sans text-white placeholder:text-neutral-400 placeholder:text-[16px] md:placeholder:text-[14px] placeholder:font-medium outline-none border-none tracking-normal ${
+          className={`bg-transparent text-[16px] md:text-[14px] font-semibold leading-none font-sans text-white placeholder:text-neutral-400 placeholder:text-[16px] md:placeholder:text-[14px] placeholder:font-semibold outline-none border-none tracking-normal ${
             isPill ? "flex-1 min-w-0" : "w-full pl-8 md:pl-7 pr-7 pt-1 pb-3"
           }`}
         />

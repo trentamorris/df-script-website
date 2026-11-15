@@ -42,9 +42,9 @@ export function Home() {
                 />
               )}
 
-              <div className={isMobile ? "max-w-lg" : "animate-hero-desc max-w-lg"}>
+              <div className={isMobile ? "max-w-lg transform-gpu" : "animate-hero-desc max-w-lg transform-gpu"}>
                 <p
-                  className={`text-sm md:text-base diamond-glisten leading-relaxed select-none transition-all duration-300 ${backgroundTheme === "wave"
+                  className={`text-sm md:text-base diamond-glisten leading-relaxed select-none ${backgroundTheme === "wave"
                       ? "[--base-color:#e0f2fe] [--glint-color:#ffffff] [--glint-prism:#7dd3fc] drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
                       : "[--base-color:#9c9c9c] [--glint-color:#ffffff] [--glint-prism:#dbeafe]"
                     }`}
