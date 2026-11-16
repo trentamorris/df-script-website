@@ -3,5 +3,5 @@ export interface SearchInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
-  variant?: "underline" | "pill";
+  variant?: "base" | "underline" | "pill";
 }

@@ -43,6 +43,9 @@ export function MobileLayout({
   }, [isDocs, activeOpName, operationsIndex]);
 
   const hasMinibar = Boolean(activeDocOp);
+  const mobileContentPb = hasMinibar
+    ? "calc(var(--mobile-bottom-nav-height, 56px) + var(--mobile-minibar-height, 56px))"
+    : "var(--mobile-bottom-nav-height, 56px)";
 
   // Sync data-minibar on document root so CSS variables automatically adjust bottom clearance
   React.useEffect(() => {
@@ -56,6 +59,9 @@ export function MobileLayout({
   return (
     <div
       data-minibar={String(hasMinibar)}
+      style={{
+        "--mobile-content-pb": mobileContentPb,
+      } as React.CSSProperties}
       className="h-[100dvh] w-screen flex flex-col relative overflow-hidden bg-[#060606] text-text-muted font-sans antialiased"
     >
       {/* Background layer: keep mounted to prevent unmount glitch, toggle opacity */}
@@ -68,13 +74,13 @@ export function MobileLayout({
 
       {/* Main View Area: unified container accounting for bottom nav and condensed minibar via --mobile-content-pb */}
       <div
-        className={`flex-1 min-h-0 w-full relative z-10 pb-[var(--mobile-content-pb,56px)] ${
-          isHomePage
-            ? "bg-transparent overflow-hidden flex flex-col"
-            : isSearchPage
+        style={{ paddingBottom: mobileContentPb }}
+        className={`flex-1 min-h-0 w-full relative z-10 transition-[padding-bottom] duration-300 ease-[var(--mobile-panel-easing,ease)] ${isHomePage
+          ? "bg-transparent overflow-hidden flex flex-col"
+          : isSearchPage
             ? "bg-[#060606] h-full overflow-hidden flex flex-col"
             : "bg-[#060606] overflow-y-auto"
-        }`}
+          }`}
       >
         {(() => {
           if (isSearchPage) {

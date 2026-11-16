@@ -1,0 +1,34 @@
+/* Stable scrollbar gutter: preserves space at all times, only thumb color transitions */
+.sidebarScrollContainer {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebarScrollContainer:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebarScrollContainer::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebarScrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebarScrollContainer::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.sidebarScrollContainer:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebarScrollContainer:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

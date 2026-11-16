@@ -1,5 +1,5 @@
 import React from "react";
-import { Menu, Favorite } from "@mui/icons-material";
+import { Menu, Close, Favorite } from "@mui/icons-material";
 import { GITHUB_REPO_URL, NPM_PACKAGE_URL } from "../../../../../constants";
 import { NOTEBOOK_PATH, ABOUT_PATH, SUPPORT_PATH, LLM_PATH } from "../../../constants";
 import { useBackgroundTheme } from "../../../../../hooks/useBackgroundTheme";
@@ -20,7 +20,7 @@ export function Header({
   const isHomePage = path === "/" || (!path.startsWith("/docs") && path !== ABOUT_PATH && path !== SUPPORT_PATH && path !== NOTEBOOK_PATH && !isLlmPage);
 
   return (
-    <header className={`flex items-center justify-between w-full h-[var(--header-height,56px)] border-0 z-20 shrink-0 sticky top-0 px-6 md:px-8 select-none transition-all duration-300 ease-in-out ${isNotebookPage
+    <header className={`flex items-center justify-between w-full h-[var(--header-height,56px)] border-0 z-20 shrink-0 sticky top-0 pl-4 md:pl-5 pr-6 md:pr-8 select-none transition-all duration-300 ease-in-out ${isNotebookPage
       ? "bg-[#030303] backdrop-blur-none"
       : isHomePage
         ? "bg-transparent hover:bg-[#060606]/90 backdrop-blur-none hover:backdrop-blur-md"
@@ -33,9 +33,15 @@ export function Header({
           onClick={() => {
             setIsSidebarCollapsed(!isSidebarCollapsed);
           }}
-          className={`flex items-center gap-2 text-[11px] font-outfit tracking-widest ${!isSidebarCollapsed ? "text-white font-medium" : "hover:text-white"} transition-colors cursor-pointer uppercase select-none text-left mr-2`}
+          className={`flex items-center gap-2 text-[11px] font-outfit tracking-widest ${!isSidebarCollapsed ? "text-white font-medium" : "hover:text-white"} transition-colors cursor-pointer uppercase select-none text-left`}
         >
-          <Menu style={{ fontSize: "14px" }} />
+          <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
+            {!isSidebarCollapsed ? (
+              <Close sx={{ fontSize: 14 }} />
+            ) : (
+              <Menu sx={{ fontSize: 14 }} />
+            )}
+          </span>
           <span>MENU</span>
         </button>
         <a
@@ -95,11 +101,10 @@ export function Header({
         }`}>
         <a
           href={SUPPORT_PATH}
-          className={`transition-colors uppercase flex items-center gap-1.5 ${
-            path === SUPPORT_PATH
-              ? "text-[#fb7185] font-semibold"
-              : "text-text-muted hover:text-[#fb7185]"
-          }`}
+          className={`transition-colors uppercase flex items-center gap-1.5 ${path === SUPPORT_PATH
+            ? "text-[#fb7185] font-semibold"
+            : "text-text-muted hover:text-[#fb7185]"
+            }`}
         >
           <Favorite style={{ fontSize: "14px" }} />
           <span>SPONSOR</span>

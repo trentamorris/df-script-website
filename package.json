@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "deploy": "npx vercel@56.3.2 deploy --prod --yes && npx vercel@56.3.2 alias set df-script.js.org",
+    "generate-sitemap": "node scripts/generate-sitemap.js",
+    "build": "npm run generate-sitemap && tsc && vite build",
+    "deploy": "npx vercel@56.3.2 deploy --prod --yes && npx vercel@56.3.2 alias set $(npx vercel@56.3.2 ls website --prod -t 1 | grep -o 'https://[^ ]*' | head -1) df-script.js.org",
     "deploy-preview": "npx vercel@56.3.2"
   },
   "dependencies": {

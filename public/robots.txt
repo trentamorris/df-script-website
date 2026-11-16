@@ -5,4 +5,8 @@ Allow: /
 Allow: /llms.txt
 Allow: /llms-full.txt
 Allow: /docs.json
+Allow: /sitemap.xml
+
+Sitemap: https://df-script.js.org/sitemap.xml
+
 
