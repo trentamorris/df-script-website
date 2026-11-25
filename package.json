@@ -16,6 +16,7 @@
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.1",
     "@mui/material": "^6.1.1",
+    "@vercel/analytics": "^2.0.1",
     "df-script": "^2.3.0",
     "marked": "^18.0.6",
     "prettier": "^3.9.10",

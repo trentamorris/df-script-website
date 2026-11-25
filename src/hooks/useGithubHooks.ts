@@ -86,11 +86,21 @@ export function useGithubDocs(activeVersion: DocsVersion) {
           extractedTypes = rawDocs.types;
         }
 
+        const inferCategory = (filePath: string): string => {
+          if (filePath.startsWith("functions/")) return "Function";
+          if (filePath.startsWith("dataframe/")) return "DataFrame";
+          if (filePath.startsWith("datatypes/")) return "DataType";
+          if (filePath.startsWith("exceptions/")) return "Exception";
+          return "ColumnExpression";
+        };
+
         const addSymbols = (symbolsObj: Record<string, any>) => {
           if (!symbolsObj || typeof symbolsObj !== "object") return;
           for (const [symbolName, info] of Object.entries(symbolsObj)) {
+            if (info.visibility && info.visibility !== "public") continue;
             const callExpression = info.callExpression || info.name || symbolName;
             const propertyAccess = info.propertyAccess || symbolName;
+            const filePath = info.filePath || "";
 
             mappedList.push({
               callExpression,
@@ -98,7 +108,7 @@ export function useGithubDocs(activeVersion: DocsVersion) {
               name: callExpression,
               namespace: info.namespace,
               accessor: info.accessor,
-              category: info.category || "ColumnExpression",
+              category: info.category || inferCategory(filePath),
               syntax: info.syntax,
               desc: info.desc || "",
               version: activeVersion,

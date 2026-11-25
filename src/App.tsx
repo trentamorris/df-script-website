@@ -1,4 +1,5 @@
 import React from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { DesktopLayout, MobileLayout } from "./ui/sections";
 import { useGithubVersions, useGithubDocs } from "./hooks/useGithubHooks";
 import { useRouter } from "./hooks/useRouter";
@@ -52,6 +53,7 @@ export default function App() {
     <LayoutProvider>
       <BackgroundThemeProvider>
         <AppContent />
+        <Analytics />
       </BackgroundThemeProvider>
     </LayoutProvider>
   );
